@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @SuperBuilder
-public abstract class VehiculeCommandBase {
+public class VehiculeCommandBase {
 
   @NotNull
   private final LocalDate dateMiseEnCirculation;
