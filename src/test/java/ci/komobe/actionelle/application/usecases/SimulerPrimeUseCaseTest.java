@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ci.komobe.actionelle.application.commands.SimulerPrimeCommand;
 import ci.komobe.actionelle.application.exceptions.ProduitError;
+import ci.komobe.actionelle.application.presenters.DefaultSimulerPrimePresenter;
 import ci.komobe.actionelle.application.presenters.SimulerPrimePresenter;
 import ci.komobe.actionelle.application.repositories.InMemoryProduitRepository;
 import ci.komobe.actionelle.application.services.prime.PrimeCalculator;
@@ -34,19 +35,7 @@ class SimulerPrimeUseCaseTest {
     primeCalculator.addStrategy(TypeMontantPrime.POURCENTAGE, new PrimePourcentageStrategy());
     primeCalculator.addStrategy(TypeMontantPrime.MONTANT, new PrimeMontantFixeStrategy());
     useCase = new SimulerPrimeUseCase(produitRepository, primeCalculator);
-    presenter = new SimulerPrimePresenter() {
-      private Object data;
-
-      @Override
-      public void addData(Object data) {
-        this.data = data;
-      }
-
-      @Override
-      public Object present() {
-        return data;
-      }
-    };
+    presenter = new DefaultSimulerPrimePresenter();
   }
 
   @Test

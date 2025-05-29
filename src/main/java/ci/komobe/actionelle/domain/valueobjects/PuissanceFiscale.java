@@ -25,6 +25,44 @@ public record PuissanceFiscale(Integer debut, Integer fin) {
     return new PuissanceFiscale(null, fin);
   }
 
+  public static PuissanceFiscale fromString(String puissanceFiscale) {
+    if (puissanceFiscale == null || puissanceFiscale.isBlank()) {
+      return null; // Pas de valeur fournie
+    }
+
+    String puissanceFiscaleStrimmed = puissanceFiscale.trim();
+
+    try {
+      if (puissanceFiscaleStrimmed.startsWith("<=")) {
+        // Cas borne supérieure uniquement : "<= valeur"
+        String valeurBorneSupStr = puissanceFiscaleStrimmed.substring(3).trim();
+        Integer borneSup = Integer.valueOf(valeurBorneSupStr);
+        return PuissanceFiscale.fromFin(borneSup);
+      } else if (puissanceFiscaleStrimmed.startsWith(">=")) {
+        // Cas borne inférieure uniquement : ">= valeur"
+        String valeurBorneInf = puissanceFiscaleStrimmed.substring(3).trim();
+        Integer borneInf = Integer.valueOf(valeurBorneInf);
+        return PuissanceFiscale.fromDebut(borneInf);
+      } else if (puissanceFiscaleStrimmed.contains(" à ")) {
+        // Cas intervalle : "debut à fin"
+        String[] bornesStr = puissanceFiscaleStrimmed.split(" à ");
+        if (bornesStr.length != 2) {
+          throw new IllegalArgumentException("Format invalide : attendu 'debut à fin'");
+        }
+        Integer borneInf = Integer.valueOf(bornesStr[0].trim());
+        Integer borneSup = Integer.valueOf(bornesStr[1].trim());
+        return PuissanceFiscale.of(borneInf, borneSup);
+      } else {
+        // Cas valeur exacte unique
+        Integer valeurExacte = Integer.valueOf(puissanceFiscaleStrimmed);
+        return PuissanceFiscale.of(valeurExacte, valeurExacte);
+      }
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("La valeur de puissance fiscale contient un nombre invalide : '" + puissanceFiscaleStrimmed + "'", e);
+    }
+  }
+
+
   public boolean isInRange(Integer puissanceFiscale) {
     if (puissanceFiscale == null) {
       return false;
@@ -51,6 +89,6 @@ public record PuissanceFiscale(Integer debut, Integer fin) {
     if (fin == null) {
       return ">= " + debut;
     }
-    return isExactMatch() ? String.valueOf(debut) : debut + " à " + fin;
+    return isExactMatch() ? "<= " + debut : debut + " à " + fin;
   }
 }

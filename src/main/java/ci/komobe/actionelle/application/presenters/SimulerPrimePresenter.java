@@ -1,11 +1,13 @@
 package ci.komobe.actionelle.application.presenters;
 
+import java.math.BigDecimal;
+
 /**
  * @author Moro KONÉ 2025-05-29
  */
-public interface SimulerPrimePresenter {
+public interface SimulerPrimePresenter<T> {
 
-  void addData(Object message);
+  void addData(BigDecimal data);
 
-  Object present();
+  T present();
 }

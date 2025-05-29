@@ -24,7 +24,7 @@ public record SimulerPrimeUseCase(
 
   private static final double TAUX_CALCUL_VALEUR_ASSUREE = 0.5;
 
-  public void execute(SimulerPrimeCommand command, SimulerPrimePresenter presenter) {
+  public void execute(SimulerPrimeCommand command, SimulerPrimePresenter<?> presenter) {
     Produit produit = getProduit(command);
     double age = calculAge(command);
 
