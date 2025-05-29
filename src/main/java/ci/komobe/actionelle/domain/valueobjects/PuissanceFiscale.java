@@ -51,6 +51,6 @@ public record PuissanceFiscale(Integer debut, Integer fin) {
     if (fin == null) {
       return ">= " + debut;
     }
-    return debut.equals(fin) ? String.valueOf(debut) : debut + " à " + fin;
+    return isExactMatch() ? String.valueOf(debut) : debut + " à " + fin;
   }
 }
