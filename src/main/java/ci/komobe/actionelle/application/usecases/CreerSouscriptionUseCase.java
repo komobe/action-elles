@@ -17,14 +17,20 @@ import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
 
 /**
+ * Usecase pour créer une souscription
+ * 
+ * @param vehiculeRepository          le repository des véhicules
+ * @param assureRepository            le repository des assurés
+ * @param souscriptionRepository      le repository des souscriptions
+ * @param categorieVehiculeRepository le repository des catégories de véhicules
+ * 
  * @author Moro KONÉ 2025-05-28
  */
 public record CreerSouscriptionUseCase(
     VehiculeRepository vehiculeRepository,
     AssureRepository assureRepository,
     SouscriptionRepository souscriptionRepository,
-    CategorieVehiculeRepository categorieVehiculeRepository
-) {
+    CategorieVehiculeRepository categorieVehiculeRepository) {
 
   public void execute(CreerSouscriptionCommand command) {
     VehiculeCommandBase vehiculeData = command.getVehicule();
