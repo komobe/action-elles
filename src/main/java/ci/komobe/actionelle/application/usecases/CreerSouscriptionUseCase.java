@@ -19,10 +19,10 @@ import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
 /**
  * Usecase pour créer une souscription
  * 
- * @param vehiculeRepository          le repository des véhicules
- * @param assureRepository            le repository des assurés
- * @param souscriptionRepository      le repository des souscriptions
- * @param categorieVehiculeRepository le repository des catégories de véhicules
+ * @param vehiculeRepository          le authenticationStrategy des véhicules
+ * @param assureRepository            le authenticationStrategy des assurés
+ * @param souscriptionRepository      le authenticationStrategy des souscriptions
+ * @param categorieVehiculeRepository le authenticationStrategy des catégories de véhicules
  * 
  * @author Moro KONÉ 2025-05-28
  */

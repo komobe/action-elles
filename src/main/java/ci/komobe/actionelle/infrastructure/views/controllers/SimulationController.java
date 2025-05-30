@@ -10,7 +10,7 @@ import ci.komobe.actionelle.application.usecases.SimulerPrimeUseCase;
 import ci.komobe.actionelle.domain.valueobjects.TypeMontantPrime;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
-import org.springframework.http.ResponseEntity;
+import java.util.Map;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,11 +34,11 @@ public class SimulationController {
   }
 
   @PostMapping
-  public ResponseEntity<BigDecimal> simulePrime(@RequestBody @Valid SimulerPrimeCommand command) {
+  public Map<String, BigDecimal> simulePrime(@RequestBody @Valid SimulerPrimeCommand command) {
     var useCase = new SimulerPrimeUseCase(produitRepository, primeCalculator);
     var presenter = new DefaultSimulerPrimePresenter();
     useCase.execute(command, presenter);
-    return ResponseEntity.ok(presenter.present());
+    return Map.of("prime", presenter.present());
   }
 
   /*

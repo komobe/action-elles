@@ -14,7 +14,7 @@ import java.time.Period;
 /**
  * UseCase pour simuler la prime d'un produit d'assurance
  *
- * @param produitRepository le repository des produits
+ * @param produitRepository le authenticationStrategy des produits
  * @param primeCalculator   le calculateur de prime
  * @author Moro KONÉ 2025-05-29
  */
