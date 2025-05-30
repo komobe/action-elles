@@ -1,8 +1,8 @@
 package ci.komobe.actionelle.infrastructure.views.controllers;
 
 import ci.komobe.actionelle.application.exceptions.UtilisateurError;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UserJpaEntity;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UserJpaRepository;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UtilisateurJpaEntity;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UtilisateurJpaRepository;
 import ci.komobe.actionelle.infrastructure.services.JwtService;
 import ci.komobe.actionelle.infrastructure.views.dto.LoginRequest;
 import ci.komobe.actionelle.infrastructure.views.dto.LoginResponse;
@@ -27,20 +27,20 @@ public class LoginController {
 
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
-  private final UserJpaRepository userJpaRepository;
+  private final UtilisateurJpaRepository utilisateurJpaRepository;
 
   public LoginController(
       PasswordEncoder passwordEncoder, JwtService jwtService,
-      UserJpaRepository userJpaRepository
+      UtilisateurJpaRepository utilisateurJpaRepository
   ) {
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
-    this.userJpaRepository = userJpaRepository;
+    this.utilisateurJpaRepository = utilisateurJpaRepository;
   }
 
   @PostMapping("/login")
   public LoginResponse login(@RequestBody LoginRequest request) {
-    UserJpaEntity user = userJpaRepository.findByUsername(request.username())
+    UtilisateurJpaEntity user = utilisateurJpaRepository.findByUsername(request.username())
         .orElseThrow(() -> new RuntimeException("User not found"));
 
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {

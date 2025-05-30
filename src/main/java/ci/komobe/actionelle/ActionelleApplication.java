@@ -1,8 +1,8 @@
 package ci.komobe.actionelle;
 
 import ci.komobe.actionelle.domain.valueobjects.Role;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UserJpaEntity;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UserJpaRepository;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UtilisateurJpaEntity;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UtilisateurJpaRepository;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.util.Base64;
@@ -28,10 +28,10 @@ public class ActionelleApplication {
   @Profile("data-test")
   @SuppressWarnings("java:S6437")
   public CommandLineRunner insertDataTest(
-      UserJpaRepository repository, PasswordEncoder passwordEncoder) {
+      UtilisateurJpaRepository repository, PasswordEncoder passwordEncoder) {
     return args -> {
       if (repository.findByUsername("adminUser").isEmpty()) {
-        var admin = new UserJpaEntity();
+        var admin = new UtilisateurJpaEntity();
         admin.setId(UUID.randomUUID().toString());
         admin.setUsername("adminUser");
         admin.setPassword(passwordEncoder.encode("admin"));
@@ -40,7 +40,7 @@ public class ActionelleApplication {
       }
 
       if (repository.findByUsername("amazone").isEmpty()) {
-        var admin = new UserJpaEntity();
+        var admin = new UtilisateurJpaEntity();
         admin.setId(UUID.randomUUID().toString());
         admin.setUsername("amazoneUser");
         admin.setPassword(passwordEncoder.encode("amazone"));

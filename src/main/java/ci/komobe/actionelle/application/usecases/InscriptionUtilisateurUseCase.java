@@ -5,6 +5,7 @@ import ci.komobe.actionelle.application.exceptions.UtilisateurError;
 import ci.komobe.actionelle.application.providers.PasswordProvider;
 import ci.komobe.actionelle.application.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 
 /**
  * @author Moro KONÉ 2025-05-30
@@ -32,6 +33,7 @@ public class InscriptionUtilisateurUseCase {
     var encodedPassword = passwordProvider.encode(password);
 
     var utilisateur = new Utilisateur();
+    utilisateur.setId(IdGenerator.generateId());
     utilisateur.inscrire(username, encodedPassword);
 
     utilisateurRepository.save(utilisateur);

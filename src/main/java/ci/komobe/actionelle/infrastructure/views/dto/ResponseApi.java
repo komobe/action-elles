@@ -14,10 +14,10 @@ public class ResponseApi<T> {
   private String status;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private T data;
+  private String message;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String message;
+  private T data;
 
   public static <T> ResponseApi<T> success(T data) {
     var responseApi = new ResponseApi<T>();

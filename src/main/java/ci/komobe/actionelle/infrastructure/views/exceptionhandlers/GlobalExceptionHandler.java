@@ -1,10 +1,11 @@
 package ci.komobe.actionelle.infrastructure.views.exceptionhandlers;
 
 import ci.komobe.actionelle.infrastructure.views.dto.ResponseApi;
-import java.util.stream.Collectors;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,14 +23,26 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ResponseApi<String>> handleValidation(MethodArgumentNotValidException ex) {
-    // Exemple d’extraction des messages d’erreur de validation
-    String errorMessage = ex.getBindingResult().getAllErrors()
-        .stream()
-        .map(DefaultMessageSourceResolvable::getDefaultMessage)
-        .collect(Collectors.joining(", "));
-    return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, errorMessage);
+  public ResponseEntity<ResponseApi<Map<String, String>>> handleValidationErrors(
+      MethodArgumentNotValidException ex) {
+    Map<String, String> errors = new HashMap<>();
+
+    ex.getBindingResult().getFieldErrors().forEach(error ->
+        errors.put(error.getField(), error.getDefaultMessage())
+    );
+
+    ResponseApi<Map<String, String>> response = ResponseApi.error("Données invalides", errors);
+    return ResponseEntity.unprocessableEntity().body(response);
   }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<ResponseApi<String>> handleEmptyOrMalformedJson(
+      HttpMessageNotReadableException ex) {
+    return ResponseEntity
+        .badRequest()
+        .body(ResponseApi.error("Le format des données envoyées est invalide."));
+  }
+
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ResponseApi<String>> handleAll(Exception ex) {

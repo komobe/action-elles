@@ -5,7 +5,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.Collection;
@@ -13,7 +12,6 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,11 +24,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 @NoArgsConstructor
 @Entity
 @Table(name = "utilisateurs")
-public class UserJpaEntity implements UserDetails {
+public class UtilisateurJpaEntity implements UserDetails {
 
   @Id
-  @GeneratedValue
-  @UuidGenerator
   @Column(name = "id", updatable = false, nullable = false, length = 36)
   private String id;
   @Column(name = "nom_utilisateur", nullable = false, unique = true, length = 50)

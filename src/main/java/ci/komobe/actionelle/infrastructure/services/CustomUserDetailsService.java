@@ -1,7 +1,7 @@
 package ci.komobe.actionelle.infrastructure.services;
 
-import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UserJpaEntity;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UserJpaRepository;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UtilisateurJpaEntity;
+import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UtilisateurJpaRepository;
 import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,15 +15,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-  private final UserJpaRepository userJpaRepository;
+  private final UtilisateurJpaRepository utilisateurJpaRepository;
 
-  public CustomUserDetailsService(UserJpaRepository userJpaRepository) {
-    this.userJpaRepository = userJpaRepository;
+  public CustomUserDetailsService(UtilisateurJpaRepository utilisateurJpaRepository) {
+    this.utilisateurJpaRepository = utilisateurJpaRepository;
   }
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    UserJpaEntity user = userJpaRepository.findByUsername(username)
+    UtilisateurJpaEntity user = utilisateurJpaRepository.findByUsername(username)
         .orElseThrow(() -> new UsernameNotFoundException("Utitisateur non trouvé"));
 
     return new org.springframework.security.core.userdetails.User(
