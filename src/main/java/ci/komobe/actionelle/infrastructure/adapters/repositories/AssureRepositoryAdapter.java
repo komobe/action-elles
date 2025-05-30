@@ -5,23 +5,18 @@ import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.infrastructure.adapters.mappers.AssureMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.AssureJpaRepository;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@AllArgsConstructor
 public class AssureRepositoryAdapter implements AssureRepository {
 
   private final AssureMapper assureMapper;
   private final AssureJpaRepository assureJpaRepository;
-
-  public AssureRepositoryAdapter(
-      AssureJpaRepository assureJpaRepository,
-      AssureMapper assureMapper) {
-    this.assureMapper = assureMapper;
-    this.assureJpaRepository = assureJpaRepository;
-  }
 
   @Override
   public boolean existsByNumeroCarteIdentite(String numeroCarteIdentite) {

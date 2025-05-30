@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,9 @@ public class ProduitEntityJpa {
       inverseJoinColumns = @JoinColumn(name = "categorie_vehicule_id")
   )
   private List<CategorieVehiculeEntityJpa> categorieVehicules = new ArrayList<>();
+
+  @OneToMany(mappedBy = "produit", fetch = FetchType.LAZY)
+  private List<DevisJpaEntity> simulationsDevis = new ArrayList<>();
 
   // Getters filtrés
   public List<GarantieEntityJpa> getGarantiesResponsabiliteCivile() {

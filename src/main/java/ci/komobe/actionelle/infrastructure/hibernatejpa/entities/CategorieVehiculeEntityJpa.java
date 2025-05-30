@@ -45,4 +45,7 @@ public class CategorieVehiculeEntityJpa {
 
   @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)
   private List<VehiculeEntityJpa> vehicules = new ArrayList<>();
+
+  @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)
+  private List<DevisJpaEntity> simulationsDevis = new ArrayList<>();
 }

@@ -1,7 +1,7 @@
 package ci.komobe.actionelle.domain.entities;
 
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,6 +28,10 @@ public class Produit {
       return false;
     }
 
-    return categorieVehicules.stream().anyMatch(c -> c.code().equals(categorie));
+    return categorieVehicules.stream().anyMatch(c -> c.getCode().equals(categorie));
+  }
+
+  public Optional<CategorieVehicule> getCategorieVehicule(String categorie) {
+    return categorieVehicules.stream().filter(c -> c.getCode().equals(categorie)).findFirst();
   }
 }

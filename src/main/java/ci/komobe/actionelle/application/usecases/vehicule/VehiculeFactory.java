@@ -3,7 +3,7 @@ package ci.komobe.actionelle.application.usecases.vehicule;
 import ci.komobe.actionelle.application.commands.vehicule.VehiculeCommandBase;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 
 /**
  * @author Moro KONÉ 2025-05-28

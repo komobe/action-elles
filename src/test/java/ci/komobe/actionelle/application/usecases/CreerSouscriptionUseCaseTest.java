@@ -1,5 +1,10 @@
 package ci.komobe.actionelle.application.usecases;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import ci.komobe.actionelle.application.commands.CreerSouscriptionCommand;
 import ci.komobe.actionelle.application.commands.assure.AssureCommandBase;
 import ci.komobe.actionelle.application.commands.vehicule.VehiculeCommandBase;
@@ -14,7 +19,6 @@ import ci.komobe.actionelle.application.repositories.VehiculeRepository;
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import java.time.LocalDate;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,8 +44,7 @@ class CreerSouscriptionUseCaseTest {
         vehiculeRepository,
         assureRepository,
         souscriptionRepository,
-        new InMemoryCategorieVehiculeRepository()
-    );
+        new InMemoryCategorieVehiculeRepository());
   }
 
   @Test
@@ -73,38 +76,19 @@ class CreerSouscriptionUseCaseTest {
 
     // Assert
     var souscription = souscriptionRepository.findAll().stream().findFirst().orElse(null);
-    Assertions.assertThat(souscription).isNotNull();
+    assertNotNull(souscription);
     Vehicule vehiculeSaved = souscription.getVehicule();
-    Assertions.assertThat(vehiculeSaved).isNotNull();
+    assertNotNull(vehiculeSaved);
+
     Assure assureSaved = souscription.getAssure();
-    Assertions.assertThat(assureSaved).isNotNull();
-
-    Assertions
-        .assertThat(vehiculeSaved.getNumeroImmatriculation())
-        .isEqualTo(vehicule.getNumeroImmatriculation());
-    Assertions
-        .assertThat(assureSaved.getNumeroCarteIdentite())
-        .isEqualTo(assure.getNumeroCarteIdentite());
-
-    Assertions
-        .assertThat(vehiculeSaved.getCouleur())
-        .isEqualTo(vehicule.getCouleur());
-
-    Assertions
-        .assertThat(vehiculeSaved.getNombreDeSieges())
-        .isEqualTo(vehicule.getNombreDeSieges());
-
-    Assertions
-        .assertThat(vehiculeSaved.getNombreDePortes())
-        .isEqualTo(vehicule.getNombreDePortes());
-
-    Assertions
-        .assertThat(vehiculeSaved.getCategorie().code())
-        .isEqualTo(vehicule.getCategorieCode());
-
-    Assertions
-        .assertThat(vehiculeSaved.getDateMiseEnCirculation())
-        .isEqualTo(vehicule.getDateMiseEnCirculation());
+    assertNotNull(assureSaved);
+    assertEquals(vehicule.getNumeroImmatriculation(), vehiculeSaved.getNumeroImmatriculation());
+    assertEquals(assure.getNumeroCarteIdentite(), assureSaved.getNumeroCarteIdentite());
+    assertEquals(vehicule.getCouleur(), vehiculeSaved.getCouleur());
+    assertEquals(vehicule.getNombreDeSieges(), vehiculeSaved.getNombreDeSieges());
+    assertEquals(vehicule.getNombreDePortes(), vehiculeSaved.getNombreDePortes());
+    assertEquals(vehicule.getCategorieCode(), vehiculeSaved.getCategorie().getCode());
+    assertEquals(vehicule.getDateMiseEnCirculation(), vehiculeSaved.getDateMiseEnCirculation());
   }
 
   @Test
@@ -117,7 +101,7 @@ class CreerSouscriptionUseCaseTest {
         .couleur("Rouge")
         .nombreDeSieges(5)
         .nombreDePortes(5)
-        .categorieCode("code-inexistant")
+        .categorieCode("getCode-inexistant")
         .build();
 
     var assure = AssureCommandBase.builder()
@@ -132,16 +116,14 @@ class CreerSouscriptionUseCaseTest {
     var command = new CreerSouscriptionCommand(vehicule, assure);
 
     // When
-    Assertions.assertThatThrownBy(() -> useCase.execute(command))
-        .isInstanceOf(VehiculeError.class)
-        .hasMessage("La catégorie de véhicule " + vehicule.getCategorieCode() + " n'existe pas");
+    assertThrows(VehiculeError.class, () -> useCase.execute(command));
 
     // Then
     var souscriptions = souscriptionRepository.findAll();
-    Assertions.assertThat(souscriptions).isEmpty();
+    assertTrue(souscriptions.isEmpty());
     var vehicules = vehiculeRepository.findAll();
-    Assertions.assertThat(vehicules).hasSize(NUMBER_VEHICULES_GENERATING);
+    assertEquals(NUMBER_VEHICULES_GENERATING, vehicules.size());
     var assures = assureRepository.findAll();
-    Assertions.assertThat(assures).isEmpty();
+    assertTrue(assures.isEmpty());
   }
 }

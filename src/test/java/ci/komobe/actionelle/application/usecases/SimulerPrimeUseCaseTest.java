@@ -3,6 +3,7 @@ package ci.komobe.actionelle.application.usecases;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ci.komobe.actionelle.application.commands.SimulerPrimeCommand;
+import ci.komobe.actionelle.application.exceptions.CategorieVehiculeError;
 import ci.komobe.actionelle.application.exceptions.ProduitError;
 import ci.komobe.actionelle.application.presenters.DefaultSimulerPrimePresenter;
 import ci.komobe.actionelle.application.presenters.SimulerPrimePresenter;
@@ -10,6 +11,7 @@ import ci.komobe.actionelle.application.repositories.InMemoryProduitRepository;
 import ci.komobe.actionelle.application.services.prime.PrimeCalculator;
 import ci.komobe.actionelle.application.services.prime.PrimeMontantFixeStrategy;
 import ci.komobe.actionelle.application.services.prime.PrimePourcentageStrategy;
+import ci.komobe.actionelle.application.valueobjects.SimulationPrimeResult;
 import ci.komobe.actionelle.domain.valueobjects.TypeMontantPrime;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,7 +28,7 @@ import org.junit.jupiter.api.Test;
 class SimulerPrimeUseCaseTest {
 
   private SimulerPrimeUseCase useCase;
-  private SimulerPrimePresenter presenter;
+  private SimulerPrimePresenter<SimulationPrimeResult> presenter;
 
   @BeforeEach
   void setUp() {
@@ -41,77 +43,82 @@ class SimulerPrimeUseCaseTest {
   @Test
   @DisplayName("Simuler le calcul de la prime d'un produit Papillon avec une puissance fiscale de 5")
   void simulerCalculPrimeProduitPapillonAvecPuissanceFiscale5() {
-    var command = new SimulerPrimeCommand(
-        "Papillon",
-        "201",
-        5,
-        LocalDate.of(2022, 1, 1),
-        BigDecimal.valueOf(10_000_000),
-        BigDecimal.valueOf(6_000_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Papillon");
+    command.setCategorie("201");
+    command.setPuissanceFiscale(5);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2022, 1, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(10_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(6_000_000));
 
     useCase.execute(command, presenter);
 
-    assertEquals(0, BigDecimal.valueOf(313_581).compareTo((BigDecimal) presenter.present()));
+    SimulationPrimeResult simulationPrimeResult = presenter.present();
+    assertEquals(0, BigDecimal.valueOf(313_581).compareTo(simulationPrimeResult.price()));
   }
 
   @Test
   @DisplayName("Simuler le calcul de la prime d'un produit Douby avec une puissance fiscale de 5")
   void simulerCalculPrimeProduitDoubyAvecPuissanceFiscale5() {
-    var command = new SimulerPrimeCommand(
-        "Douby",
-        "202",
-        5,
-        LocalDate.of(2020, 6, 1),
-        BigDecimal.valueOf(10_000_000),
-        BigDecimal.valueOf(6_500_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Douby");
+    command.setCategorie("202");
+    command.setPuissanceFiscale(5);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2020, 6, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(10_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(6_500_000));
 
     useCase.execute(command, presenter);
 
-    assertEquals(0, BigDecimal.valueOf(470_181).compareTo((BigDecimal) presenter.present()));
+    SimulationPrimeResult simulationPrimeResult = presenter.present();
+    assertEquals(0, BigDecimal.valueOf(470_181).compareTo(simulationPrimeResult.price()));
   }
 
   @Test
   @DisplayName("Simuler le calcul de la prime d'un produit Douyou avec une puissance fiscale de 5")
   void simulerCalculPrimeProduitDouyouAvecPuissanceFiscale5() {
-    var command = new SimulerPrimeCommand(
-        "Douyou",
-        "202",
-        5,
-        LocalDate.of(2021, 5, 1),
-        BigDecimal.valueOf(8_000_000),
-        BigDecimal.valueOf(5_000_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Douyou");
+    command.setCategorie("202");
+    command.setPuissanceFiscale(5);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2021, 5, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(8_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(5_000_000));
 
     useCase.execute(command, presenter);
-
-    assertEquals(0, BigDecimal.valueOf(392_681).compareTo((BigDecimal) presenter.present()));
+    var simulationPrimeResult = presenter.present();
+    assertEquals(0, BigDecimal.valueOf(392_681).compareTo(simulationPrimeResult.price()));
   }
 
   @Test
   @DisplayName("Simuler le calcul de la prime d'un produit Toutourisquou avec une puissance fiscale de 5")
   void simulerCalculPrimeProduitToutourisquouAvecPuissanceFiscale5() {
-    var command = new SimulerPrimeCommand(
-        "Toutourisquou",
-        "201",
-        5,
-        LocalDate.of(2020, 3, 1),
-        BigDecimal.valueOf(12_000_000),
-        BigDecimal.valueOf(7_000_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Toutourisquou");
+    command.setCategorie("201");
+    command.setPuissanceFiscale(5);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2020, 3, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(12_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(7_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(7_000_000));
 
     useCase.execute(command, presenter);
 
-    assertEquals(0, BigDecimal.valueOf(410_481).compareTo((BigDecimal) presenter.present()));
+    var simulationPrimeResult = presenter.present();
+
+    assertEquals(0, BigDecimal.valueOf(410_481).compareTo(simulationPrimeResult.price()));
   }
 
   @Test
   @DisplayName("Echec de la simulation de la prime car le produit n'existe pas")
   void echecDeLaSimulationDeLaPrimeCarLeProduitNexistePas() {
-    var command = new SimulerPrimeCommand(
-        "Papillon2",
-        "201",
-        10,
-        LocalDate.of(2021, 1, 1),
-        BigDecimal.valueOf(10_000_000),
-        BigDecimal.valueOf(6_000_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Papillon2");
+    command.setCategorie("201");
+    command.setPuissanceFiscale(10);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2021, 1, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(10_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(6_000_000));
 
     Assertions.assertThrows(ProduitError.class, () -> useCase.execute(command, presenter));
   }
@@ -119,14 +126,14 @@ class SimulerPrimeUseCaseTest {
   @Test
   @DisplayName("Echec de la simulation de la prime car le produit n'a pas de catégorie de véhicule")
   void echecDeLaSimulationDeLaPrimeCarLeProduitNaCategorieVehicule() {
-    var command = new SimulerPrimeCommand(
-        "Papillon",
-        "100",
-        11,
-        LocalDate.of(2021, 1, 1),
-        BigDecimal.valueOf(10_000_000),
-        BigDecimal.valueOf(6_000_000));
+    var command = new SimulerPrimeCommand();
+    command.setProduit("Papillon");
+    command.setCategorie("100");
+    command.setPuissanceFiscale(11);
+    command.setDateDeMiseEnCirculation(LocalDate.of(2021, 1, 1));
+    command.setValeurNeuf(BigDecimal.valueOf(10_000_000));
+    command.setValeurVenale(BigDecimal.valueOf(6_000_000));
 
-    Assertions.assertThrows(ProduitError.class, () -> useCase.execute(command, presenter));
+    Assertions.assertThrows(CategorieVehiculeError.class, () -> useCase.execute(command, presenter));
   }
 }

@@ -1,6 +1,6 @@
 package ci.komobe.actionelle.application.repositories;
 
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 
 import java.util.List;
 import java.util.Optional;

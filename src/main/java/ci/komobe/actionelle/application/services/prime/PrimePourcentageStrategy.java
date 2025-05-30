@@ -20,9 +20,9 @@ public class PrimePourcentageStrategy implements PrimeCalculationStrategy {
   @Override
   public BigDecimal calculer(Garantie garantie, SimulerPrimeCommand command) {
     BigDecimal base = switch (garantie.getBaseDeCalcul()) {
-      case VALEUR_A_NEUF -> command.valeurNeuf();
-      case VALEUR_VENALE -> command.valeurVenale();
-      case VALEUR_ASSUREE -> command.valeurVenale().multiply(BigDecimal.valueOf(0.5));
+      case VALEUR_A_NEUF -> command.getValeurNeuf();
+      case VALEUR_VENALE -> command.getValeurVenale();
+      case VALEUR_ASSUREE -> command.getValeurVenale().multiply(BigDecimal.valueOf(0.5));
       default -> BigDecimal.ZERO;
     };
 

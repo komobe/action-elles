@@ -1,6 +1,5 @@
 package ci.komobe.actionelle.domain.entities;
 
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
 import java.time.LocalDate;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

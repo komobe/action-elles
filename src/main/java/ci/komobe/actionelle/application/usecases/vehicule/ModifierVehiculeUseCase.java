@@ -6,7 +6,7 @@ import ci.komobe.actionelle.application.exceptions.VehiculeError;
 import ci.komobe.actionelle.application.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.application.repositories.VehiculeRepository;
 import ci.komobe.actionelle.domain.entities.Vehicule;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 
 /**
  * @author Moro KONÉ 2025-05-28

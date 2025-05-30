@@ -1,16 +1,15 @@
 package ci.komobe.actionelle.application.utils;
 
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 import ci.komobe.actionelle.domain.entities.Garantie;
 import ci.komobe.actionelle.domain.entities.Produit;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
 import ci.komobe.actionelle.domain.valueobjects.Prime;
 import ci.komobe.actionelle.domain.valueobjects.PuissanceFiscale;
 import ci.komobe.actionelle.domain.valueobjects.TypeBaseCalcul;
 import ci.komobe.actionelle.domain.valueobjects.TypeMontantPrime;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,7 +40,13 @@ public class FakeGenerator {
       vehicule.setNombreDePortes(portes);
       vehicule.setNombreDeSieges(places);
       vehicule.setDateMiseEnCirculation(LocalDate.now());
-      vehicule.setCategorie(new CategorieVehicule("201", "Voiture", "Voiture de classe"));
+      var categorieVehicule = CategorieVehicule.builder()
+          .id(IdGenerator.generateId())
+          .code("201")
+          .libelle("Voiture")
+          .description("Voiture de classe")
+          .build();
+      vehicule.setCategorie(categorieVehicule);
 
       vehicules.add(vehicule);
     }
@@ -51,19 +56,46 @@ public class FakeGenerator {
 
   public static List<CategorieVehicule> generateCategorieVehicules() {
     var categorieVehicules = new ArrayList<CategorieVehicule>();
-    categorieVehicules.add(new CategorieVehicule("201", "Promenade et Affaire", "Usage personnel"));
-    categorieVehicules.add(new CategorieVehicule("202", "Véhicules Motorisés à 2 ou 3 roues", "Motocycle, tricycles"));
-    categorieVehicules
-        .add(new CategorieVehicule("203", "Transport public de voyage", "Véhicule transport de personnes"));
-    categorieVehicules.add(new CategorieVehicule("204", "Véhicule de transport avec taximètres", "Taxis"));
+    categorieVehicules.add(CategorieVehicule.builder()
+        .code("201")
+        .libelle("Promenade et Affaire")
+        .description("Usage personnel")
+        .build());
+    categorieVehicules.add(
+        CategorieVehicule.builder()
+            .code("202")
+            .libelle("Véhicules Motorisés à 2 ou 3 roues")
+            .description("Motocycle, tricycles")
+            .build());
+    categorieVehicules.add(CategorieVehicule.builder()
+        .code("203")
+        .libelle("Transport public de voyage")
+        .description("Véhicule transport de personnes")
+        .build());
+    categorieVehicules.add(
+        CategorieVehicule.builder()
+            .code("204")
+            .libelle("Véhicule de transport avec taximètres")
+            .description("Taxis")
+            .build());
     return categorieVehicules;
   }
 
   public static List<Produit> generateProduits() {
 
     // Définitions préliminaires
-    var categorie201 = new CategorieVehicule("201", "Promenade et Affaire", "Usage personnel");
-    var categorie202 = new CategorieVehicule("202", "Véhicules Motorisés à 2 ou 3 roues", "Motocycle, tricycles");
+    var categorie201 = CategorieVehicule.builder()
+        .id(IdGenerator.generateId())
+        .code("201")
+        .libelle("Promenade et Affaire")
+        .description("Usage personnel")
+        .build();
+    var categorie202 = CategorieVehicule.builder()
+        .id(IdGenerator.generateId())
+        .code("202")
+        .libelle("Véhicules Motorisés à 2 ou 3 roues")
+        .description("Motocycle, tricycles")
+        .build();
 
     // Garanties
     Map<PuissanceFiscale, BigDecimal> puissanceFiscaleToPrime = new HashMap<>();

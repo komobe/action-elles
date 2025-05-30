@@ -1,7 +1,7 @@
 package ci.komobe.actionelle.application.repositories;
 
 import ci.komobe.actionelle.application.utils.FakeGenerator;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +24,7 @@ public class InMemoryCategorieVehiculeRepository implements CategorieVehiculeRep
   }
 
   public void addCategorieVehicule(CategorieVehicule categorieVehicule) {
-    categorieVehicules.put(categorieVehicule.code(), categorieVehicule);
+    categorieVehicules.put(categorieVehicule.getCode(), categorieVehicule);
   }
 
   public CategorieVehicule findRandomCategorieVehicule() {
@@ -44,7 +44,7 @@ public class InMemoryCategorieVehiculeRepository implements CategorieVehiculeRep
 
   @Override
   public void save(CategorieVehicule categorieVehicule) {
-    categorieVehicules.put(categorieVehicule.code(), categorieVehicule);
+    categorieVehicules.put(categorieVehicule.getCode(), categorieVehicule);
     saveCallCount++;
   }
 

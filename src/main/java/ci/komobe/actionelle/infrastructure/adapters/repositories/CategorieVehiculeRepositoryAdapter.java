@@ -1,27 +1,23 @@
 package ci.komobe.actionelle.infrastructure.adapters.repositories;
 
 import ci.komobe.actionelle.application.repositories.CategorieVehiculeRepository;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 import ci.komobe.actionelle.infrastructure.adapters.mappers.CategorieVehiculeMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.CategorieVehiculeJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@AllArgsConstructor
 public class CategorieVehiculeRepositoryAdapter implements CategorieVehiculeRepository {
 
   private final CategorieVehiculeMapper categorieVehiculeMapper;
   private final CategorieVehiculeJpaRepository categorieVehiculeJpaRepository;
-
-  public CategorieVehiculeRepositoryAdapter(CategorieVehiculeMapper categorieVehiculeMapper,
-      CategorieVehiculeJpaRepository categorieVehiculeJpaRepository) {
-    this.categorieVehiculeMapper = categorieVehiculeMapper;
-    this.categorieVehiculeJpaRepository = categorieVehiculeJpaRepository;
-  }
 
   @Override
   public void save(CategorieVehicule categorieVehicule) {

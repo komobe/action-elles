@@ -14,7 +14,7 @@ import ci.komobe.actionelle.application.usecases.vehicule.VehiculeFactory;
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.entities.Souscription;
 import ci.komobe.actionelle.domain.entities.Vehicule;
-import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
+import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 
 /**
  * Usecase pour créer une souscription

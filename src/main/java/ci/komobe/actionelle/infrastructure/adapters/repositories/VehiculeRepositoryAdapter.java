@@ -7,24 +7,18 @@ import ci.komobe.actionelle.infrastructure.adapters.mappers.VehiculeMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.VehiculeJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@AllArgsConstructor
 public class VehiculeRepositoryAdapter implements VehiculeRepository {
 
   private final VehiculeJpaRepository vehiculeJpaRepository;
   private final VehiculeMapper vehiculeMapper;
-
-  public VehiculeRepositoryAdapter(
-      VehiculeJpaRepository vehiculeJpaRepository,
-      VehiculeMapper vehiculeMapper
-  ) {
-    this.vehiculeJpaRepository = vehiculeJpaRepository;
-    this.vehiculeMapper = vehiculeMapper;
-  }
 
   @Override
   public void save(Vehicule vehicule) {

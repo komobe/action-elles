@@ -107,6 +107,6 @@ class ModifierVehiculeUseCaseTest {
     assertThat(vehiculeModifie.getCouleur()).isEqualTo("Noir");
     assertThat(vehiculeModifie.getNombreDeSieges()).isEqualTo(6);
     assertThat(vehiculeModifie.getNombreDePortes()).isEqualTo(5);
-    assertThat(vehiculeModifie.getCategorie().code()).isEqualTo("202");
+    assertThat(vehiculeModifie.getCategorie().getCode()).isEqualTo("202");
   }
 }

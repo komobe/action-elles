@@ -6,24 +6,18 @@ import ci.komobe.actionelle.infrastructure.adapters.mappers.GarantieMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.GarantieJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@AllArgsConstructor
 public class GarantieRepositoryAdapter implements GarantieRepository {
 
   private final GarantieMapper garantieMapper;
   private final GarantieJpaRepository garantieJpaRepository;
-
-  public GarantieRepositoryAdapter(
-      GarantieJpaRepository garantieJpaRepository,
-      GarantieMapper garantieMapper
-  ) {
-    this.garantieMapper = garantieMapper;
-    this.garantieJpaRepository = garantieJpaRepository;
-  }
 
   @Override
   public Optional<Garantie> findByCode(String code) {

@@ -6,24 +6,18 @@ import ci.komobe.actionelle.infrastructure.adapters.mappers.ProduitMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.ProduitJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@AllArgsConstructor
 public class ProduitRepositoryAdapter implements ProduitRepository {
 
   private final ProduitMapper produitMapper;
   private final ProduitJpaRepository produitJpaRepository;
-
-  public ProduitRepositoryAdapter(
-      ProduitJpaRepository produitJpaRepository,
-      ProduitMapper produitMapper
-  ) {
-    this.produitMapper = produitMapper;
-    this.produitJpaRepository = produitJpaRepository;
-  }
 
   @Override
   public Optional<Produit> findByNom(String code) {
@@ -32,7 +26,8 @@ public class ProduitRepositoryAdapter implements ProduitRepository {
 
   @Override
   public List<Produit> findAll() {
-    return produitJpaRepository.findAll().stream().map(produitMapper::toDomain).toList();
+    return produitJpaRepository.findAll().stream()
+        .map(produitMapper::toDomain).toList();
   }
 
   @Override

@@ -1,21 +1,21 @@
 package ci.komobe.actionelle.application.presenters;
 
-import java.math.BigDecimal;
+import ci.komobe.actionelle.application.valueobjects.SimulationPrimeResult;
 
 /**
  * @author Moro KONÉ 2025-05-29
  */
-public class DefaultSimulerPrimePresenter implements SimulerPrimePresenter<BigDecimal> {
+public class DefaultSimulerPrimePresenter implements SimulerPrimePresenter<SimulationPrimeResult> {
 
-  private BigDecimal valeur = BigDecimal.ZERO;
+  private SimulationPrimeResult primeResult;
 
   @Override
-  public void addData(BigDecimal data) {
-    valeur = data;
+  public void addData(SimulationPrimeResult data) {
+    primeResult = data;
   }
 
   @Override
-  public BigDecimal present() {
-    return valeur;
+  public SimulationPrimeResult present() {
+    return primeResult;
   }
 }
