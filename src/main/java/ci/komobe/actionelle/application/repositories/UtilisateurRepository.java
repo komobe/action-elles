@@ -8,9 +8,9 @@ import java.util.Optional;
  */
 public interface UtilisateurRepository {
 
-  boolean existsByPseudo(String pseudo);
+  boolean existsByUsername(String username);
 
   void save(Utilisateur utilisateur);
 
-  Optional<Utilisateur> findByPseudo(String pseudo);
+  Optional<Utilisateur> findByUsername(String username);
 }

@@ -10,11 +10,17 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = { "id" })
 public class Utilisateur {
 
   private String id;
   private String username;
   private String password;
   private Role role;
+
+  public void inscrire(String username, String password) {
+    this.username = username;
+    this.password = password;
+    this.role = Role.DEFAULT;
+  }
 }

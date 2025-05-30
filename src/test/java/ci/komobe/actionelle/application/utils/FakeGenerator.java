@@ -2,6 +2,7 @@ package ci.komobe.actionelle.application.utils;
 
 import ci.komobe.actionelle.domain.entities.Garantie;
 import ci.komobe.actionelle.domain.entities.Produit;
+import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
 import ci.komobe.actionelle.domain.valueobjects.CategorieVehicule;
@@ -197,6 +198,25 @@ public class FakeGenerator {
     produits.add(produit);
 
     return produits;
+  }
+
+  public static Map<String, Utilisateur> generateUtilisateurs() {
+
+    var utilisateurs = new HashMap<String, Utilisateur>();
+
+    var utilisateurGabriella = new Utilisateur();
+    utilisateurGabriella.inscrire("gabriella", "monsupermotdepasse");
+    utilisateurs.put("gabriella", utilisateurGabriella);
+
+    var utilisateurStephanie = new Utilisateur();
+    utilisateurStephanie.inscrire("stephanie", "autrepassword");
+    utilisateurs.put("stephanie", utilisateurStephanie);
+
+    var utilisateurRobine = new Utilisateur();
+    utilisateurRobine.inscrire("robine", "monsupermotdepasse");
+    utilisateurs.put("robine", utilisateurRobine);
+
+    return utilisateurs;
   }
 
 }
