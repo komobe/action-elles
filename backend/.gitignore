@@ -1,0 +1,83 @@
+# ====================
+# Fichiers Java/Maven
+# ====================
+
+# Dossiers de build Maven
+/target/
+/out/
+
+# Fichiers compilés Java
+*.class
+
+# Packages distribuables
+*.jar
+*.war
+*.nar
+*.ear
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+
+# Fichiers temporaires
+hs_err_pid*
+replay_pid*
+
+# ====================
+# IDEs & Editors
+# ====================
+
+# IntelliJ IDEA
+/.idea/
+/*.iml
+/out/
+/*.iws
+
+# Eclipse
+/.classpath
+/.project
+/.settings/
+/bin/
+
+# VS Code
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/.nb-gradle/
+
+# ====================
+# OS Files
+# ====================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ====================
+# Spring Boot specific
+# ====================
+
+# Spring Boot launcher temp files
+spring.log
+
+# ====================
+# Others
+# ====================
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# BlueJ files
+*.ctxt
