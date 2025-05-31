@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { FaCheckCircle, FaExclamationCircle, FaInfoCircle } from 'react-icons/fa';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleCheck, faCircleExclamation, faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -22,11 +23,11 @@ const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) => {
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <FaCheckCircle className="h-5 w-5 text-green-400" />;
+        return <FontAwesomeIcon icon={faCircleCheck} className="h-5 w-5 text-green-400" />;
       case 'error':
-        return <FaExclamationCircle className="h-5 w-5 text-red-400" />;
+        return <FontAwesomeIcon icon={faCircleExclamation} className="h-5 w-5 text-red-400" />;
       case 'info':
-        return <FaInfoCircle className="h-5 w-5 text-blue-400" />;
+        return <FontAwesomeIcon icon={faCircleInfo} className="h-5 w-5 text-blue-400" />;
     }
   };
 
@@ -54,7 +55,7 @@ const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) => {
 
   return (
     <div
-      className={`flex items-center p-4 rounded-lg shadow-lg border-l-4 ${getBackgroundColor()} ${getBorderColor()} transition-all duration-500 transform translate-y-0 w-full max-w-sm`}
+      className={`flex items-center p-4 border-l-4 ${getBackgroundColor()} ${getBorderColor()} w-full max-w-sm`}
       role="alert"
     >
       <div className="flex-shrink-0">{getIcon()}</div>
@@ -62,17 +63,11 @@ const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) => {
         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{message}</p>
       </div>
       <button
-        className="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-500 focus:outline-none"
         onClick={onClose}
       >
         <span className="sr-only">Fermer</span>
-        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path
-            fillRule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faXmark} className="h-5 w-5" />
       </button>
     </div>
   );

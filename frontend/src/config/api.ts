@@ -7,14 +7,25 @@ export const API_ENDPOINTS = {
     login: `${API_BASE_URL}/api/login`,
     register: `${API_BASE_URL}/api/v1/utilisateurs/inscrire`,
     refreshToken: `${API_BASE_URL}/api/refresh-token`,
-    profile: `${API_BASE_URL}/api/v1/utilisateurs/profile`
+    profile: `${API_BASE_URL}/api/v1/utilisateurs/profile`,
+  },
+  users: {
+    list: `${API_BASE_URL}/api/v1/utilisateurs`,
+    delete: (id: string) => `${API_BASE_URL}/api/v1/utilisateurs/${id}`,
+    update: (id: string) => `${API_BASE_URL}/api/v1/utilisateurs/${id}`
+  },
+  roles: {
+    list: `${API_BASE_URL}/api/v1/roles`
   },
   devis: {
-    simuler: `${API_BASE_URL}/api/v1/devis/simuler`
+    simuler: `${API_BASE_URL}/api/v1/devis/simuler`,
+    enregistrer: `${API_BASE_URL}/api/v1/devis/enregistrer`,
   },
   souscription: {
-    creer: `${API_BASE_URL}/api/v1/subscriptions`
-  }
+    creer: `${API_BASE_URL}/api/v1/subscriptions`,
+    list: `${API_BASE_URL}/api/v1/subscriptions`,
+    details: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}`,
+  },
   // Ajoutez d'autres endpoints ici
 } as const;
 

@@ -19,6 +19,7 @@ export default defineConfig({
       '@hooks': createPath('./src/hooks'),
       '@services': createPath('./src/services'),
       '@types': createPath('./src/types'),
+      '@contexts': createPath('./src/contexts'),
     },
   },
 })

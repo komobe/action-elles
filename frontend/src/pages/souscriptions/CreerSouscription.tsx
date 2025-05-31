@@ -1,9 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '@/config/api';
+import ActionButton from "@components/ui/ActionButton.tsx";
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { http } from '@services/http';
-import { API_ENDPOINTS } from '@/config/api';
-import { useToast } from '@components/ui/toast';
+import { MenuItem } from 'primereact/menuitem';
+import { Steps } from 'primereact/steps';
+import { classNames } from 'primereact/utils';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../contexts/ToastContext';
+import { Button } from 'primereact/button';
 
 interface Vehicule {
   dateMiseEnCirculation: string;
@@ -37,7 +42,7 @@ const CreerSouscription = () => {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<string, string>>>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -62,21 +67,75 @@ const CreerSouscription = () => {
     }
   });
 
-  const steps = [
+  const updateStepStatus = (stepIndex: number) => {
+    const stepFields = {
+      0: ['dateMiseEnCirculation', 'numeroImmatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes'],
+      1: ['nom', 'prenom', 'numeroCarteIdentite', 'adresse', 'telephone', 'ville'],
+      2: []
+    };
+
+    const fields = stepFields[stepIndex as keyof typeof stepFields];
+    let isStepValid = true;
+
+    fields.forEach((field) => {
+      let value = '';
+      if (stepIndex === 0) {
+        value = String(formData.vehicule[field as keyof Vehicule] || '');
+      } else if (stepIndex === 1) {
+        value = String(formData.assure[field as keyof Assure] || '');
+      }
+
+      if (!value || value.trim() === '') {
+        isStepValid = false;
+      }
+    });
+
+    if (isStepValid && !completedSteps.includes(stepIndex)) {
+      setCompletedSteps(prev => [...prev, stepIndex]);
+    } else if (!isStepValid && completedSteps.includes(stepIndex)) {
+      setCompletedSteps(prev => prev.filter(step => step !== stepIndex));
+    }
+  };
+
+  const steps: MenuItem[] = [
     {
-      number: 1,
-      title: 'Informations du véhicule',
-      fields: ['dateMiseEnCirculation', 'numeroImmatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes']
+      label: 'Véhicule',
+      icon: completedSteps.includes(0) ? 'pi pi-check' : undefined,
+      className: classNames({
+        'step-completed': completedSteps.includes(0),
+        'step-current': currentStep === 0
+      }),
+      command: () => {
+        if (completedSteps.includes(0) || currentStep >= 0) {
+          setCurrentStep(0);
+        }
+      }
     },
     {
-      number: 2,
-      title: 'Informations de l\'assuré',
-      fields: ['nom', 'prenom', 'numeroCarteIdentite', 'adresse', 'telephone', 'ville']
+      label: 'Assuré',
+      icon: completedSteps.includes(1) ? 'pi pi-check' : undefined,
+      className: classNames({
+        'step-completed': completedSteps.includes(1),
+        'step-current': currentStep === 1
+      }),
+      command: () => {
+        if (completedSteps.includes(1) || currentStep >= 1) {
+          setCurrentStep(1);
+        }
+      }
     },
     {
-      number: 3,
-      title: 'Récapitulatif',
-      fields: []
+      label: 'Récapitulatif',
+      icon: completedSteps.includes(2) ? 'pi pi-check' : undefined,
+      className: classNames({
+        'step-completed': completedSteps.includes(2),
+        'step-current': currentStep === 2
+      }),
+      command: () => {
+        if (completedSteps.includes(2) || currentStep >= 2) {
+          setCurrentStep(2);
+        }
+      }
     }
   ];
 
@@ -115,14 +174,19 @@ const CreerSouscription = () => {
   };
 
   const validateStep = (step: number): boolean => {
-    const currentStepFields = steps[step - 1].fields;
+    const stepFields = {
+      0: ['dateMiseEnCirculation', 'numeroImmatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes'],
+      1: ['nom', 'prenom', 'numeroCarteIdentite', 'adresse', 'telephone', 'ville'],
+      2: []
+    };
+    const currentStepFields = stepFields[step as keyof typeof stepFields];
     const errors: Record<string, string> = {};
 
     currentStepFields.forEach((field) => {
       let value = '';
-      if (step === 1) {
+      if (step === 0) {
         value = String(formData.vehicule[field as keyof Vehicule] || '');
-      } else if (step === 2) {
+      } else if (step === 1) {
         value = String(formData.assure[field as keyof Assure] || '');
       }
 
@@ -175,17 +239,17 @@ const CreerSouscription = () => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep === steps.length) {
+      updateStepStatus(currentStep);
+      if (currentStep === steps.length - 1) {
         handleSubmit();
       } else {
-        setCompletedSteps(prev => [...new Set([...prev, currentStep])]);
         setCurrentStep(currentStep + 1);
       }
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
@@ -215,12 +279,10 @@ const CreerSouscription = () => {
             if (field.startsWith('vehicule.')) {
               const vehiculeField = field.replace('vehicule.', '');
               newValidationErrors[vehiculeField] = messages[0];
-            }
-            else if (field.startsWith('assure.')) {
+            } else if (field.startsWith('assure.')) {
               const assureField = field.replace('assure.', '');
               newValidationErrors[assureField] = messages[0];
-            }
-            else {
+            } else {
               newValidationErrors[field] = messages[0];
             }
           });
@@ -238,19 +300,13 @@ const CreerSouscription = () => {
       if (error.response?.data?.errors) {
         const firstErrorField = Object.keys(error.response.data.errors)[0];
         if (firstErrorField.startsWith('vehicule.')) {
-          setCurrentStep(1);
+          setCurrentStep(0);
         } else if (firstErrorField.startsWith('assure.')) {
-          setCurrentStep(2);
+          setCurrentStep(1);
         }
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleStepClick = (stepNumber: number) => {
-    if (completedSteps.includes(stepNumber - 1) || stepNumber <= Math.max(...completedSteps, 1)) {
-      setCurrentStep(stepNumber);
     }
   };
 
@@ -321,7 +377,7 @@ const CreerSouscription = () => {
 
   const renderStepContent = (step: number) => {
     switch (step) {
-      case 1:
+      case 0:
         return (
           <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -339,7 +395,7 @@ const CreerSouscription = () => {
             </div>
           </div>
         );
-      case 2:
+      case 1:
         return (
           <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -352,7 +408,7 @@ const CreerSouscription = () => {
             </div>
           </div>
         );
-      case 3:
+      case 2:
         return (
           <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
@@ -368,11 +424,13 @@ const CreerSouscription = () => {
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Date de mise en circulation</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formatDate(formData.vehicule.dateMiseEnCirculation)}</p>
+                      <p
+                        className="font-medium text-gray-900 dark:text-white">{formatDate(formData.vehicule.dateMiseEnCirculation)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Numéro d'immatriculation</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.numeroImmatriculation}</p>
+                      <p
+                        className="font-medium text-gray-900 dark:text-white">{formData.vehicule.numeroImmatriculation}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Couleur</p>
@@ -446,105 +504,58 @@ const CreerSouscription = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-          Nouvelle Souscription
-        </h1>
-
-        {apiError && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {apiError}
-            </p>
-          </div>
-        )}
-
-        {/* Stepper */}
-        <div className="mb-8">
-          <div className="relative flex items-center justify-between">
-            {steps.map((step, index) => (
-              <div
-                key={step.number}
-                className={`flex flex-col items-center flex-1 ${completedSteps.includes(step.number) || step.number <= Math.max(...completedSteps, 1)
-                  ? 'cursor-pointer'
-                  : 'cursor-not-allowed'
-                  }`}
-                onClick={() => handleStepClick(step.number)}
-              >
-                <div className={`flex items-center justify-center w-8 h-8 border-2 rounded-full mb-2 
-                    ${currentStep >= step.number
-                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                    : completedSteps.includes(step.number)
-                      ? 'border-indigo-600 bg-white text-indigo-600'
-                      : 'border-gray-300 text-gray-500'
-                  }`}
-                >
-                  {step.number}
-                </div>
-                <div className={`text-xs text-center ${currentStep >= step.number || completedSteps.includes(step.number)
-                  ? 'text-indigo-600 font-medium'
-                  : 'text-gray-500'
-                  }`}>
-                  {step.title}
-                </div>
-              </div>
-            ))}
-            {/* Lignes de connexion */}
-            <div className="absolute top-4 left-0 right-0 flex -z-10">
-              {steps.map((_, index) => (
-                index < steps.length - 1 && (
-                  <div
-                    key={index}
-                    className={`h-0.5 flex-1 mx-4 ${currentStep > index + 1 || completedSteps.includes(index + 2)
-                      ? 'bg-indigo-600'
-                      : 'bg-gray-300'
-                      }`}
-                  />
-                )
-              ))}
+    <>
+      <h1 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white pb-12 pt-5 gap-4">
+        Nouvelle Souscription
+      </h1>
+      <div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
+        <div className="p-6">
+          {apiError && (
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {apiError}
+              </p>
             </div>
+          )}
+
+          {/* Stepper */}
+          <div className="mb-8">
+            <Steps
+              model={steps}
+              activeIndex={currentStep}
+              readOnly={false}
+              className={classNames('custom-steps', { 'steps-mobile': !isDesktop })}
+            />
           </div>
+
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+            {/* Contenu de l'étape courante */}
+            {renderStepContent(currentStep)}
+
+            {/* Boutons de navigation */}
+            <div className="w-full mt-6">
+              <div className="flex gap-4 justify-end">
+                {currentStep > 0 && (
+                  <Button
+                    severity="secondary"
+                    onClick={handleBack}
+                    label="Précédent"
+                    className="px-4 py-2 text-sm w-24"
+                  />
+                )}
+                <Button
+                  onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
+                  disabled={isLoading}
+                  label={currentStep === steps.length - 1 ? "Enregistrer" : "Suivant"}
+                  className="px-4 py-2 text-sm w-24"
+                />
+              </div>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-          {/* Contenu de l'étape courante */}
-          {renderStepContent(currentStep)}
-
-          {/* Boutons de navigation */}
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={handleBack}
-              className={`px-4 py-2 text-sm border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${currentStep === 1 ? 'invisible' : ''}`}
-            >
-              Précédent
-            </button>
-            <button
-              type="button"
-              onClick={currentStep === steps.length ? handleSubmit : handleNext}
-              disabled={isLoading}
-              className={`px-4 py-2 text-sm border border-transparent text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50
-                ${apiError ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Création en cours...
-                </span>
-              ) : currentStep === steps.length ? (
-                'Créer la souscription'
-              ) : (
-                'Suivant'
-              )}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </>
+
   );
 };
 

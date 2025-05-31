@@ -1,0 +1,263 @@
+/* Reset des styles */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+/* Configuration de base */
+:root {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Styles de base */
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  color: #111827;
+  background-color: #f9fafb;
+}
+
+/* Typographie */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.25;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+p,
+li {
+  font-size: 1rem;
+  line-height: 1.625;
+  color: #374151;
+}
+
+/* Formulaires */
+input,
+select,
+textarea,
+button {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* Boutons */
+button {
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-weight: 500;
+  text-align: center;
+}
+
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #f3f4f6;
+    background-color: #111827;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #f3f4f6;
+  }
+
+  p,
+  li {
+    color: #d1d5db;
+  }
+
+  input,
+  select,
+  textarea {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #818cf8;
+  }
+
+  button {
+    background-color: #6366f1;
+  }
+
+  button:hover {
+    background-color: #4f46e5;
+  }
+}
+
+/* Styles pour améliorer la lisibilité des formulaires */
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Styles PrimeReact existants */
+/* Styles personnalisés pour PrimeReact Steps */
+.custom-steps .p-steps-item.p-highlight .p-steps-number {
+  background-color: #4f46e5;
+  color: #ffffff;
+}
+
+.custom-steps .p-steps-item.p-highlight .p-steps-title {
+  color: #4f46e5;
+}
+
+.custom-steps .p-steps-item .p-steps-number {
+  border-color: #4f46e5;
+}
+
+.custom-steps .p-steps-item.p-disabled {
+  opacity: 0.6;
+}
+
+/* Styles pour les étapes complétées */
+
+.custom-steps .step-completed .p-steps-number {
+  border-radius: 50% !important;
+  background-color: #22c55e !important;
+  border-color: #22c55e !important;
+  color: #ffffff !important;
+}
+
+.custom-steps .step-completed .p-steps-title {
+  color: #22c55e !important;
+}
+
+.custom-steps .step-completed .pi-check {
+  font-size: 0.875rem;
+}
+
+/* Styles pour l'étape courante */
+.custom-steps .step-current .p-steps-number {
+  border-radius: 50% !important;
+
+  background-color: #d0d0d0 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+.custom-steps .step-current .p-steps-title {
+  color: #4f46e5 !important;
+  font-weight: 600;
+}
+
+/* Version mobile */
+.steps-mobile {
+  flex-direction: column !important;
+  gap: 1rem;
+}
+
+.steps-mobile .p-steps-item {
+  flex: none !important;
+  width: 100%;
+}
+
+.steps-mobile .p-steps-item:before {
+  display: none !important;
+}
+
+.steps-mobile .p-steps-item .p-menuitem-link {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem;
+  background-color: #f3f4f6;
+  transition: all 0.2s;
+}
+
+.steps-mobile .p-steps-item.p-highlight .p-menuitem-link {
+  background-color: #eef2ff;
+}
+
+.steps-mobile .p-steps-number {
+  margin: 0 1rem 0 0 !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+}
+
+.steps-mobile .p-steps-title {
+  margin-top: 0 !important;
+}
+
+/* Dark mode */
+.dark .custom-steps .p-steps-item .p-steps-title {
+  color: #e5e7eb;
+}
+
+.dark .custom-steps .p-steps-item.p-highlight .p-steps-title {
+  color: #818cf8;
+}
+
+.dark .custom-steps .p-steps-item .p-steps-number {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+.dark .custom-steps .p-steps-item.p-highlight .p-steps-number {
+  background-color: #818cf8;
+  color: #1f2937;
+  border-color: #818cf8;
+}
+
+.dark .custom-steps .step-completed .p-steps-number {
+  background-color: #22c55e !important;
+  border-color: #22c55e !important;
+  color: #1f2937 !important;
+}
+
+.dark .custom-steps .step-completed .p-steps-title {
+  color: #4ade80 !important;
+}
+
+.dark .steps-mobile .p-steps-item .p-menuitem-link {
+  background-color: #374151;
+}
+
+.dark .steps-mobile .p-steps-item.p-highlight .p-menuitem-link {
+  background-color: #312e81;
+}

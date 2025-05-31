@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../services/api';
-import { AuthenticationError } from '../services/http';
+import { authApi } from '@services/api';
 
 interface User {
   username: string;

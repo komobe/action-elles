@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaEye, FaEyeSlash, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthenticationError, ApiError } from '../services/http';
 
@@ -90,7 +91,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-2xl p-8">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-8">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Inscription
@@ -148,9 +149,9 @@ const Register = () => {
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
                   ) : (
-                    <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
                   )}
                 </button>
               </div>
@@ -178,9 +179,9 @@ const Register = () => {
                   disabled={isLoading}
                 >
                   {showConfirmPassword ? (
-                    <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
                   ) : (
-                    <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
                   )}
                 </button>
               </div>
@@ -195,7 +196,7 @@ const Register = () => {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading || !isFormValid()}
             >
               {isLoading ? (
@@ -229,12 +230,16 @@ const Register = () => {
               onClick={() => setShowCriteria(!showCriteria)}
               disabled={isLoading}
             >
-              {showCriteria ? <FaChevronUp className="h-3 w-3 mr-1" /> : <FaChevronDown className="h-3 w-3 mr-1" />}
+              {showCriteria ? (
+                <FontAwesomeIcon icon={faChevronUp} className="h-3 w-3 mr-1" />
+              ) : (
+                <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 mr-1" />
+              )}
               <span>Critères du mot de passe</span>
             </button>
 
             {showCriteria && (
-              <div className="w-full bg-gray-50 dark:bg-gray-700/50 px-4 py-3 rounded-sm border-l-2 border-indigo-500 dark:border-indigo-400">
+              <div className="w-full bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-l-2 border-indigo-500 dark:border-indigo-400">
                 <ul className="space-y-1.5 text-xs">
                   <li className={`flex items-center ${formData.password.length >= 8 ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <span className="mr-2">{formData.password.length >= 8 ? '✓' : '•'}</span>

@@ -1,23 +1,19 @@
-import { useState, useEffect } from 'react';
-import { devisService, type SimulationDevis, type SimulationResponse } from '../services/devis';
-import { useMediaQuery } from '../hooks/useMediaQuery';
+import { Button } from 'primereact/button';
+import React, { useEffect, useState } from 'react';
+import { useMediaQuery } from '@hooks/useMediaQuery.ts';
+import { devisService, type SimulationDevisRequest, type SimulationResponse } from '@services/devis.ts';
 
 const SimulerDevis = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formData, setFormData] = useState<SimulationDevis>({
-    produit: 'Papillon',
-    categorie: '201',
-    puissanceFiscale: 5,
-    dateDeMiseEnCirculation: '2022-01-01',
-    valeurNeuf: 10000000,
-    valeurVenale: 6000000
-  });
+  const [formData, setFormData] = useState<SimulationDevisRequest>({} as SimulationDevisRequest);
 
-  const [result, setResult] = useState<SimulationResponse['data'] | null>(null);
+  type SimulationResponseData = SimulationResponse['data'];
+
+  const [result, setResult] = useState<SimulationResponseData | null>(null);
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof SimulationDevis, string>>>({});
+  const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof SimulationDevisRequest, string>>>({});
 
   const steps = [
     {
@@ -39,15 +35,15 @@ const SimulerDevis = () => {
 
   const validateStep = (step: number): boolean => {
     const currentStepFields = steps[step - 1].fields;
-    const errors: Partial<Record<keyof SimulationDevis, string>> = {};
+    const errors: Partial<Record<keyof SimulationDevisRequest, string>> = {};
 
     if (currentStepFields.length === 0) return true; // Pour l'étape résultat
 
     currentStepFields.forEach((field) => {
-      const value = formData[field as keyof SimulationDevis];
+      const value = formData[field as keyof SimulationDevisRequest];
 
       if (!value) {
-        errors[field as keyof SimulationDevis] = 'Ce champ est requis';
+        errors[field as keyof SimulationDevisRequest] = 'Ce champ est requis';
       }
 
       if (field === 'puissanceFiscale' && (value as number) < 1) {
@@ -105,7 +101,7 @@ const SimulerDevis = () => {
         ? Number(value)
         : value
     }));
-    if (validationErrors[name as keyof SimulationDevis]) {
+    if (validationErrors[name as keyof SimulationDevisRequest]) {
       setValidationErrors(prev => ({
         ...prev,
         [name]: ''
@@ -120,6 +116,10 @@ const SimulerDevis = () => {
     }
 
     if (!validateStep(1) || !validateStep(2)) {
+      return;
+    }
+
+    if (isLoading) {
       return;
     }
 
@@ -140,6 +140,49 @@ const SimulerDevis = () => {
     } catch (error) {
       setError('Une erreur est survenue lors de la simulation');
       console.error('Erreur de simulation:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setFormData({
+      produit: 'Papillon',
+      categorie: '201',
+      puissanceFiscale: 5,
+      dateDeMiseEnCirculation: '2022-01-01',
+      valeurNeuf: 10000000,
+      valeurVenale: 6000000
+    });
+    setResult(null);
+    setError('');
+    setValidationErrors({});
+    setCurrentStep(1);
+  };
+
+  const handleSave = async (e?: React.FormEvent): Promise<void> => {
+    e?.preventDefault();
+
+    // Guards clauses
+    if (!result) {
+      setError('Aucune simulation disponible');
+      return;
+    }
+
+    const { quoteReference, price, endDate, metadata }: SimulationResponseData = result;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const enregistrerDevisRequest = { quoteReference, price, endDate, ...metadata };
+      const response = await devisService.enregistrer(enregistrerDevisRequest);
+      if (response.status === 'error') {
+        setError(response.message ?? 'Erreur lors de l\'enregistrement');
+      }
+      handleReset();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Erreur inattendue');
     } finally {
       setIsLoading(false);
     }
@@ -173,7 +216,7 @@ const SimulerDevis = () => {
   };
 
   const renderField = (
-    name: keyof SimulationDevis,
+    name: keyof SimulationDevisRequest,
     label: string,
     type: 'text' | 'number' | 'date' | 'select',
     options?: { value: string; label: string }[]
@@ -223,7 +266,7 @@ const SimulerDevis = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
+    <div className="bg-white dark:bg-gray-800 w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
       <div className="p-6">
         <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
           Simulation de Devis
@@ -237,10 +280,11 @@ const SimulerDevis = () => {
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
               <div key={step.number} className="flex flex-col items-center flex-1">
-                <div className={`flex items-center justify-center w-8 h-8 border-2 rounded-full mb-2 ${currentStep >= step.number
-                  ? 'border-indigo-600 bg-indigo-600 text-white'
-                  : 'border-gray-300 text-gray-500'
-                  }`}>
+                <div
+                  className={`flex items-center justify-center w-8 h-8 border-2 rounded-full mb-2 ${currentStep >= step.number
+                    ? 'border-indigo-600 bg-indigo-600 text-white'
+                    : 'border-gray-300 text-gray-500'
+                    }`}>
                   {step.number}
                 </div>
                 <div className={`text-xs text-center ${currentStep >= step.number
@@ -305,69 +349,75 @@ const SimulerDevis = () => {
                   </div>
                 </div>
 
-                {/* Résultat - visible en desktop ou à l'étape 3 en mobile */}
-                <div className={`${!isDesktop && currentStep !== 3 ? 'hidden' : 'block'} mt-6`}>
-                  {result ? (
-                    <div className="space-y-4">
-                      {/* Prix */}
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Prime d'assurance</p>
-                          <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                            {formatMontant(result.price)}
+                {/* Résultat - visible à l'étape 3 sur mobile */}
+                {currentStep === 3 && (
+                  <div className="block lg:hidden mt-6">
+                    {result ? (
+                      <div className="space-y-4">
+                        {/* Prix */}
+                        <div
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Prime d'assurance</p>
+                            <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                              {formatMontant(result.price)}
+                            </p>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Référence</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{result.quoteReference}</span>
+                          </div>
+                          <div className="mt-1 flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Valable jusqu'au</span>
+                            <span
+                              className="font-medium text-gray-900 dark:text-white">{formatDate(result.endDate)}</span>
+                          </div>
+                        </div>
+
+                        {/* Récapitulatif */}
+                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                            Récapitulatif
+                          </h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Produit</span>
+                              <span className="font-medium">{formData.produit}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Catégorie</span>
+                              <span className="font-medium">{formData.categorie}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Puissance</span>
+                              <span className="font-medium">{formData.puissanceFiscale} CV</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Valeur à neuf</span>
+                              <span className="font-medium">{formatMontant(formData.valeurNeuf)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Valeur vénale</span>
+                              <span className="font-medium">{formatMontant(formData.valeurVenale)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg">
+                          <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                            Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours. Pour
+                            souscrire, contactez votre agent.
                           </p>
                         </div>
-                        <div className="mt-2 flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Référence</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{result.quoteReference}</span>
-                        </div>
-                        <div className="mt-1 flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Valable jusqu'au</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formatDate(result.endDate)}</span>
-                        </div>
                       </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-sm text-gray-500">Aucun résultat disponible</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                      {/* Récapitulatif */}
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                          Récapitulatif
-                        </h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Produit</span>
-                            <span className="font-medium">{formData.produit}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Catégorie</span>
-                            <span className="font-medium">{formData.categorie}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Puissance</span>
-                            <span className="font-medium">{formData.puissanceFiscale} CV</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Valeur à neuf</span>
-                            <span className="font-medium">{formatMontant(formData.valeurNeuf)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Valeur vénale</span>
-                            <span className="font-medium">{formatMontant(formData.valeurVenale)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg">
-                        <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                          Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours. Pour souscrire, contactez votre agent.
-                        </p>
-                      </div>
-                    </div>
-                  ) : !isDesktop && currentStep === 3 ? (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-gray-500">Aucun résultat disponible</p>
-                    </div>
-                  ) : null}
-                </div>
 
                 {/* Boutons de navigation mobile */}
                 <div className="flex justify-between mt-6 lg:hidden">
@@ -387,9 +437,12 @@ const SimulerDevis = () => {
                   >
                     {isLoading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                          fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                            strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Simulation en cours...
                       </span>
@@ -404,26 +457,29 @@ const SimulerDevis = () => {
                 </div>
 
                 {/* Bouton Simuler en desktop */}
-                <div className="hidden lg:flex justify-center mt-6">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isLoading || Object.keys(validationErrors).length > 0}
-                    className="px-6 py-2.5 text-sm border border-transparent text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
+                <div className="mt-6 flex lg:justify-end justify-center">
+                  <Button
+                    className="w-full lg:w-auto"
+                    onClick={result ? handleSave : handleSubmit}
+                    disabled={isLoading || (!result && Object.keys(validationErrors).length > 0)}
                   >
                     {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                          fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                            strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Simulation en cours...
                       </span>
-                    ) : (
-                      'Simuler le devis'
-                    )}
-                  </button>
+                    ) : result ? ('Enregistrer le devis') : ('Simuler le devis')
+                    }
+                  </Button>
                 </div>
+
+
               </div>
             </form>
           </div>
@@ -444,7 +500,8 @@ const SimulerDevis = () => {
 
                   <div className="space-y-3">
                     {/* Prix */}
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900">
+                    <div
+                      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900">
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Prime d'assurance</p>
                         <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
@@ -461,7 +518,8 @@ const SimulerDevis = () => {
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                            d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 2v4M8 2v4M3 10h18" />
                         </svg>
                         Informations du véhicule
@@ -477,30 +535,38 @@ const SimulerDevis = () => {
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-500 dark:text-gray-400">Puissance Fiscale</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formData.puissanceFiscale} CV</span>
+                          <span
+                            className="font-medium text-gray-900 dark:text-white">{formData.puissanceFiscale} CV</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-500 dark:text-gray-400">Mise en circulation</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formatDate(formData.dateDeMiseEnCirculation)}</span>
+                          <span
+                            className="font-medium text-gray-900 dark:text-white">{formatDate(formData.dateDeMiseEnCirculation)}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-500 dark:text-gray-400">Valeur à neuf</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurNeuf)}</span>
+                          <span
+                            className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurNeuf)}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-500 dark:text-gray-400">Valeur vénale</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurVenale)}</span>
+                          <span
+                            className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurVenale)}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded-lg">
                       <div className="flex items-start">
-                        <svg className="w-3 h-3 text-indigo-500 mt-0.5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg className="w-3 h-3 text-indigo-500 mt-0.5 mr-1 flex-shrink-0" fill="none"
+                          stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                          Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours (jusqu'au {formatDate(result.endDate)}). Pour souscrire à cette offre, veuillez contacter votre agent.
+                          Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours
+                          (jusqu'au {formatDate(result.endDate)}). Pour souscrire à cette offre, veuillez contacter
+                          votre agent.
                         </p>
                       </div>
                     </div>
@@ -510,9 +576,12 @@ const SimulerDevis = () => {
             ) : (
               <div className="bg-gray-50 dark:bg-gray-700/50 p-4 h-full flex items-center justify-center rounded-lg">
                 <div className="text-center">
-                  <div className="bg-gray-100 dark:bg-gray-600 p-3 mx-auto mb-2 w-12 h-12 flex items-center justify-center rounded-lg">
-                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  <div
+                    className="bg-gray-100 dark:bg-gray-600 p-3 mx-auto mb-2 w-12 h-12 flex items-center justify-center rounded-lg">
+                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
                   </div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
