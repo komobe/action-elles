@@ -5,6 +5,7 @@ import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.infrastructure.adapters.mappers.UtilisateurMapper;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UtilisateurJpaEntity;
 import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UtilisateurJpaRepository;
+import java.util.Collection;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -33,6 +34,18 @@ public class UtilisateurRepositoryAdapater implements UtilisateurRepository {
   @Override
   public Optional<Utilisateur> findByUsername(String username) {
     return utilisateurJpaRepository.findByUsername(username)
+        .map(utilisateurMapper::toDomain);
+  }
+
+  @Override
+  public Collection<Utilisateur> findAll() {
+    return utilisateurJpaRepository.findAll().stream()
+        .map(utilisateurMapper::toDomain).toList();
+  }
+
+  @Override
+  public Optional<Utilisateur> findById(String utilisateurId) {
+    return utilisateurJpaRepository.findById(utilisateurId)
         .map(utilisateurMapper::toDomain);
   }
 }

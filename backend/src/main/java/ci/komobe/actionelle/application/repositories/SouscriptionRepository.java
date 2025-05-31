@@ -1,14 +1,17 @@
 package ci.komobe.actionelle.application.repositories;
 
-import java.util.List;
-
 import ci.komobe.actionelle.domain.entities.Souscription;
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  * @author Moro KONÉ 2025-05-28
  */
 public interface SouscriptionRepository {
+
   void save(Souscription souscription);
 
-  List<Souscription> findAll();
+  Collection<Souscription> findAll();
+
+  Optional<Souscription> findById(String souscriptionId);
 }

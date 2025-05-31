@@ -1,6 +1,7 @@
 package ci.komobe.actionelle.infrastructure.views.exceptionhandlers;
 
 import ci.komobe.actionelle.infrastructure.views.dto.ResponseApi;
+import io.jsonwebtoken.JwtException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpServerErrorException.InternalServerError;
 
 /**
  * @author Moro KONÉ 2025-05-30
@@ -20,6 +22,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<ResponseApi<String>> handleAccessDenied(AccessDeniedException ex) {
     return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+  }
+
+  @ExceptionHandler(JwtException.class)
+  public ResponseEntity<ResponseApi<String>> handleJwtException(JwtException ex) {
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -41,6 +48,11 @@ public class GlobalExceptionHandler {
     return ResponseEntity
         .badRequest()
         .body(ResponseApi.error("Le format des données envoyées est invalide."));
+  }
+
+  @ExceptionHandler(InternalServerError.class)
+  public ResponseEntity<ResponseApi<String>> handleInternalServerError(InternalServerError ex) {
+    return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
   }
 
 

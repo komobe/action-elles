@@ -5,16 +5,14 @@ import ci.komobe.actionelle.application.commands.vehicule.VehiculeCommandBase;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * @author Moro KONÉ 2025-05-28
  */
 @Getter
-@Builder
-@NoArgsConstructor
+@SuperBuilder
 @AllArgsConstructor
 public class CreerSouscriptionCommand {
 

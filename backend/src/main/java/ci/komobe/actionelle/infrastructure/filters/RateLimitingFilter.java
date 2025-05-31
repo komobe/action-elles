@@ -57,8 +57,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
       FilterChain filterChain
   ) throws ServletException, IOException {
 
-    if (rateLimit.isEnabled()) {
+    if (rateLimit.isDisabled()) {
       filterChain.doFilter(request, response);
+      return;
     }
 
     String ip = getClientIpAddress(request);

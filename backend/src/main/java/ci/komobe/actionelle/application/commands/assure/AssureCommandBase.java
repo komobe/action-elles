@@ -2,6 +2,7 @@ package ci.komobe.actionelle.application.commands.assure;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -9,6 +10,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @SuperBuilder
+@NoArgsConstructor
 public class AssureCommandBase {
 
   @NotBlank(message = "L'adresse ne peut pas être vide")

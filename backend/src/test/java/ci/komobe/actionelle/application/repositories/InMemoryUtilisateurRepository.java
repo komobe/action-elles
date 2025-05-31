@@ -2,6 +2,7 @@ package ci.komobe.actionelle.application.repositories;
 
 import ci.komobe.actionelle.application.utils.FakeGenerator;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,5 +26,17 @@ public class InMemoryUtilisateurRepository implements UtilisateurRepository {
   @Override
   public Optional<Utilisateur> findByUsername(String username) {
     return Optional.ofNullable(utilisateurs.get(username));
+  }
+
+  @Override
+  public Collection<Utilisateur> findAll() {
+    return utilisateurs.values();
+  }
+
+  @Override
+  public  Optional<Utilisateur>  findById(String utilisateurId) {
+    return utilisateurs.values().stream()
+        .filter(utilisateur -> utilisateur.getId().equals(utilisateurId))
+        .findFirst();
   }
 }

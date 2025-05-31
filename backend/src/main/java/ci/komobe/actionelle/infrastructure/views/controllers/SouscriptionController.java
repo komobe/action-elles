@@ -1,18 +1,23 @@
 package ci.komobe.actionelle.infrastructure.views.controllers;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import ci.komobe.actionelle.application.commands.CreerSouscriptionCommand;
 import ci.komobe.actionelle.application.repositories.AssureRepository;
-import ci.komobe.actionelle.application.repositories.SouscriptionRepository;
 import ci.komobe.actionelle.application.repositories.CategorieVehiculeRepository;
+import ci.komobe.actionelle.application.repositories.SouscriptionRepository;
 import ci.komobe.actionelle.application.repositories.VehiculeRepository;
 import ci.komobe.actionelle.application.usecases.CreerSouscriptionUseCase;
+import ci.komobe.actionelle.application.usecases.queryhandler.GetAllSouscriptions;
+import ci.komobe.actionelle.application.usecases.queryhandler.GetSouscriptionById;
+import ci.komobe.actionelle.domain.entities.Souscription;
 import jakarta.validation.Valid;
+import java.util.Collection;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Moro KONÉ 2025-05-29
@@ -37,27 +42,13 @@ public class SouscriptionController {
     useCase.execute(command);
   }
 
-  // TODO: Implementer les use cases pour les autres endpoints
-  /*
-   * 
-   * @GetMapping("/{id}")
-   * public void getSouscription(@PathVariable String id) {
-   * var useCase = new ObtenirSouscriptionUseCase(souscriptionRepository);
-   * useCase.execute(id);
-   * }
-   * 
-   * @GetMapping("/status/{id}")
-   * public void getSouscriptionStatus(@PathVariable String id) {
-   * var useCase = new ObtenirSouscriptionStatusUseCase(souscriptionRepository);
-   * useCase.execute(id);
-   * }
-   * 
-   * @GetMapping("/{id}/attestation")
-   * public void getSouscriptionAttestation(@PathVariable String id) {
-   * var useCase = new
-   * ObtenirSouscriptionAttestationUseCase(souscriptionRepository);
-   * useCase.execute(id);
-   * }
-   * 
-   */
+  @GetMapping
+  public Collection<Souscription> listSouscriptions() {
+    return new GetAllSouscriptions(souscriptionRepository).get();
+  }
+
+  @GetMapping("/{souscriptionId}")
+  public Souscription getSouscriptionById(@PathVariable String souscriptionId) {
+    return new GetSouscriptionById(souscriptionRepository).get(souscriptionId);
+  }
 }

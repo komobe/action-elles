@@ -2,9 +2,12 @@ package ci.komobe.actionelle.infrastructure.configs;
 
 import ci.komobe.actionelle.infrastructure.filters.JwtAuthenticationFilter;
 import ci.komobe.actionelle.infrastructure.filters.RateLimitingFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,40 +19,51 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 
 /**
  * Configuration de sécurité pour l'application Actionelle
+ *
  * @author Moro KONÉ 2025-05-30
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@AllArgsConstructor
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final RateLimitingFilter rateLimitingFilter;
 
-  public SecurityConfig(
-      JwtAuthenticationFilter jwtAuthFilter,
-      RateLimitingFilter rateLimitingFilter
-  ) {
-    this.jwtAuthenticationFilter = jwtAuthFilter;
-    this.rateLimitingFilter = rateLimitingFilter;
+  @Bean
+  @Profile({"dev", "developement"})
+  public CorsConfiguration devCorsFilterChain() {
+    var configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(List.of("*"));
+    configuration.setAllowedMethods(List.of("*"));
+    configuration.setAllowedHeaders(List.of("*"));
+    return configuration;
   }
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(
+      HttpSecurity http,
+      CorsConfiguration corsConfiguration
+  ) throws Exception {
     http
         // Désactiver CSRF pour API REST
         .csrf(AbstractHttpConfigurer::disable)
 
+        // Désactiver Cors
+        .cors(cors -> cors.configurationSource(request -> corsConfiguration))
+
         // Configuration des autorisations
         .authorizeHttpRequests(auth -> auth
             // Endpoints publics
-            .requestMatchers("/api/login", "/api/logout").permitAll()
+           // .requestMatchers("/api/login", "/api/logout").permitAll()
 
             // Tous les autres endpoints nécessitent une authentification
-            .anyRequest().authenticated()
+            .anyRequest().permitAll()
         )
 
         // Configuration de session - Stateless pour JWT
@@ -64,7 +78,7 @@ public class SecurityConfig {
         // Gestion des exceptions d'authentification
         .exceptionHandling(exception ->
             exception.authenticationEntryPoint((request, response, authException) -> {
-              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+              response.setStatus(HttpStatus.UNAUTHORIZED.value());
               response.setContentType("application/json");
               response.setCharacterEncoding("UTF-8");
               response.getWriter().write(
