@@ -3,8 +3,9 @@ package ci.komobe.actionelle.application.usecases.vehicule;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import ci.komobe.actionelle.application.commands.vehicule.SupprimerVehiculeByImmatriculation;
-import ci.komobe.actionelle.application.exceptions.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.commands.SupprimerVehiculeByImmatriculation;
+import ci.komobe.actionelle.application.features.vehicule.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.usecases.SupprimerVehiculeUseCase;
 import ci.komobe.actionelle.application.repositories.InMemoryVehiculeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

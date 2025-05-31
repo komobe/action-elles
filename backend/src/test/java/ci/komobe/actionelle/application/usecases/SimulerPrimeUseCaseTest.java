@@ -2,16 +2,17 @@ package ci.komobe.actionelle.application.usecases;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import ci.komobe.actionelle.application.commands.SimulerPrimeCommand;
-import ci.komobe.actionelle.application.exceptions.CategorieVehiculeError;
-import ci.komobe.actionelle.application.exceptions.ProduitError;
-import ci.komobe.actionelle.application.presenters.DefaultSimulerPrimePresenter;
-import ci.komobe.actionelle.application.presenters.SimulerPrimePresenter;
+import ci.komobe.actionelle.application.features.devis.commands.SimulerPrimeCommand;
+import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeError;
+import ci.komobe.actionelle.application.features.produit.ProduitError;
+import ci.komobe.actionelle.application.features.devis.usecases.SimulerPrimeUseCase;
+import ci.komobe.actionelle.application.features.devis.presenters.DefaultSimulerPrimePresenter;
+import ci.komobe.actionelle.application.features.devis.presenters.SimulerPrimePresenter;
 import ci.komobe.actionelle.application.repositories.InMemoryProduitRepository;
-import ci.komobe.actionelle.application.services.prime.PrimeCalculator;
-import ci.komobe.actionelle.application.services.prime.PrimeMontantFixeStrategy;
-import ci.komobe.actionelle.application.services.prime.PrimePourcentageStrategy;
-import ci.komobe.actionelle.application.valueobjects.SimulationPrimeResult;
+import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
+import ci.komobe.actionelle.application.commons.services.prime.PrimeMontantFixeStrategy;
+import ci.komobe.actionelle.application.commons.services.prime.PrimePourcentageStrategy;
+import ci.komobe.actionelle.application.features.devis.dto.SimulationPrimeResult;
 import ci.komobe.actionelle.domain.valueobjects.TypeMontantPrime;
 import java.math.BigDecimal;
 import java.time.LocalDate;

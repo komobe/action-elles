@@ -2,6 +2,7 @@ package ci.komobe.actionelle.application.repositories;
 
 import ci.komobe.actionelle.application.utils.FakeGenerator;
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
+import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

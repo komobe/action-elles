@@ -1,6 +1,6 @@
 package ci.komobe.actionelle.application.utils;
 
-import ci.komobe.actionelle.application.providers.PasswordProvider;
+import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
 
 /**
  * @author Moro KONÉ 2025-05-30

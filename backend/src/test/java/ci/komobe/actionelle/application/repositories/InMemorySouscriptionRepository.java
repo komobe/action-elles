@@ -1,6 +1,7 @@
 package ci.komobe.actionelle.application.repositories;
 
 import ci.komobe.actionelle.domain.entities.Souscription;
+import ci.komobe.actionelle.domain.repositories.SouscriptionRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

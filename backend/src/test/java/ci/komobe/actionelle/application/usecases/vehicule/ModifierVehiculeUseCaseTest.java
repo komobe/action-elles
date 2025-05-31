@@ -3,9 +3,10 @@ package ci.komobe.actionelle.application.usecases.vehicule;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import ci.komobe.actionelle.application.commands.vehicule.ModifierVehiculeCommand;
-import ci.komobe.actionelle.application.exceptions.CategorieVehiculeError;
-import ci.komobe.actionelle.application.exceptions.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.commands.ModifierVehiculeCommand;
+import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.usecases.ModifierVehiculeUseCase;
 import ci.komobe.actionelle.application.repositories.InMemoryCategorieVehiculeRepository;
 import ci.komobe.actionelle.application.repositories.InMemoryVehiculeRepository;
 import ci.komobe.actionelle.domain.entities.Vehicule;

@@ -1,10 +1,11 @@
 package ci.komobe.actionelle.application.usecases;
 
-import ci.komobe.actionelle.application.commands.InscriptionUtilisateurCommand;
-import ci.komobe.actionelle.application.exceptions.UtilisateurError;
-import ci.komobe.actionelle.application.providers.PasswordProvider;
+import ci.komobe.actionelle.application.features.utilisateur.commands.InscriptionUtilisateurCommand;
+import ci.komobe.actionelle.application.features.utilisateur.UtilisateurError;
+import ci.komobe.actionelle.application.features.utilisateur.usecases.InscriptionUtilisateurUseCase;
+import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
 import ci.komobe.actionelle.application.repositories.InMemoryUtilisateurRepository;
-import ci.komobe.actionelle.application.repositories.UtilisateurRepository;
+import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.application.utils.PlainPassword;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.valueobjects.Role;

@@ -2,6 +2,7 @@ package ci.komobe.actionelle.application.repositories;
 
 import ci.komobe.actionelle.application.utils.FakeGenerator;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;

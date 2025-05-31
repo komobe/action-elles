@@ -1,8 +1,9 @@
 package ci.komobe.actionelle.application.repositories;
 
-import ci.komobe.actionelle.application.Specification;
+import ci.komobe.actionelle.application.commons.Specification;
 import ci.komobe.actionelle.application.utils.FakeGenerator;
 import ci.komobe.actionelle.domain.entities.Vehicule;
+import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

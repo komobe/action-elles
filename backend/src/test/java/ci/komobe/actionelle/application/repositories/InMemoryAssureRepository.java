@@ -1,5 +1,6 @@
 package ci.komobe.actionelle.application.repositories;
 
+import ci.komobe.actionelle.domain.repositories.AssureRepository;
 import java.util.ArrayList;
 import java.util.List;
 

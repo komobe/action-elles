@@ -3,8 +3,9 @@ package ci.komobe.actionelle.application.usecases.vehicule;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import ci.komobe.actionelle.application.commands.vehicule.CreerVehiculeCommand;
-import ci.komobe.actionelle.application.exceptions.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.commands.CreerVehiculeCommand;
+import ci.komobe.actionelle.application.features.vehicule.VehiculeError;
+import ci.komobe.actionelle.application.features.vehicule.usecases.CreerVehiculeUseCase;
 import ci.komobe.actionelle.application.repositories.InMemoryVehiculeRepository;
 
 import java.time.LocalDate;

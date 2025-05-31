@@ -1,8 +1,8 @@
 package ci.komobe.actionelle;
 
 import ci.komobe.actionelle.domain.valueobjects.Role;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.entities.UtilisateurJpaEntity;
-import ci.komobe.actionelle.infrastructure.hibernatejpa.repositories.UtilisateurJpaRepository;
+import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.util.Base64;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
-@ConfigurationPropertiesScan(basePackages = "ci.komobe.actionelle.infrastructure.configs")
+@ConfigurationPropertiesScan(basePackages = "ci.komobe.actionelle.infrastructure")
 public class ActionelleApplication {
 
   public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class ActionelleApplication {
       UtilisateurJpaRepository repository, PasswordEncoder passwordEncoder) {
     return args -> {
       if (repository.findByUsername("adminUser").isEmpty()) {
-        var admin = new UtilisateurJpaEntity();
+        var admin = new UtilisateurEntity();
         admin.setId(UUID.randomUUID().toString());
         admin.setUsername("adminUser");
         admin.setPassword(passwordEncoder.encode("admin"));
@@ -40,7 +40,7 @@ public class ActionelleApplication {
       }
 
       if (repository.findByUsername("amazone").isEmpty()) {
-        var admin = new UtilisateurJpaEntity();
+        var admin = new UtilisateurEntity();
         admin.setId(UUID.randomUUID().toString());
         admin.setUsername("amazoneUser");
         admin.setPassword(passwordEncoder.encode("amazone"));
