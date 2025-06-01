@@ -41,7 +41,7 @@ public class InMemoryVehiculeRepository implements VehiculeRepository {
   }
 
   @Override
-  public void save(Vehicule vehicule) {
+  public void enregistrer(Vehicule vehicule) {
     addVehicule(vehicule);
     saveCallCount++;
   }
@@ -52,12 +52,12 @@ public class InMemoryVehiculeRepository implements VehiculeRepository {
   }
 
   @Override
-  public Optional<Vehicule> findByImmatriculation(String numero) {
+  public Optional<Vehicule> recupererParImmatriculation(String numero) {
     return vehicules.containsKey(numero) ? Optional.of(vehicules.get(numero)) : Optional.empty();
   }
 
   @Override
-  public void delete(Specification<Vehicule> specification) {
+  public void supprimer(Specification<Vehicule> specification) {
     List<String> keysToRemove = new ArrayList<>();
     for (Map.Entry<String, Vehicule> entry : vehicules.entrySet()) {
       if (specification.isSatisfiedBy(entry.getValue())) {
@@ -70,7 +70,7 @@ public class InMemoryVehiculeRepository implements VehiculeRepository {
   }
 
   @Override
-  public Optional<Vehicule> findBySpecification(Specification<Vehicule> specification) {
+  public Optional<Vehicule> recupererParSpec(Specification<Vehicule> specification) {
     return vehicules.values().stream()
         .filter(specification::isSatisfiedBy)
         .findFirst();

@@ -7,11 +7,9 @@ import java.util.Optional;
 /**
  * @author Moro KONÉ 2025-05-28
  */
-public interface SouscriptionRepository {
-
-  void save(Souscription souscription);
+public interface SouscriptionRepository extends CrudRepository<Souscription>{
 
   Collection<Souscription> findAll();
 
-  Optional<Souscription> findById(String souscriptionId);
+  Optional<Souscription> recupererParId(String souscriptionId);
 }

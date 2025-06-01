@@ -3,12 +3,14 @@ package ci.komobe.actionelle.infrastructure.rest.controllers;
 import ci.komobe.actionelle.application.features.utilisateur.UtilisateurError;
 import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
 import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
-import ci.komobe.actionelle.infrastructure.security.services.JwtService;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginRequest;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginResponse;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginResponse.UserInfo;
+import ci.komobe.actionelle.infrastructure.security.services.JwtService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,10 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
+ * Contrôleur d'authentification
+ *
  * @author Moro KONÉ 2025-05-30
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1/auth")
+@Tag(name = "Authentification", description = "API d'authentification et gestion des sessions")
+@RequiredArgsConstructor
 public class LoginController {
 
   private static final String AUTH_HEADER = "Authorization";
@@ -29,14 +35,6 @@ public class LoginController {
   private final JwtService jwtService;
   private final UtilisateurJpaRepository utilisateurJpaRepository;
 
-  public LoginController(
-      PasswordEncoder passwordEncoder, JwtService jwtService,
-      UtilisateurJpaRepository utilisateurJpaRepository
-  ) {
-    this.passwordEncoder = passwordEncoder;
-    this.jwtService = jwtService;
-    this.utilisateurJpaRepository = utilisateurJpaRepository;
-  }
 
   @PostMapping("/login")
   public LoginResponse login(@RequestBody LoginRequest request) {
@@ -49,17 +47,15 @@ public class LoginController {
 
     String accessToken = jwtService.generateToken(user.getUsername());
 
-    UserInfo userInfo = UserInfo.builder()
-        .username(user.getUsername())
-        .roles(List.of(user.getRole().name()))
-        .build();
+    var userInfo = new UserInfo(
+        user.getUsername(),
+        List.of(user.getRole().name()));
 
-    return LoginResponse.builder()
-        .accessToken(accessToken)
-        .tokenType("Bearer")
-        .expiresIn(jwtService.getTokenExpirationInMillis())
-        .user(userInfo
-        ).build();
+    return new LoginResponse(
+        accessToken,
+        "Bearer",
+        jwtService.getTokenExpirationInMillis(),
+        userInfo);
   }
 
   @PostMapping("/logout")

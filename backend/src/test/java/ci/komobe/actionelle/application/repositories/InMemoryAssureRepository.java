@@ -16,7 +16,7 @@ public class InMemoryAssureRepository implements AssureRepository {
   }
 
   @Override
-  public void save(Assure assure) {
+  public void enregistrer(Assure assure) {
     assures.add(assure);
   }
 

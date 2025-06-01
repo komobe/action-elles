@@ -3,6 +3,8 @@ package ci.komobe.actionelle.application.repositories;
 import ci.komobe.actionelle.application.utils.FakeGenerator;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
+import ci.komobe.actionelle.domain.utils.paginate.Page;
+import ci.komobe.actionelle.domain.utils.paginate.PageRequest;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +37,17 @@ public class InMemoryUtilisateurRepository implements UtilisateurRepository {
   }
 
   @Override
-  public  Optional<Utilisateur>  findById(String utilisateurId) {
+  public Page<Utilisateur> findAll(PageRequest pageRequest) {
+    return Page.<Utilisateur>builder()
+        .number(pageRequest.getNumber())
+        .size(pageRequest.getSize())
+        .totalElements(findAll().size())
+        .totalPages(1)
+        .build();
+  }
+
+  @Override
+  public Optional<Utilisateur> findById(String utilisateurId) {
     return utilisateurs.values().stream()
         .filter(utilisateur -> utilisateur.getId().equals(utilisateurId))
         .findFirst();

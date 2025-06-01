@@ -20,7 +20,7 @@ public class GarantieRepositoryAdapter implements GarantieRepository {
   private final GarantieJpaRepository garantieJpaRepository;
 
   @Override
-  public Optional<Garantie> findByCode(String code) {
+  public Optional<Garantie> recupererParCode(String code) {
     return garantieJpaRepository.findByCode(code).map(garantieMapper::toDomain);
   }
 
@@ -32,13 +32,13 @@ public class GarantieRepositoryAdapter implements GarantieRepository {
   }
 
   @Override
-  public void save(Garantie garantie) {
+  public void enregistrer(Garantie garantie) {
     var garantieEntity = garantieMapper.toEntity(garantie);
     garantieJpaRepository.save(garantieEntity);
   }
 
   @Override
-  public boolean existsByCode(String code) {
+  public boolean codeExiste(String code) {
     return garantieJpaRepository.existsByCode(code);
   }
 }

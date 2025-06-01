@@ -21,7 +21,7 @@ public class DevisRepositoryAdapter implements DevisRepository {
   private final DevisMapper devisMapper;
 
   @Override
-  public void save(Devis devis) {
+  public void enregistrer(Devis devis) {
     var devisJpaEntity = devisMapper.toEntity(devis);
     var categorieVehiculeEntityJpa = new CategorieVehiculeEntity();
     categorieVehiculeEntityJpa.setId(devis.getCategorieId());
@@ -33,12 +33,12 @@ public class DevisRepositoryAdapter implements DevisRepository {
   }
 
   @Override
-  public boolean existsByReference(String reference) {
+  public boolean referenceExiste(String reference) {
     return devisJpaRepository.existsByReference(reference);
   }
 
   @Override
-  public Optional<Devis> findByReference(String reference) {
+  public Optional<Devis> recupererParReference(String reference) {
     return devisJpaRepository.findByReference(reference)
         .map(devisMapper::toDomain);
   }

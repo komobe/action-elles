@@ -14,17 +14,17 @@ public class InMemoryProduitRepository implements ProduitRepository {
   private final List<Produit> produits = FakeGenerator.generateProduits();
 
   @Override
-  public Optional<Produit> findByNom(String nom) {
+  public Optional<Produit> recupererParNom(String nom) {
     return produits.stream().filter(produit -> produit.getNom().equals(nom)).findFirst();
   }
 
   @Override
-  public List<Produit> findAll() {
+  public List<Produit> recupererTous() {
     return produits;
   }
 
   @Override
-  public void save(Produit produit) {
+  public void enregistrer(Produit produit) {
     produits.add(produit);
   }
 

@@ -10,19 +10,20 @@ import ci.komobe.actionelle.domain.utils.IdGenerator;
 /**
  * @author Moro KONÉ 2025-05-30
  */
-public class InscriptionUtilisateurUseCase {
+public class InscrireUtilisateur {
 
   private final UtilisateurRepository utilisateurRepository;
   private final PasswordProvider passwordProvider;
 
-  public InscriptionUtilisateurUseCase(
+  public InscrireUtilisateur(
       UtilisateurRepository utilisateurRepository,
-      PasswordProvider passwordProvider) {
+      PasswordProvider passwordProvider
+  ) {
     this.utilisateurRepository = utilisateurRepository;
     this.passwordProvider = passwordProvider;
   }
 
-  public void execute(InscriptionUtilisateurCommand command) {
+  public void executer(InscriptionUtilisateurCommand command) {
     var username = command.username().trim();
     var password = command.password().trim();
 

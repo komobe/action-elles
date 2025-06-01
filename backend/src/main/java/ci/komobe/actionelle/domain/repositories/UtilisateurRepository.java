@@ -1,6 +1,8 @@
 package ci.komobe.actionelle.domain.repositories;
 
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import ci.komobe.actionelle.domain.utils.paginate.Page;
+import ci.komobe.actionelle.domain.utils.paginate.PageRequest;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -17,5 +19,7 @@ public interface UtilisateurRepository {
 
   Collection<Utilisateur> findAll();
 
-  Optional<Utilisateur>  findById(String utilisateurId);
+  Page<Utilisateur> findAll(PageRequest pageRequest);
+
+  Optional<Utilisateur> findById(String utilisateurId);
 }

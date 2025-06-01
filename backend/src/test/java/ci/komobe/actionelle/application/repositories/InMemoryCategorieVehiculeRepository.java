@@ -37,20 +37,20 @@ public class InMemoryCategorieVehiculeRepository implements CategorieVehiculeRep
   }
 
   @Override
-  public Optional<CategorieVehicule> findByCode(String code) {
+  public Optional<CategorieVehicule> recupererParCode(String code) {
     return categorieVehicules.containsKey(code)
         ? Optional.of(categorieVehicules.get(code))
         : Optional.empty();
   }
 
   @Override
-  public void save(CategorieVehicule categorieVehicule) {
+  public void enregistrer(CategorieVehicule categorieVehicule) {
     categorieVehicules.put(categorieVehicule.getCode(), categorieVehicule);
     saveCallCount++;
   }
 
   @Override
-  public boolean existsByCode(String code) {
+  public boolean codeExiste(String code) {
     return categorieVehicules.containsKey(code);
   }
 

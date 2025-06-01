@@ -8,12 +8,10 @@ import ci.komobe.actionelle.domain.entities.Garantie;
 /**
  * @author Moro KONÉ 2025-05-29
  */
-public interface GarantieRepository {
-  Optional<Garantie> findByCode(String code);
+public interface GarantieRepository extends CrudRepository<Garantie>{
+  Optional<Garantie> recupererParCode(String code);
 
   List<Garantie> findAll();
 
-  void save(Garantie garantie);
-
-  boolean existsByCode(String code);
+  boolean codeExiste(String code);
 }

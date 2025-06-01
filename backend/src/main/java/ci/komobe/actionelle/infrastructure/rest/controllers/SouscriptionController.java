@@ -1,14 +1,15 @@
 package ci.komobe.actionelle.infrastructure.rest.controllers;
 
 import ci.komobe.actionelle.application.features.assure.commands.CreerSouscriptionCommand;
+import ci.komobe.actionelle.application.features.souscription.RecupererSouscriptionParId;
+import ci.komobe.actionelle.application.features.souscription.ListerSouscriptions;
+import ci.komobe.actionelle.application.features.souscription.usecases.CreerSouscriptionUseCase;
+import ci.komobe.actionelle.domain.entities.Souscription;
 import ci.komobe.actionelle.domain.repositories.AssureRepository;
 import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.repositories.SouscriptionRepository;
 import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
-import ci.komobe.actionelle.application.features.souscription.usecases.CreerSouscriptionUseCase;
-import ci.komobe.actionelle.application.features.souscription.GetAllSouscriptions;
-import ci.komobe.actionelle.application.features.souscription.GetSouscriptionById;
-import ci.komobe.actionelle.domain.entities.Souscription;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
+ * Contrôleur de gestion des souscriptions
+ *
  * @author Moro KONÉ 2025-05-29
  */
+@RestController
+@RequestMapping("/api/v1/souscriptions")
 @RequiredArgsConstructor
-@RestController()
-@RequestMapping("/api/v1/subscriptions")
+@Tag(name = "Souscriptions", description = "API de gestion des souscriptions d'assurance")
 public class SouscriptionController {
 
   private final VehiculeRepository vehiculeRepository;
@@ -43,12 +47,13 @@ public class SouscriptionController {
   }
 
   @GetMapping
-  public Collection<Souscription> listSouscriptions() {
-    return new GetAllSouscriptions(souscriptionRepository).get();
+  public Collection<Souscription> listerSouscriptions() {
+    return new ListerSouscriptions(souscriptionRepository).executer();
   }
 
+
   @GetMapping("/{souscriptionId}")
-  public Souscription getSouscriptionById(@PathVariable String souscriptionId) {
-    return new GetSouscriptionById(souscriptionRepository).get(souscriptionId);
+  public Souscription recupererSouscriptionParId(@PathVariable String souscriptionId) {
+    return new RecupererSouscriptionParId(souscriptionRepository).recuperer(souscriptionId);
   }
 }

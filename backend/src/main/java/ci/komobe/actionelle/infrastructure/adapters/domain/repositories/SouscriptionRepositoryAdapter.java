@@ -26,7 +26,7 @@ public class SouscriptionRepositoryAdapter implements SouscriptionRepository {
 
   @Transactional
   @Override
-  public void save(Souscription souscription) {
+  public void enregistrer(Souscription souscription) {
     var souscriptionEntity = souscriptionMapper.toEntity(souscription);
     assureJpaRepository.save(souscriptionEntity.getAssure());
     vehiculeJpaRepository.save(souscriptionEntity.getVehicule());
@@ -41,7 +41,7 @@ public class SouscriptionRepositoryAdapter implements SouscriptionRepository {
   }
 
   @Override
-  public Optional<Souscription> findById(String souscriptionId) {
+  public Optional<Souscription> recupererParId(String souscriptionId) {
     return souscriptionJpaRepository.findById(souscriptionId)
         .map(souscriptionMapper::toDomain);
   }

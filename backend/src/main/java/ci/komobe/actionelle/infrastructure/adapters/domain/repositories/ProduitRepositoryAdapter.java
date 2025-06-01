@@ -20,18 +20,18 @@ public class ProduitRepositoryAdapter implements ProduitRepository {
   private final ProduitJpaRepository produitJpaRepository;
 
   @Override
-  public Optional<Produit> findByNom(String code) {
+  public Optional<Produit> recupererParNom(String code) {
     return produitJpaRepository.findByNom(code).map(produitMapper::toDomain);
   }
 
   @Override
-  public List<Produit> findAll() {
+  public List<Produit> recupererTous() {
     return produitJpaRepository.findAll().stream()
         .map(produitMapper::toDomain).toList();
   }
 
   @Override
-  public void save(Produit produit) {
+  public void enregistrer(Produit produit) {
     var produitEntity = produitMapper.toEntity(produit);
     produitJpaRepository.save(produitEntity);
   }

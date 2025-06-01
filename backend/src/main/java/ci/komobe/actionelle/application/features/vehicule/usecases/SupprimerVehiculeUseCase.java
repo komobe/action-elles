@@ -10,11 +10,11 @@ import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 public record SupprimerVehiculeUseCase(VehiculeRepository vehiculeRepository) {
 
   public void execute(SupprimerVehiculeCommand<?> command) {
-    vehiculeRepository.findBySpecification(command)
+    vehiculeRepository.recupererParSpec(command)
         .orElseThrow(() -> new VehiculeError(
             "Le véhicule est introuvable avec les critères: "
                 + command.field() + " = " + command.value()));
 
-    vehiculeRepository.delete(command);
+    vehiculeRepository.supprimer(command);
   }
 }

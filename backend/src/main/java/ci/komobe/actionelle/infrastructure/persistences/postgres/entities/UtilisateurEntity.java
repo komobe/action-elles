@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,17 +19,21 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
- * @author Moro KONÉ 2025-05-30
+ * Entité JPA Utilisateur
+ *
+ * @author Moro KONÉ 2025-05-31
  */
+
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "utilisateurs")
 public class UtilisateurEntity implements UserDetails {
 
   @Id
-  @Column(name = "id", updatable = false, nullable = false, length = 36)
   private String id;
   @Column(name = "nom_utilisateur", nullable = false, unique = true, length = 50)
   private String username;
@@ -41,15 +47,5 @@ public class UtilisateurEntity implements UserDetails {
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return List.of(new SimpleGrantedAuthority(role.name()));
-  }
-
-  @Override
-  public String getPassword() {
-    return password;
-  }
-
-  @Override
-  public String getUsername() {
-    return username;
   }
 }

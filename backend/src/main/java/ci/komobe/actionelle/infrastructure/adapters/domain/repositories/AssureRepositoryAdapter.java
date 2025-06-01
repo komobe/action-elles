@@ -24,7 +24,7 @@ public class AssureRepositoryAdapter implements AssureRepository {
   }
 
   @Override
-  public void save(Assure assure) {
+  public void enregistrer(Assure assure) {
     var assureEntity = assureMapper.toEntity(assure);
     assureJpaRepository.save(assureEntity);
   }

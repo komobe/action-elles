@@ -33,17 +33,17 @@ public class ModifierVehiculeUseCase {
     vehicule.setNombreDePortes(command.getNombreDePortes());
     vehicule.setCategorie(categorieVehicule);
 
-    vehiculeRepository.save(vehicule);
+    vehiculeRepository.enregistrer(vehicule);
   }
 
   private Vehicule getVehiculeByImmatriculation(String immatriculation) {
-    return vehiculeRepository.findByImmatriculation(immatriculation)
+    return vehiculeRepository.recupererParImmatriculation(immatriculation)
         .orElseThrow(() -> new VehiculeError(
             "Le véhicule avec l'immatriculation " + immatriculation + " n'existe pas"));
   }
 
   private CategorieVehicule getCategorieVehiculeByCode(String categorieCode) {
-    return categorieVehiculeRepository.findByCode(categorieCode)
+    return categorieVehiculeRepository.recupererParCode(categorieCode)
         .orElseThrow(() -> new CategorieVehiculeError(
             "La catégorie de véhicule " + categorieCode + " n'existe pas"));
   }

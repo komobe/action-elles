@@ -20,7 +20,7 @@ public class CategorieVehiculeRepositoryAdapter implements CategorieVehiculeRepo
   private final CategorieVehiculeJpaRepository categorieVehiculeJpaRepository;
 
   @Override
-  public void save(CategorieVehicule categorieVehicule) {
+  public void enregistrer(CategorieVehicule categorieVehicule) {
     var categorieVehiculeEntity = categorieVehiculeMapper.toEntity(categorieVehicule);
     categorieVehiculeJpaRepository.save(categorieVehiculeEntity);
   }
@@ -33,12 +33,12 @@ public class CategorieVehiculeRepositoryAdapter implements CategorieVehiculeRepo
   }
 
   @Override
-  public boolean existsByCode(String code) {
+  public boolean codeExiste(String code) {
     return categorieVehiculeJpaRepository.existsByCode(code);
   }
 
   @Override
-  public Optional<CategorieVehicule> findByCode(String code) {
+  public Optional<CategorieVehicule> recupererParCode(String code) {
     return categorieVehiculeJpaRepository.findByCode(code)
         .map(categorieVehiculeMapper::toDomain);
   }

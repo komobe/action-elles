@@ -11,7 +11,7 @@ public class InMemorySouscriptionRepository implements SouscriptionRepository {
   private final List<Souscription> souscriptions = new ArrayList<>();
 
   @Override
-  public void save(Souscription souscription) {
+  public void enregistrer(Souscription souscription) {
     souscriptions.add(souscription);
   }
 
@@ -21,7 +21,7 @@ public class InMemorySouscriptionRepository implements SouscriptionRepository {
   }
 
   @Override
-  public Optional<Souscription> findById(String souscriptionId) {
+  public Optional<Souscription> recupererParId(String souscriptionId) {
     return souscriptions.stream()
         .filter(souscription -> souscription.getId().equals(souscriptionId))
         .findFirst();

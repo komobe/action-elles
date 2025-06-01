@@ -1,9 +1,12 @@
 package ci.komobe.actionelle.infrastructure.adapters.domain.repositories;
 
-import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
+import ci.komobe.actionelle.domain.utils.paginate.Page;
+import ci.komobe.actionelle.domain.utils.paginate.PageRequest;
 import ci.komobe.actionelle.infrastructure.mappers.UtilisateurMapper;
 import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.postgres.mappers.PageMapper;
 import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
 import java.util.Collection;
 import java.util.Optional;
@@ -41,6 +44,13 @@ public class UtilisateurRepositoryAdapater implements UtilisateurRepository {
   public Collection<Utilisateur> findAll() {
     return utilisateurJpaRepository.findAll().stream()
         .map(utilisateurMapper::toDomain).toList();
+  }
+
+  @Override
+  public Page<Utilisateur> findAll(PageRequest pageRequest) {
+    var springPageRequest = PageMapper.toSpringPageRequest(pageRequest);
+    var springPage = utilisateurJpaRepository.findAll(springPageRequest);
+    return PageMapper.fromSpringPage(springPage, utilisateurMapper::toDomain);
   }
 
   @Override

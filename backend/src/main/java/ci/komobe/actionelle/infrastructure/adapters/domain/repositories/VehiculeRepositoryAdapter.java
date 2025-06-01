@@ -21,7 +21,7 @@ public class VehiculeRepositoryAdapter implements VehiculeRepository {
   private final VehiculeMapper vehiculeMapper;
 
   @Override
-  public void save(Vehicule vehicule) {
+  public void enregistrer(Vehicule vehicule) {
     var vehiculeEntity = vehiculeMapper.toEntity(vehicule);
     vehiculeJpaRepository.save(vehiculeEntity);
   }
@@ -38,18 +38,18 @@ public class VehiculeRepositoryAdapter implements VehiculeRepository {
   }
 
   @Override
-  public Optional<Vehicule> findByImmatriculation(String numero) {
+  public Optional<Vehicule> recupererParImmatriculation(String numero) {
     return vehiculeJpaRepository.findByNumeroImmatriculation(numero)
         .map(vehiculeMapper::toDomain);
   }
 
   @Override
-  public void delete(Specification<Vehicule> specification) {
+  public void supprimer(Specification<Vehicule> specification) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
   @Override
-  public Optional<Vehicule> findBySpecification(Specification<Vehicule> specification) {
+  public Optional<Vehicule> recupererParSpec(Specification<Vehicule> specification) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }

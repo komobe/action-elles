@@ -40,7 +40,7 @@ public record SimulerPrimeUseCase(
   }
 
   private Produit getProduit(SimulerPrimeCommand command) {
-    Produit produit = produitRepository.findByNom(command.getProduit())
+    Produit produit = produitRepository.recupererParNom(command.getProduit())
         .orElseThrow(() -> new ProduitError("Produit non trouvé"));
 
     if (produit.contientCategorie(command.getCategorie())) {

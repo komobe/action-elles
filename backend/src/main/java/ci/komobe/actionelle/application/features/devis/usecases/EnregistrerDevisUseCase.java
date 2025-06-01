@@ -31,11 +31,11 @@ public class EnregistrerDevisUseCase {
   }
 
   public void execute(EnregistrerDevisCommand command) {
-    if (devisRepository.existsByReference(command.getQuoteReference())) {
+    if (devisRepository.referenceExiste(command.getQuoteReference())) {
       throw new DevisError("Le devis existe déjà");
     }
 
-    var produit = produitRepository.findByNom(command.getProduit())
+    var produit = produitRepository.recupererParNom(command.getProduit())
         .orElseThrow(() -> new ProduitError("Le produit n'existe pas"));
 
     var categorie = produit.getCategorieVehicule(command.getCategorie())
@@ -62,6 +62,6 @@ public class EnregistrerDevisUseCase {
         .dateExpiration(command.getDateExpiration())
         .build();
 
-    devisRepository.save(devis);
+    devisRepository.enregistrer(devis);
   }
 }

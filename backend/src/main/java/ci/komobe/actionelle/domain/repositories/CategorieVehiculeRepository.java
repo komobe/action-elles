@@ -1,16 +1,14 @@
 package ci.komobe.actionelle.domain.repositories;
 
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
-
 import java.util.List;
 import java.util.Optional;
 
-public interface CategorieVehiculeRepository {
-  void save(CategorieVehicule categorieVehicule);
+public interface CategorieVehiculeRepository extends CrudRepository<CategorieVehicule> {
 
   List<CategorieVehicule> findAll();
 
-  boolean existsByCode(String code);
+  boolean codeExiste(String code);
 
-  Optional<CategorieVehicule> findByCode(String code);
+  Optional<CategorieVehicule> recupererParCode(String code);
 }

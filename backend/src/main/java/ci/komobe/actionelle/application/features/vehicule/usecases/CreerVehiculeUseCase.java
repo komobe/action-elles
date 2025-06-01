@@ -26,8 +26,8 @@ public class CreerVehiculeUseCase {
       throw new VehiculeError("Un véhicule immatriculé " + immatriculation + " déjà enregistré");
     }
 
-    Vehicule factory = VehiculeFactory.factory(command);
+    Vehicule vehicule = VehiculeFactory.factory(command);
 
-    vehiculeRepository.save(factory);
+    vehiculeRepository.enregistrer(vehicule);
   }
 }

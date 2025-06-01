@@ -1,18 +1,21 @@
 package ci.komobe.actionelle.domain.entities;
 
 import ci.komobe.actionelle.domain.valueobjects.Role;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * @author Moro KONÉ 2025-05-30
+ * Entité Utilisateur du domaine
+ * 
+ * @author Moro KONÉ 2025-05-31
  */
-@Getter
-@Setter
-@EqualsAndHashCode(of = { "id" })
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Utilisateur {
-
   private String id;
   private String username;
   private String password;

@@ -1,20 +1,20 @@
 package ci.komobe.actionelle.application.features.utilisateur.usecases;
 
-import ci.komobe.actionelle.application.features.utilisateur.UtilisateurError;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
+import ci.komobe.actionelle.domain.utils.paginate.Page;
+import ci.komobe.actionelle.domain.utils.paginate.PageRequest;
 import lombok.AllArgsConstructor;
 
 /**
  * @author Moro KONÉ 2025-05-31
  */
 @AllArgsConstructor
-public class GetUtilisateurByUsername {
+public class ListerUtilisateurs {
 
   private final UtilisateurRepository utilisateurRepository;
 
-  public Utilisateur get(String username) {
-    return utilisateurRepository.findByUsername(username)
-        .orElseThrow(() -> new UtilisateurError("Utilisateur inconnu"));
+  public Page<Utilisateur> executer(PageRequest pageRequest) {
+    return utilisateurRepository.findAll(pageRequest);
   }
 }

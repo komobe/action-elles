@@ -58,12 +58,12 @@ public record CreerSouscriptionUseCase(
 
     var souscription = Souscription.creer(assure, vehicule);
 
-    souscriptionRepository.save(souscription);
+    souscriptionRepository.enregistrer(souscription);
   }
 
   private CategorieVehicule getCategorieVehicule(String categorieCode) {
     return categorieVehiculeRepository
-        .findByCode(categorieCode)
+        .recupererParCode(categorieCode)
         .orElseThrow(
             () -> new VehiculeError("La catégorie de véhicule " + categorieCode + " n'existe pas"));
   }

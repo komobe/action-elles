@@ -7,10 +7,9 @@ import ci.komobe.actionelle.domain.entities.Devis;
 /**
  * @author Moro KONÉ 2025-05-30
  */
-public interface DevisRepository {
-  void save(Devis devis);
+public interface DevisRepository extends CrudRepository<Devis> {
 
-  boolean existsByReference(String reference);
+  boolean referenceExiste(String reference);
 
-  Optional<Devis> findByReference(String reference);
+  Optional<Devis> recupererParReference(String reference);
 }

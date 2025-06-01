@@ -8,12 +8,10 @@ import ci.komobe.actionelle.domain.entities.Produit;
 /**
  * @author Moro KONÉ 2025-05-29
  */
-public interface ProduitRepository {
-  Optional<Produit> findByNom(String code);
+public interface ProduitRepository extends CrudRepository<Produit> {
+  Optional<Produit> recupererParNom(String code);
 
-  List<Produit> findAll();
-
-  void save(Produit produit);
+  List<Produit> recupererTous();
 
   boolean existsByNom(String code);
 }

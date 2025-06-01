@@ -36,7 +36,7 @@ public class SecurityConfig {
   private final RateLimitingFilter rateLimitingFilter;
 
   @Bean
-  @Profile({"dev", "developement"})
+  @Profile({ "dev", "developement" })
   public CorsConfiguration devCorsFilterChain() {
     var configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(List.of("*"));
@@ -48,8 +48,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(
       HttpSecurity http,
-      CorsConfiguration corsConfiguration
-  ) throws Exception {
+      CorsConfiguration corsConfiguration) throws Exception {
     http
         // Désactiver CSRF pour API REST
         .csrf(AbstractHttpConfigurer::disable)
@@ -60,36 +59,31 @@ public class SecurityConfig {
         // Configuration des autorisations
         .authorizeHttpRequests(auth -> auth
             // Endpoints publics
-           // .requestMatchers("/api/login", "/api/logout").permitAll()
+            //.requestMatchers("/api/login").permitAll()
+            //.requestMatchers("/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
             // Tous les autres endpoints nécessitent une authentification
-            .anyRequest().permitAll()
-        )
+            .anyRequest().permitAll())
 
         // Configuration de session - Stateless pour JWT
         .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
         // Désactiver l'authentification HTTP Basic et Form Login
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
 
         // Gestion des exceptions d'authentification
-        .exceptionHandling(exception ->
-            exception.authenticationEntryPoint((request, response, authException) -> {
-              response.setStatus(HttpStatus.UNAUTHORIZED.value());
-              response.setContentType("application/json");
-              response.setCharacterEncoding("UTF-8");
-              response.getWriter().write(
-                  String.format(
-                      "{\"error\":\"Unauthorized\",\"message\":\"%s\",\"path\":\"%s\"}",
-                      authException.getMessage(),
-                      request.getRequestURI()
-                  )
-              );
-            })
-        );
+        .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+          response.setStatus(HttpStatus.UNAUTHORIZED.value());
+          response.setContentType("application/json");
+          response.setCharacterEncoding("UTF-8");
+          response.getWriter().write(
+              String.format(
+                  "{\"error\":\"Unauthorized\",\"message\":\"%s\",\"path\":\"%s\"}",
+                  authException.getMessage(),
+                  request.getRequestURI()));
+        }));
 
     // 1. RateLimitingFilter en premier pour limiter les requêtes
     http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);

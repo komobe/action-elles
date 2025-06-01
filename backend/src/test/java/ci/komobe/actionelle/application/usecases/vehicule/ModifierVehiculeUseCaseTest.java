@@ -54,7 +54,7 @@ class ModifierVehiculeUseCaseTest {
     // Then
     assertThat(vehiculeRepository.getSaveCallCount()).isZero();
     assertThat(vehiculeRepository.findAll()).hasSize(NUMBER_VEHICULES_GENERATING);
-    assertThat(vehiculeRepository.findByImmatriculation("123456789012345")).isEmpty();
+    assertThat(vehiculeRepository.recupererParImmatriculation("123456789012345")).isEmpty();
   }
 
   @Test
@@ -78,7 +78,7 @@ class ModifierVehiculeUseCaseTest {
     // Then
     assertThat(vehiculeRepository.getSaveCallCount()).isZero();
     assertThat(vehiculeRepository.findAll()).hasSize(NUMBER_VEHICULES_GENERATING);
-    assertThat(vehiculeRepository.findByImmatriculation("123456789012345")).isEmpty();
+    assertThat(vehiculeRepository.recupererParImmatriculation("123456789012345")).isEmpty();
   }
 
   @Test
@@ -102,7 +102,7 @@ class ModifierVehiculeUseCaseTest {
 
     // Then
     Vehicule vehiculeModifie = vehiculeRepository
-        .findByImmatriculation(immatriculation)
+        .recupererParImmatriculation(immatriculation)
         .orElse(new Vehicule());
 
     assertThat(vehiculeModifie.getCouleur()).isEqualTo("Noir");

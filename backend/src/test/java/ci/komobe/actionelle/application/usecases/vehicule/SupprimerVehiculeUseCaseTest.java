@@ -55,6 +55,6 @@ class SupprimerVehiculeUseCaseTest {
 
     // Then
     assertThat(vehiculeRepository.findAll()).hasSize(NUMBER_VEHICULES_GENERATING - 1);
-    assertThat(vehiculeRepository.findBySpecification(command)).isEmpty();
+    assertThat(vehiculeRepository.recupererParSpec(command)).isEmpty();
   }
 }
