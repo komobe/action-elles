@@ -1,4 +1,4 @@
-package ci.komobe.actionelle.infrastructure.config;
+package ci.komobe.actionelle.infrastructure.persistences.jpa;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
