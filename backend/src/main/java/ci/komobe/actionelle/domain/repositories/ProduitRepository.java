@@ -1,17 +1,18 @@
 package ci.komobe.actionelle.domain.repositories;
 
-import java.util.List;
+import ci.komobe.actionelle.domain.entities.Produit;
 import java.util.Optional;
 
-import ci.komobe.actionelle.domain.entities.Produit;
-
 /**
- * @author Moro KONÉ 2025-05-29
+ * Interface pour le repository des produits
+ *
+ * @author Moro KONÉ 2025-06-01
  */
-public interface ProduitRepository extends CrudRepository<Produit> {
-  Optional<Produit> recupererParNom(String code);
+public interface ProduitRepository extends BaseRepository<Produit, String> {
 
-  List<Produit> recupererTous();
+  Optional<Produit> chercherParNom(String nom);
 
-  boolean existsByNom(String code);
+  boolean existParNom(String nom);
+
+  boolean existeParCode(String code);
 }

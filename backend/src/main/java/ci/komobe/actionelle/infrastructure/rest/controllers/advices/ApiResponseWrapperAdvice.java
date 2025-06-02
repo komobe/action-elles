@@ -1,6 +1,6 @@
 package ci.komobe.actionelle.infrastructure.rest.controllers.advices;
 
-import ci.komobe.actionelle.domain.utils.paginate.PageResponse;
+import ci.komobe.actionelle.domain.utils.ClientResponse;
 import ci.komobe.actionelle.infrastructure.rest.controllers.responses.ResponseApi;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -32,12 +32,11 @@ public class ApiResponseWrapperAdvice implements ResponseBodyAdvice<Object> {
     if (body instanceof byte[]) {
       return body;
     }
-    // Ne pas wrapper les réponses déjà au format ResponseApi ou PageResponse
-    if (body instanceof ResponseApi<?> || body instanceof PageResponse<?>) {
+
+    if (body instanceof ClientResponse) {
       return body;
     }
 
     return ResponseApi.success(body);
-
   }
 }

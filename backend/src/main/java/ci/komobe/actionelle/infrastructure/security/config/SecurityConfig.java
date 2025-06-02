@@ -36,7 +36,7 @@ public class SecurityConfig {
   private final RateLimitingFilter rateLimitingFilter;
 
   @Bean
-  @Profile({ "dev", "developement" })
+  @Profile({ "dev", "developement", "data-test" })
   public CorsConfiguration devCorsFilterChain() {
     var configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(List.of("*"));

@@ -3,12 +3,12 @@ package ci.komobe.actionelle.infrastructure.adapters.domain.repositories;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.utils.paginate.Page;
-import ci.komobe.actionelle.domain.utils.paginate.PageRequest;
+import ci.komobe.actionelle.domain.utils.paginate.Pageable;
 import ci.komobe.actionelle.infrastructure.mappers.UtilisateurMapper;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.mappers.PageMapper;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
-import java.util.Collection;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.mappers.PageMapper;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.UtilisateurJpaRepository;
+import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -24,38 +24,49 @@ public class UtilisateurRepositoryAdapater implements UtilisateurRepository {
   private final UtilisateurJpaRepository utilisateurJpaRepository;
 
   @Override
-  public boolean existsByUsername(String username) {
+  public boolean existParUsername(String username) {
     return utilisateurJpaRepository.existsByUsername(username);
   }
 
   @Override
-  public void save(Utilisateur utilisateur) {
+  public void enregistrer(Utilisateur utilisateur) {
     UtilisateurEntity entity = utilisateurMapper.toEntity(utilisateur);
     utilisateurJpaRepository.save(entity);
   }
 
   @Override
-  public Optional<Utilisateur> findByUsername(String username) {
+  public Optional<Utilisateur> chercherParUsername(String username) {
     return utilisateurJpaRepository.findByUsername(username)
         .map(utilisateurMapper::toDomain);
   }
 
   @Override
-  public Collection<Utilisateur> findAll() {
+  public List<Utilisateur> lister() {
     return utilisateurJpaRepository.findAll().stream()
         .map(utilisateurMapper::toDomain).toList();
   }
 
   @Override
-  public Page<Utilisateur> findAll(PageRequest pageRequest) {
-    var springPageRequest = PageMapper.toSpringPageRequest(pageRequest);
+  public Page<Utilisateur> lister(Pageable pageable) {
+    var springPageRequest = PageMapper.toSpringPageRequest(pageable);
     var springPage = utilisateurJpaRepository.findAll(springPageRequest);
     return PageMapper.fromSpringPage(springPage, utilisateurMapper::toDomain);
   }
 
   @Override
-  public Optional<Utilisateur> findById(String utilisateurId) {
+  public Optional<Utilisateur> chercherParId(String utilisateurId) {
     return utilisateurJpaRepository.findById(utilisateurId)
         .map(utilisateurMapper::toDomain);
+  }
+
+  @Override
+  public void supprimer(Utilisateur utilisateur) {
+    var entity = utilisateurMapper.toEntity(utilisateur);
+    utilisateurJpaRepository.delete(entity);
+  }
+
+  @Override
+  public boolean existeParId(String id) {
+    return utilisateurJpaRepository.existsById(id);
   }
 }

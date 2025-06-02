@@ -1,8 +1,8 @@
 package ci.komobe.actionelle.infrastructure.rest.controllers;
 
-import ci.komobe.actionelle.application.features.utilisateur.UtilisateurError;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
+import ci.komobe.actionelle.domain.exceptions.UtilisateurErreur;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.UtilisateurJpaRepository;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginRequest;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginResponse;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginResponse.UserInfo;
@@ -42,7 +42,7 @@ public class LoginController {
         .orElseThrow(() -> new RuntimeException("User not found"));
 
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-      throw new UtilisateurError("Credentials incorrect");
+      throw new UtilisateurErreur("Credentials incorrect");
     }
 
     String accessToken = jwtService.generateToken(user.getUsername());

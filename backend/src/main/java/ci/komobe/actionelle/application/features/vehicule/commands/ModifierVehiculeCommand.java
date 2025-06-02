@@ -1,11 +1,28 @@
 package ci.komobe.actionelle.application.features.vehicule.commands;
 
-import lombok.EqualsAndHashCode;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Moro KONÉ 2025-05-28
+ * Commande pour modifier un véhicule
+ *
+ * @author Moro KONÉ 2025-06-01
  */
+@Getter
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true)
-public class ModifierVehiculeCommand extends VehiculeCommandBase {}
+@AllArgsConstructor
+@NoArgsConstructor
+public class ModifierVehiculeCommand {
+
+  @NotBlank(message = "L'ID ne peut pas être vide")
+  private String id;
+
+  @Valid
+  @NotNull(message = "Les données du véhicule ne peuvent pas être null")
+  private CreerVehiculeCommand vehiculeData;
+}

@@ -27,6 +27,6 @@ public class SupprimerVehiculeByImmatriculation extends SupprimerVehiculeCommand
 
   @Override
   public boolean isSatisfiedBy(Vehicule vehicule) {
-    return vehicule.getNumeroImmatriculation().equals(value());
+    return vehicule.getImmatriculation().equals(value());
   }
 }

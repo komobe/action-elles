@@ -1,7 +1,8 @@
 package ci.komobe.actionelle.infrastructure.mappers;
 
 import ci.komobe.actionelle.domain.entities.Devis;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.DevisEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.DevisEntity;
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -11,22 +12,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DevisMapper {
 
-
-  @Mapping(target = "categorie", ignore = true)
-  @Mapping(target = "produit", ignore = true)
-  @Mapping(target = "price", source = "prime")
-  @Mapping(target = "vehicule.puissanceFiscale", source = "puissanceFiscale")
-  @Mapping(target = "vehicule.dateMiseEnCirculation", source = "vehiculeDateMiseEnCirculation")
-  @Mapping(target = "vehicule.valeurNeuf", source = "vehiculeValeurNeuf")
-  @Mapping(target = "vehicule.valeurVenale", source = "vehiculeValeurVenale")
-  DevisEntity toEntity(Devis devis);
-
   @Mapping(target = "produitId", source = "produit.id")
-  @Mapping(target = "categorieId", source = "categorie.id")
-  @Mapping(target = "prime", source = "price")
-  @Mapping(target = "vehiculeValeurVenale", source = "vehicule.valeurVenale")
-  @Mapping(target = "vehiculeValeurNeuf", source = "vehicule.valeurNeuf")
-  @Mapping(target = "vehiculeDateMiseEnCirculation", source = "vehicule.dateMiseEnCirculation")
-  @Mapping(target = "puissanceFiscale", source = "vehicule.puissanceFiscale")
+  @Mapping(target = "vehiculeId", source = "vehicule.id")
+  @Mapping(target = "montantPrime", source = "price")
   Devis toDomain(DevisEntity devisEntity);
+
+  @InheritInverseConfiguration
+  DevisEntity toEntity(Devis devis);
 }

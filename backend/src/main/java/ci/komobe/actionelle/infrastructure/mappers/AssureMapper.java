@@ -1,9 +1,9 @@
 package ci.komobe.actionelle.infrastructure.mappers;
 
-import org.mapstruct.Mapper;
-
 import ci.komobe.actionelle.domain.entities.Assure;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.AssureEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.AssureEntity;
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
@@ -15,5 +15,6 @@ public interface AssureMapper {
   Assure toDomain(AssureEntity assureEntity);
 
   @Mapping(target = "souscriptions", ignore = true)
+  @InheritInverseConfiguration
   AssureEntity toEntity(Assure assure);
 }

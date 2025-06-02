@@ -2,21 +2,18 @@ package ci.komobe.actionelle.domain.repositories;
 
 import ci.komobe.actionelle.application.commons.Specification;
 import ci.komobe.actionelle.domain.entities.Vehicule;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * @author Moro KONÉ 2025-05-28
+ * Interface pour le repository des véhicules
+ *
+ * @author Moro KONÉ 2025-06-01
  */
-public interface VehiculeRepository extends CrudRepository<Vehicule> {
+public interface VehiculeRepository extends BaseRepository<Vehicule, String> {
 
-  List<Vehicule> findAll();
+  boolean existParImmatriculation(String numero);
 
-  boolean existsByImmatriculation(String numero);
+  Optional<Vehicule> chercherParImmatriculation(String numero);
 
-  Optional<Vehicule> recupererParImmatriculation(String numero);
-
-  void supprimer(Specification<Vehicule> specification);
-
-  Optional<Vehicule> recupererParSpec(Specification<Vehicule> specification);
+  Optional<Vehicule> chercherParSpec(Specification<Vehicule> specification);
 }

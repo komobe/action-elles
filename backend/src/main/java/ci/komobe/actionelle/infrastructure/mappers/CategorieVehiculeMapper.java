@@ -1,9 +1,11 @@
 package ci.komobe.actionelle.infrastructure.mappers;
 
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.CategorieVehiculeEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.CategorieVehiculeEntity;
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 /**
  * @author Moro KONÉ 2025-05-29
@@ -15,6 +17,8 @@ public interface CategorieVehiculeMapper {
 
   @Mapping(target = "vehicules", ignore = true)
   @Mapping(target = "produits", ignore = true)
-  @Mapping(target = "simulationsDevis", ignore = true)
+  @Named("mapToCategorieEntity")
+  @InheritInverseConfiguration
   CategorieVehiculeEntity toEntity(CategorieVehicule categorieVehicule);
 }
+

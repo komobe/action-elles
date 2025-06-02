@@ -1,13 +1,13 @@
 package ci.komobe.actionelle.application.features.devis.usecases;
 
+import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
 import ci.komobe.actionelle.application.features.devis.commands.SimulerPrimeCommand;
-import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeError;
-import ci.komobe.actionelle.application.features.produit.ProduitError;
 import ci.komobe.actionelle.application.features.devis.dto.SimulationPrimeResult;
 import ci.komobe.actionelle.application.features.devis.presenters.SimulerPrimePresenter;
-import ci.komobe.actionelle.domain.repositories.ProduitRepository;
-import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
+import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeException;
 import ci.komobe.actionelle.domain.entities.Produit;
+import ci.komobe.actionelle.domain.exceptions.ProduitErreur;
+import ci.komobe.actionelle.domain.repositories.ProduitRepository;
 import ci.komobe.actionelle.domain.utils.QuoteReferenceGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,8 +21,7 @@ import java.time.LocalDate;
  */
 public record SimulerPrimeUseCase(
     ProduitRepository produitRepository,
-    PrimeCalculator primeCalculator
-) {
+    PrimeCalculator primeCalculator) {
 
   public void execute(SimulerPrimeCommand command, SimulerPrimePresenter<?> presenter) {
     Produit produit = getProduit(command);
@@ -30,9 +29,9 @@ public record SimulerPrimeUseCase(
     BigDecimal primeTotale = primeCalculator.calculPrime(produit, command);
 
     var simulationPrimeResult = SimulationPrimeResult.builder()
+        .quoteReference(QuoteReferenceGenerator.generate())
         .price(primeTotale)
         .endDate(LocalDate.now().plusWeeks(2))
-        .quoteReference(QuoteReferenceGenerator.generate())
         .metadata(command)
         .build();
 
@@ -40,13 +39,13 @@ public record SimulerPrimeUseCase(
   }
 
   private Produit getProduit(SimulerPrimeCommand command) {
-    Produit produit = produitRepository.recupererParNom(command.getProduit())
-        .orElseThrow(() -> new ProduitError("Produit non trouvé"));
+    Produit produit = produitRepository.chercherParNom(command.getProduit())
+        .orElseThrow(() -> new ProduitErreur("Produit non trouvé"));
 
     if (produit.contientCategorie(command.getCategorie())) {
       return produit;
     }
 
-    throw new CategorieVehiculeError("Produit catégorie non trouvée");
+    throw new CategorieVehiculeException("Produit catégorie non trouvée");
   }
 }

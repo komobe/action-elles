@@ -1,15 +1,19 @@
 package ci.komobe.actionelle.domain.repositories;
 
 import ci.komobe.actionelle.domain.entities.Souscription;
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * @author Moro KONÉ 2025-05-28
+ * Interface pour le repository des souscriptions
+ * 
+ * @author Moro KONÉ 2025-06-01
  */
-public interface SouscriptionRepository extends CrudRepository<Souscription>{
+public interface SouscriptionRepository extends BaseRepository<Souscription, String>{
 
-  Collection<Souscription> findAll();
+  Optional<Souscription> chercherParNumero(String numero);
 
-  Optional<Souscription> recupererParId(String souscriptionId);
+  boolean existeParNumero(String numero);
+
+  List<Souscription> lister();
 }

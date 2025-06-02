@@ -1,5 +1,6 @@
 package ci.komobe.actionelle.infrastructure.rest.controllers.advices;
 
+import ci.komobe.actionelle.domain.utils.ClientResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Map;
@@ -11,7 +12,7 @@ import org.springframework.http.ResponseEntity;
  * @author Moro KONÉ 2025-05-30
  */
 @Getter
-public class ResponseApi<T> {
+public class ResponseApi<T> implements ClientResponse {
 
   public static final String SUCCESS_STATUS = "success";
   private final String status;
@@ -25,6 +26,7 @@ public class ResponseApi<T> {
   @JsonIgnore
   private final HttpStatus httpStatus;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private final Map<String, Object> metadata;
 
   public ResponseApi(T data, String message, String status, HttpStatus httpStatus) {
@@ -58,7 +60,8 @@ public class ResponseApi<T> {
   public static <T> ResponseEntity<ResponseApi<T>> created(T data) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(
-            new ResponseApi<>(data, "Ressource créée avec succès", SUCCESS_STATUS, HttpStatus.CREATED));
+            new ResponseApi<>(data, "Ressource créée avec succès", SUCCESS_STATUS,
+                HttpStatus.CREATED));
   }
 
   public static <T> ResponseEntity<ResponseApi<T>> noContent() {

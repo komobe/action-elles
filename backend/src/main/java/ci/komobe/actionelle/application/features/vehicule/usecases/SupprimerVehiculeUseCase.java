@@ -1,7 +1,8 @@
 package ci.komobe.actionelle.application.features.vehicule.usecases;
 
+import ci.komobe.actionelle.application.features.vehicule.VehiculeErreur;
 import ci.komobe.actionelle.application.features.vehicule.commands.SupprimerVehiculeCommand;
-import ci.komobe.actionelle.application.features.vehicule.VehiculeError;
+import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 
 /**
@@ -10,11 +11,11 @@ import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 public record SupprimerVehiculeUseCase(VehiculeRepository vehiculeRepository) {
 
   public void execute(SupprimerVehiculeCommand<?> command) {
-    vehiculeRepository.recupererParSpec(command)
-        .orElseThrow(() -> new VehiculeError(
+    Vehicule vehicule = vehiculeRepository.chercherParSpec(command)
+        .orElseThrow(() -> new VehiculeErreur(
             "Le véhicule est introuvable avec les critères: "
                 + command.field() + " = " + command.value()));
 
-    vehiculeRepository.supprimer(command);
+    vehiculeRepository.supprimer(vehicule);
   }
 }

@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Builder
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = { "id" })
 public class CategorieVehicule {
 
   private String id;

@@ -1,6 +1,7 @@
 package ci.komobe.actionelle.domain.valueobjects;
 
 import jakarta.validation.constraints.NotNull;
+import java.util.Objects;
 
 public record PuissanceFiscale(Integer debut, Integer fin) {
 
@@ -25,70 +26,87 @@ public record PuissanceFiscale(Integer debut, Integer fin) {
     return new PuissanceFiscale(null, fin);
   }
 
-  public static PuissanceFiscale fromString(String puissanceFiscale) {
-    if (puissanceFiscale == null || puissanceFiscale.isBlank()) {
-      return null; // Pas de valeur fournie
+  public static PuissanceFiscale fromString(String rawValue) {
+    if (rawValue == null || rawValue.isBlank()) {
+      return null;
     }
 
-    String puissanceFiscaleStrimmed = puissanceFiscale.trim();
+    String value = rawValue.trim();
 
     try {
-      if (puissanceFiscaleStrimmed.startsWith("<=")) {
-        // Cas borne supérieure uniquement : "<= valeur"
-        String valeurBorneSupStr = puissanceFiscaleStrimmed.substring(3).trim();
-        Integer borneSup = Integer.valueOf(valeurBorneSupStr);
-        return PuissanceFiscale.fromFin(borneSup);
-      } else if (puissanceFiscaleStrimmed.startsWith(">=")) {
-        // Cas borne inférieure uniquement : ">= valeur"
-        String valeurBorneInf = puissanceFiscaleStrimmed.substring(3).trim();
-        Integer borneInf = Integer.valueOf(valeurBorneInf);
-        return PuissanceFiscale.fromDebut(borneInf);
-      } else if (puissanceFiscaleStrimmed.contains(" à ")) {
-        // Cas intervalle : "debut à fin"
-        String[] bornesStr = puissanceFiscaleStrimmed.split(" à ");
-        if (bornesStr.length != 2) {
-          throw new IllegalArgumentException("Format invalide : attendu 'debut à fin'");
-        }
-        Integer borneInf = Integer.valueOf(bornesStr[0].trim());
-        Integer borneSup = Integer.valueOf(bornesStr[1].trim());
-        return PuissanceFiscale.of(borneInf, borneSup);
-      } else {
-        // Cas valeur exacte unique
-        Integer valeurExacte = Integer.valueOf(puissanceFiscaleStrimmed);
-        return PuissanceFiscale.of(valeurExacte, valeurExacte);
+      if (value.startsWith(">=")) {
+        return fromDebut(parse(value.substring(2)));
       }
+
+      if (value.startsWith("<=")) {
+        return fromFin(parse(value.substring(2)));
+      }
+
+      if (value.startsWith(">")) {
+        return fromDebut(parse(value.substring(1)) + 1);
+      }
+
+      if (value.startsWith("<")) {
+        return fromFin(parse(value.substring(1)) - 1);
+      }
+
+      if (value.contains(" à ")) {
+        return parseInterval(value);
+      }
+
+      // Cas valeur unique
+      int uniqueValue = parse(value);
+      return of(uniqueValue, uniqueValue);
+
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("La valeur de puissance fiscale contient un nombre invalide : '" + puissanceFiscaleStrimmed + "'", e);
+      throw new IllegalArgumentException(
+          "Format de puissance fiscale invalide : '" + rawValue + "'", e);
     }
   }
 
+  private static PuissanceFiscale parseInterval(String value) {
+    String[] parts = value.split(" à ");
+    if (parts.length != 2) {
+      throw new IllegalArgumentException("Format invalide : attendu 'debut à fin'");
+    }
+    int debut = parse(parts[0]);
+    int fin = parse(parts[1]);
+    return of(debut, fin);
+  }
+
+  private static int parse(String s) {
+    return Integer.parseInt(s.trim());
+  }
 
   public boolean isInRange(Integer puissanceFiscale) {
     if (puissanceFiscale == null) {
       return false;
     }
 
-    if (debut == null) {
-      return puissanceFiscale <= fin;
-    }
-    if (fin == null) {
-      return puissanceFiscale >= debut;
-    }
-    return puissanceFiscale >= debut && puissanceFiscale <= fin;
+    boolean afterStart = debut == null || puissanceFiscale >= debut;
+    boolean beforeEnd = fin == null || puissanceFiscale <= fin;
+
+    return afterStart && beforeEnd;
   }
 
   public boolean isExactMatch() {
-    return debut != null && debut.equals(fin);
+    return Objects.equals(debut, fin);
   }
 
   @Override
   public @NotNull String toString() {
+    if (isExactMatch()) {
+      return String.valueOf(debut);
+    }
+
     if (debut == null) {
       return "<= " + fin;
     }
+
     if (fin == null) {
       return ">= " + debut;
     }
-    return isExactMatch() ? "<= " + debut : debut + " à " + fin;
+
+    return debut + " à " + fin;
   }
 }

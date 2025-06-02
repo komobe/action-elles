@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { http } from '@services/http';
+import { ApiResponse } from '@/types/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@contexts/ToastContext';
 import { Dialog } from 'primereact/dialog';
@@ -115,7 +116,7 @@ const ListerUtilisateurs = () => {
         updateData.password = editForm.password;
       }
 
-      await http.put(API_ENDPOINTS.users.update(selectedUser.id), updateData);
+      await http.put<{ status: string }>(API_ENDPOINTS.users.update(selectedUser.id), updateData);
       showSuccess('Utilisateur mis à jour avec succès');
 
       setUsers(users.map(user =>
@@ -133,7 +134,7 @@ const ListerUtilisateurs = () => {
     if (!selectedUser) return;
 
     try {
-      await http.put(API_ENDPOINTS.users.update(selectedUser.id), {
+      await http.put<{ status: string }>(API_ENDPOINTS.users.update(selectedUser.id), {
         password: newPassword
       });
       showSuccess('Mot de passe réinitialisé avec succès');
@@ -146,7 +147,7 @@ const ListerUtilisateurs = () => {
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await http.put(API_ENDPOINTS.users.update(userId), {
+      await http.put<{ status: string }>(API_ENDPOINTS.users.update(userId), {
         isActive: !currentStatus
       });
       setUsers(users.map(user =>

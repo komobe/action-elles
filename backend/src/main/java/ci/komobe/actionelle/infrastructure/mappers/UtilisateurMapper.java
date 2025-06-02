@@ -1,7 +1,8 @@
 package ci.komobe.actionelle.infrastructure.mappers;
 
 import ci.komobe.actionelle.domain.entities.Utilisateur;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 
 /**
@@ -12,5 +13,6 @@ public interface UtilisateurMapper {
 
   Utilisateur toDomain(UtilisateurEntity utilisateurJpa);
 
+  @InheritInverseConfiguration
   UtilisateurEntity toEntity(Utilisateur utilisateur);
 }

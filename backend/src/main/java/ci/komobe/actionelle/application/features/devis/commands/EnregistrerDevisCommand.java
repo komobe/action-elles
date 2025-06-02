@@ -1,5 +1,6 @@
 package ci.komobe.actionelle.application.features.devis.commands;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,6 +22,9 @@ public class EnregistrerDevisCommand extends SimulerPrimeCommand {
 
   @NotNull(message = "Le montant de la prime est requise")
   private final BigDecimal price;
+
+  @NotBlank(message = "L'immatriculation du vehicule est requise")
+  private final String vehiculeImmatriculation;
 
   public LocalDate getDateExpiration() {
     return endDate;

@@ -1,8 +1,8 @@
 package ci.komobe.actionelle;
 
 import ci.komobe.actionelle.domain.valueobjects.Role;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.UtilisateurJpaRepository;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.util.Base64;

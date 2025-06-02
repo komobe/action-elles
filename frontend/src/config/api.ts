@@ -4,10 +4,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 // Configuration des endpoints de l'API
 export const API_ENDPOINTS = {
   auth: {
-    login: `${API_BASE_URL}/api/login`,
-    register: `${API_BASE_URL}/api/v1/utilisateurs/inscrire`,
-    refreshToken: `${API_BASE_URL}/api/refresh-token`,
-    profile: `${API_BASE_URL}/api/v1/utilisateurs/profile`,
+    login: `${API_BASE_URL}/api/auth/login`,
+    register: `${API_BASE_URL}/api/v1/auth/register`,
+    refreshToken: `${API_BASE_URL}/api/auth/refresh-token`,
+    profile: `${API_BASE_URL}/api/v1/auth/profile`,
   },
   users: {
     list: `${API_BASE_URL}/api/v1/utilisateurs`,
@@ -15,7 +15,10 @@ export const API_ENDPOINTS = {
     update: (id: string) => `${API_BASE_URL}/api/v1/utilisateurs/${id}`
   },
   roles: {
-    list: `${API_BASE_URL}/api/v1/roles`
+    list: `${API_BASE_URL}/api/v1/roles`,
+    delete: (id: string) => `${API_BASE_URL}/api/v1/roles/${id}`,
+    update: (id: string) => `${API_BASE_URL}/api/v1/roles/${id}`,
+    create: `${API_BASE_URL}/api/v1/roles`,
   },
   devis: {
     simuler: `${API_BASE_URL}/api/v1/devis/simuler`,
@@ -25,6 +28,8 @@ export const API_ENDPOINTS = {
     creer: `${API_BASE_URL}/api/v1/subscriptions`,
     list: `${API_BASE_URL}/api/v1/subscriptions`,
     details: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}`,
+    statut: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/statut`,
+    gerererAttestation: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/attestation`,
   },
   // Ajoutez d'autres endpoints ici
 } as const;

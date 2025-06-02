@@ -1,8 +1,8 @@
 package ci.komobe.actionelle.infrastructure.adapters.application.providers;
 
 import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
-import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Moro KONÉ 2025-05-30

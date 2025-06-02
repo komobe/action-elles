@@ -1,9 +1,5 @@
 package ci.komobe.actionelle.domain.utils.paginate;
 
-import ci.komobe.actionelle.domain.utils.sorting.Sort;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * Interface pour les objets paginables
  * 
@@ -30,13 +26,6 @@ public interface Pageable {
    * @return offset calculé
    */
   long getOffset();
-
-  /**
-   * Obtient les critères de tri
-   * 
-   * @return liste des tris à appliquer
-   */
-  List<Sort> getSorts();
 
   /**
    * Vérifie si la pagination est active
@@ -74,48 +63,4 @@ public interface Pageable {
    * @return true s'il existe une page précédente
    */
   boolean hasPrevious();
-
-  /**
-   * Convertit les critères de tri en clause SQL ORDER BY
-   * 
-   * @return clause SQL ORDER BY
-   */
-  default String toSqlOrderBy() {
-    List<Sort> sorts = getSorts();
-    if (sorts == null || sorts.isEmpty()) {
-      return Sort.getDefault().toSql();
-    }
-    return sorts.stream()
-        .map(Sort::toSql)
-        .collect(Collectors.joining(", "));
-  }
-
-  /**
-   * Vérifie si la page actuelle est la première
-   * 
-   * @return true si c'est la première page
-   */
-  default boolean isFirst() {
-    return !hasPrevious();
-  }
-
-  /**
-   * Crée une nouvelle pagination avec une taille de page différente
-   * 
-   * @param newSize nouvelle taille de page
-   * @return nouvelle pagination
-   */
-  default Pageable withSize(int newSize) {
-    return PageRequest.of(getNumber(), newSize, getSorts());
-  }
-
-  /**
-   * Crée une nouvelle pagination avec un numéro de page différent
-   * 
-   * @param newNumber nouveau numéro de page
-   * @return nouvelle pagination
-   */
-  default Pageable withNumber(int newNumber) {
-    return PageRequest.of(newNumber, getSize(), getSorts());
-  }
 }

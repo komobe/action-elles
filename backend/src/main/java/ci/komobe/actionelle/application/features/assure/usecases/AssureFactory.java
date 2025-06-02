@@ -1,6 +1,6 @@
 package ci.komobe.actionelle.application.features.assure.usecases;
 
-import ci.komobe.actionelle.application.features.assure.commands.AssureCommandBase;
+import ci.komobe.actionelle.application.features.assure.commands.CreerAssureCommand;
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
 
@@ -12,15 +12,17 @@ public class AssureFactory {
   private AssureFactory() {
   }
 
-  public static Assure factory(AssureCommandBase command) {
+  public static Assure factory(CreerAssureCommand command) {
     return Assure.builder()
         .id(IdGenerator.generateId())
         .numeroCarteIdentite(command.getNumeroCarteIdentite())
         .nom(command.getNom())
-        .prenom(command.getPrenom())
+        .prenoms(command.getPrenoms())
+        .dateNaissance(command.getDateNaissance())
+        .lieuNaissance(command.getLieuNaissance())
+        .email(command.getEmail())
         .adresse(command.getAdresse())
         .telephone(command.getTelephone())
-        .ville(command.getVille())
         .build();
   }
 }

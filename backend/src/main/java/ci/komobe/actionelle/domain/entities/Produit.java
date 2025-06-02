@@ -2,25 +2,27 @@ package ci.komobe.actionelle.domain.entities;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * @author Moro KONÉ 2025-05-28
+ * Entité Produit
+ *
+ * @author Moro KONÉ 2025-06-01
  */
-@Getter
-@Setter
+@Data
 @Builder
-@EqualsAndHashCode(of = {"id"})
+@NoArgsConstructor
+@AllArgsConstructor
 public class Produit {
 
   private String id;
+  private String code;
   private String nom;
   private String description;
-  private List<Garantie> garantiesResponsabiliteCivile;
-  private List<Garantie> autresGaranties;
+  private List<Garantie> garanties;
   private List<CategorieVehicule> categorieVehicules;
 
   public boolean contientCategorie(String categorie) {
@@ -31,7 +33,33 @@ public class Produit {
     return categorieVehicules.stream().anyMatch(c -> c.getCode().equals(categorie));
   }
 
-  public Optional<CategorieVehicule> getCategorieVehicule(String categorie) {
-    return categorieVehicules.stream().filter(c -> c.getCode().equals(categorie)).findFirst();
+  // Getters filtrés
+  public List<Garantie> getGarantiesResponsabiliteCivile() {
+    return garanties.stream()
+        .filter(g -> "RC".equalsIgnoreCase(g.getCode()))
+        .toList();
+  }
+
+  public List<Garantie> getAutresGaranties() {
+    return garanties.stream()
+        .filter(g -> !"RC".equalsIgnoreCase(g.getCode()))
+        .toList();
+  }
+
+  public Optional<CategorieVehicule> recupererCategorieParCode(String categorieCode) {
+    return categorieVehicules.stream().filter(c -> c.getCode().equals(categorieCode)).findFirst();
+  }
+
+  /**
+   * Vérifie si un véhicule est éligible au produit.
+   *
+   * @param vehicule Le véhicule à vérifier
+   * @return true si le véhicule est éligible, false sinon
+   */
+  public boolean estEligible(Vehicule vehicule) {
+    if (categorieVehicules == null) {
+      return false;
+    }
+    return categorieVehicules.stream().anyMatch(c -> c.getCode().equals(vehicule.getCategorie().getCode()));
   }
 }

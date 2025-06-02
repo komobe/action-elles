@@ -1,7 +1,7 @@
 package ci.komobe.actionelle.infrastructure.security.services;
 
-import ci.komobe.actionelle.infrastructure.persistences.postgres.entities.UtilisateurEntity;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.UtilisateurJpaRepository;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.UtilisateurJpaRepository;
 import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

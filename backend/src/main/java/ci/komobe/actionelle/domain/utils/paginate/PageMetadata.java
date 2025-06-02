@@ -12,7 +12,7 @@ import lombok.Value;
 @Builder
 public class PageMetadata {
   /**
-   * Numéro de la page courante (commence à 0)
+   * Numéro de la page courante (commence à 1)
    */
   int number;
 
@@ -40,10 +40,10 @@ public class PageMetadata {
    */
   public static <T> PageMetadata from(Page<T> page) {
     return PageMetadata.builder()
-        .number(page.getNumber())
+        .number(page.getNumber() + 1)
         .size(page.getSize())
         .totalElements(page.getTotalElements())
-        .totalPages(page.getTotalPages())
+        .totalPages(page.getTotalPages() > 0 ? page.getTotalPages() : 1)
         .build();
   }
 
@@ -53,7 +53,7 @@ public class PageMetadata {
    * @return true s'il existe une page suivante
    */
   public boolean hasNext() {
-    return number < totalPages - 1;
+    return number < totalPages;
   }
 
   /**
@@ -62,7 +62,7 @@ public class PageMetadata {
    * @return true s'il existe une page précédente
    */
   public boolean hasPrevious() {
-    return number > 0;
+    return number > 1;
   }
 
   /**
@@ -71,7 +71,7 @@ public class PageMetadata {
    * @return true si c'est la première page
    */
   public boolean isFirst() {
-    return !hasPrevious();
+    return number == 1;
   }
 
   /**
@@ -80,7 +80,7 @@ public class PageMetadata {
    * @return true si c'est la dernière page
    */
   public boolean isLast() {
-    return !hasNext();
+    return number == totalPages;
   }
 
   /**
@@ -89,7 +89,7 @@ public class PageMetadata {
    * @return l'offset calculé
    */
   public long getOffset() {
-    return (long) number * size;
+    return (long) (number - 1) * size;
   }
 
   /**
@@ -107,6 +107,6 @@ public class PageMetadata {
    * @return nombre de pages restantes
    */
   public int getRemainingPages() {
-    return Math.max(0, totalPages - (number + 1));
+    return Math.max(0, totalPages - number);
   }
 }

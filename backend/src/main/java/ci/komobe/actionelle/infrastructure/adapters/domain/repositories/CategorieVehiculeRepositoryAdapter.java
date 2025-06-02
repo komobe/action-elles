@@ -1,9 +1,12 @@
 package ci.komobe.actionelle.infrastructure.adapters.domain.repositories;
 
-import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
+import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
+import ci.komobe.actionelle.domain.utils.paginate.Page;
+import ci.komobe.actionelle.domain.utils.paginate.Pageable;
 import ci.komobe.actionelle.infrastructure.mappers.CategorieVehiculeMapper;
-import ci.komobe.actionelle.infrastructure.persistences.postgres.repositories.CategorieVehiculeJpaRepository;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.mappers.PageMapper;
+import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.CategorieVehiculeJpaRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -26,19 +29,41 @@ public class CategorieVehiculeRepositoryAdapter implements CategorieVehiculeRepo
   }
 
   @Override
-  public List<CategorieVehicule> findAll() {
+  public void supprimer(CategorieVehicule entity) {
+    categorieVehiculeJpaRepository.delete(categorieVehiculeMapper.toEntity(entity));
+  }
+
+  @Override
+  public Optional<CategorieVehicule> chercherParId(String id) {
+    return categorieVehiculeJpaRepository.findById(id).map(categorieVehiculeMapper::toDomain);
+  }
+
+  @Override
+  public boolean existeParId(String id) {
+    return categorieVehiculeJpaRepository.existsById(id);
+  }
+
+  @Override
+  public List<CategorieVehicule> lister() {
     return categorieVehiculeJpaRepository.findAll().stream()
         .map(categorieVehiculeMapper::toDomain)
         .toList();
   }
 
   @Override
-  public boolean codeExiste(String code) {
+  public Page<CategorieVehicule> lister(Pageable pageable) {
+    var springPageRequest = PageMapper.toSpringPageRequest(pageable);
+    var springPage = categorieVehiculeJpaRepository.findAll(springPageRequest);
+    return PageMapper.fromSpringPage(springPage, categorieVehiculeMapper::toDomain);
+  }
+
+  @Override
+  public boolean existeParCode(String code) {
     return categorieVehiculeJpaRepository.existsByCode(code);
   }
 
   @Override
-  public Optional<CategorieVehicule> recupererParCode(String code) {
+  public Optional<CategorieVehicule> chercherParCode(String code) {
     return categorieVehiculeJpaRepository.findByCode(code)
         .map(categorieVehiculeMapper::toDomain);
   }

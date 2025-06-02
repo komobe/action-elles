@@ -1,90 +1,48 @@
 package ci.komobe.actionelle.domain.utils.paginate;
 
-import ci.komobe.actionelle.domain.utils.sorting.Sort;
-import ci.komobe.actionelle.domain.utils.sorting.Sort.Direction;
+import static ci.komobe.actionelle.domain.utils.paginate.PaginationConstants.MAX_PAGE_SIZE;
+import static ci.komobe.actionelle.domain.utils.paginate.PaginationConstants.MIN_PAGE_SIZE;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
-import org.springframework.web.bind.annotation.RequestParam;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Paramètres de pagination pour les requêtes HTTP
- * 
+ * Paramètres de pagination pour les requêtes HTTP La page commence à 1 pour le front-end, mais est
+ * convertie en 0-based pour JPA
+ *
  * @author Moro KONÉ 2025-05-31
  */
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaginationParams {
-  /**
-   * Numéro de la page (commence à 0)
-   */
-  @Min(0)
-  @Builder.Default
-  Integer page = PaginationConstants.DEFAULT_PAGE_NUMBER;
 
-  /**
-   * Taille de la page
-   */
-  @Min(PaginationConstants.MIN_PAGE_SIZE)
-  @Max(PaginationConstants.MAX_PAGE_SIZE)
-  @Builder.Default
-  Integer size = PaginationConstants.DEFAULT_PAGE_SIZE;
+  @NotNull(message = "Le numéro de page est obligatoire")
+  @Min(value = 1, message = "Le numéro de page doit être supérieur ou égal à 1")
+  private Integer page;
 
-  /**
-   * Liste des tris
-   */
-  @Builder.Default
-  List<Sort> sorts = new ArrayList<>();
+  @NotNull(message = "La taille de page est obligatoire")
+  @Min(
+      value = MIN_PAGE_SIZE,
+      message = "La taille de page doit être supérieure ou égale à " + MIN_PAGE_SIZE
+  )
+  @Max(
+      value = MAX_PAGE_SIZE,
+      message = "La taille de page doit être inférieure ou égale à " + MAX_PAGE_SIZE
+    )
+  private Integer size;
 
-  /**
-   * Crée une instance avec les paramètres par défaut
-   * 
-   * @return instance avec paramètres par défaut
-   */
-  public static PaginationParams getDefault() {
-    return PaginationParams.builder().build();
-  }
-
-  /**
-   * Crée une instance à partir des paramètres HTTP
-   * 
-   * @param page numéro de page
-   * @param size taille de page
-   * @param sort champs de tri au format "field,direction"
-   * @return instance créée
-   */
-  public static PaginationParams of(
-      @RequestParam(defaultValue = "0") Integer page,
-      @RequestParam(defaultValue = "10") Integer size,
-      @RequestParam(required = false) String sort
-  ) {
-
-    var params = PaginationParams.builder()
-        .page(page)
-        .size(size)
-        .build();
-
-    if (sort != null && !sort.isBlank()) {
-      String[] parts = sort.split(",");
-      String field = parts[0];
-      Direction direction = parts.length > 1 && parts[1].equalsIgnoreCase("desc")
-          ? Direction.DESC
-          : Direction.ASC;
-      params.sorts.add(Sort.by(field, direction));
-    }
-
-    return params;
-  }
-
-  /**
-   * Convertit en PageRequest
-   * 
-   * @return PageRequest correspondant
-   */
   public PageRequest toPageRequest() {
-    return PageRequest.of(page, size, sorts);
+    if (page == null || size == null) {
+      throw new IllegalArgumentException("Les paramètres de pagination sont obligatoires");
+    }
+    // Convertir la page 1-based en 0-based pour JPA
+    return PageRequest.of(page - 1, size);
   }
 }
