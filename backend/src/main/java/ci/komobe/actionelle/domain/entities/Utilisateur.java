@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Entité Utilisateur du domaine
- * 
+ *
  * @author Moro KONÉ 2025-05-31
  */
 @Data
@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Utilisateur {
+
   private String id;
   private String username;
   private String password;
@@ -25,5 +26,14 @@ public class Utilisateur {
     this.username = username;
     this.password = password;
     this.role = Role.DEFAULT;
+  }
+
+  public void modifier(String username, Role role) {
+    this.username = username;
+    this.role = role;
+  }
+
+  public void modifieMotPasse(String nouveauMotPasse) {
+    this.password = nouveauMotPasse;
   }
 }

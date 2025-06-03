@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +57,21 @@ public class LoginController {
         "Bearer",
         jwtService.getTokenExpirationInMillis(),
         userInfo);
+  }
+
+  @GetMapping("/profile")
+  public UserInfo profile(HttpServletRequest request) {
+    String authHeader = request.getHeader(AUTH_HEADER);
+    if (authHeader != null && authHeader.startsWith(TOKEN_PREFIX)) {
+      String token = authHeader.substring(TOKEN_PREFIX.length());
+      String username = jwtService.getUsernameFromToken(token);
+      if (username != null) {
+        return utilisateurJpaRepository.findByUsername(username)
+            .map(u -> new UserInfo(u.getUsername(), List.of(u.getRole().name())))
+            .orElseThrow(() -> new UtilisateurErreur("User not found"));
+      }
+    }
+    throw new UtilisateurErreur("Invalide token, please login again.");
   }
 
   @PostMapping("/logout")

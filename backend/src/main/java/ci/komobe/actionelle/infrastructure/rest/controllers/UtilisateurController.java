@@ -2,17 +2,19 @@ package ci.komobe.actionelle.infrastructure.rest.controllers;
 
 import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
 import ci.komobe.actionelle.application.features.utilisateur.commands.InscriptionUtilisateurCommand;
+import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierUtilisateurCommand;
+import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierMotPasseCommand;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.InscrireUtilisateur;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.ListerUtilisateurs;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.ModifierUtilisateurUseCase;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.RecupererUtilisateurParUsername;
+import ci.komobe.actionelle.application.features.utilisateur.usecases.ModifierMotPasseUseCase;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.SupprimerUtilisateurUseCase;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.utils.paginate.Page;
 import ci.komobe.actionelle.domain.utils.paginate.PageResponse;
 import ci.komobe.actionelle.domain.utils.paginate.PaginationParams;
-import ci.komobe.actionelle.domain.valueobjects.Role;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -23,8 +25,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -62,10 +64,17 @@ public class UtilisateurController {
     useCase.executer(command);
   }
 
-  @PutMapping("/{id}/role")
-  public void modifierRole(@PathVariable String id, @RequestParam Role role) {
+  @PutMapping
+  public void modifierUtilisateur(@Valid @RequestBody ModifierUtilisateurCommand command) {
     var useCase = new ModifierUtilisateurUseCase(utilisateurRepository);
-    useCase.execute(id, role);
+    useCase.execute(command);
+  }
+
+  @PutMapping("/reset-password")
+  public void modifierMotDePasseUtilisateur(
+      @Valid @RequestBody ModifierMotPasseCommand command) {
+    var useCase = new ModifierMotPasseUseCase(utilisateurRepository, passwordProvider);
+    useCase.execute(command);
   }
 
   @DeleteMapping("/{id}")

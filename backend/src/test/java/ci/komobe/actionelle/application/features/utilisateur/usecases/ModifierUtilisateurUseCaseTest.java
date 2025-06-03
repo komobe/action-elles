@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierUtilisateurCommand;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.exceptions.UtilisateurErreur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
@@ -40,7 +41,10 @@ class ModifierUtilisateurUseCaseTest {
         .thenReturn(Optional.of(utilisateur));
 
     // When
-    useCase.execute(utilisateurId, Role.ADMIN);
+    var modifierUtilisateurCommand = new ModifierUtilisateurCommand();
+    modifierUtilisateurCommand.setId(utilisateurId);
+    modifierUtilisateurCommand.setRole(Role.ADMIN);
+    useCase.execute(modifierUtilisateurCommand);
 
     // Then
     assertThat(utilisateur.getRole()).isEqualTo(Role.ADMIN);
@@ -53,11 +57,16 @@ class ModifierUtilisateurUseCaseTest {
     // Given
     var utilisateurId = "123";
 
+    var command = new ModifierUtilisateurCommand();
+    command.setId(utilisateurId);
+    command.setRole(Role.ADMIN);
+
+    // When
     when(utilisateurRepository.chercherParId(utilisateurId))
         .thenReturn(Optional.empty());
 
     // Then
-    assertThatThrownBy(() -> useCase.execute(utilisateurId, Role.ADMIN))
+    assertThatThrownBy(() -> useCase.execute(command))
         .isInstanceOf(UtilisateurErreur.class)
         .hasMessage("Utilisateur non trouvé");
   }
