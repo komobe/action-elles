@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { http } from '@services/http';
@@ -7,7 +7,6 @@ import { useToast } from '@contexts/ToastContext';
 import 'primeicons/primeicons.css';
 import { Button } from 'primereact/button';
 import { useNavigate } from 'react-router-dom';
-import ActionButton from '@/components/ui/ActionButton';
 
 interface Assure {
   nom: string;
@@ -22,7 +21,7 @@ interface Assure {
 }
 
 interface Vehicule {
-  numeroImmatriculation: string;
+  immatriculation: string;
   dateMiseEnCirculation: string;
   couleur: string;
   nombreDeSieges: number;
@@ -114,7 +113,7 @@ export default function ListerSouscriptions() {
             <div className="space-y-3">
               <div>
                 <label className="text-sm text-gray-500">Immatriculation</label>
-                <p className="font-medium">{data.vehicule.numeroImmatriculation}</p>
+                <p className="font-medium">{data.vehicule.immatriculation}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">N° Chassis</label>
@@ -185,8 +184,8 @@ export default function ListerSouscriptions() {
           <Column expander style={{ width: '1.5rem' }} />
           <Column field="id" header="N° Souscription" headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm" />
           <Column
-            header="Nom et Prénom"
-            body={(rowData) => `${rowData.assure.nom} ${rowData.assure.prenom}`}
+            header="Nom et Prénoms"
+            body={(rowData) => `${rowData.assure.nom} ${rowData.assure.prenoms}`}
             headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
           />
           <Column
@@ -195,7 +194,7 @@ export default function ListerSouscriptions() {
             headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
           />
           <Column
-            field="vehicule.numeroImmatriculation"
+            field="vehicule.immatriculation"
             header="Immatriculation"
             headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
           />

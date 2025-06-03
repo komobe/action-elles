@@ -11,7 +11,7 @@ const isPublicRoute = (url: string): boolean => {
 };
 
 export class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(message: string) {
     super(message);
     this.name = 'HttpError';
   }
@@ -25,7 +25,7 @@ export class AuthenticationError extends Error {
 }
 
 export class ApiError extends Error {
-  constructor(message: string) {
+  constructor(public status: number, message: string) {
     super(message);
     this.name = 'ApiError';
   }
@@ -33,23 +33,15 @@ export class ApiError extends Error {
 
 const getAuthHeader = (): Record<string, string> => {
   const token = localStorage.getItem('token');
+  if (!token) {
+    return {
+      'Content-Type': 'application/json'
+    };
+  }
   return {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    'Authorization': `Bearer ${token}`
   };
-};
-
-const handleResponse = async (response: Response) => {
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new AuthenticationError('Session expirée ou invalide');
-    }
-    throw new ApiError(`Erreur HTTP: ${response.status}`);
-  }
-
-  return data;
 };
 
 const createAbortController = (timeout: number) => {
@@ -58,110 +50,61 @@ const createAbortController = (timeout: number) => {
   return controller;
 };
 
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new AuthenticationError('Session expirée ou invalide');
+    }
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(response.status, errorData.message || `Erreur HTTP: ${response.status}`);
+  }
+
+  try {
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erreur lors du parsing de la réponse:', error);
+    throw new ApiError(500, 'Erreur lors du traitement de la réponse');
+  }
+};
+
 export const http = {
-  request: async (url: string, options: RequestInit = {}) => {
-    const controller = createAbortController(API_CONFIG.timeout);
-
-    const baseHeaders: HeadersInit = {
-      ...API_CONFIG.headers,
-    };
-
-    // Ajouter le token seulement si ce n'est pas une route publique
-    if (!isPublicRoute(url)) {
-      const token = getAuthHeader();
-      if (token) {
-        baseHeaders.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...baseHeaders,
-        ...(options.headers || {}),
-      },
-      signal: controller.signal,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      return handleResponse(response);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new ApiError(408, 'La requête a pris trop de temps');
-        }
-      }
-      if (error instanceof HttpError) {
-        throw error;
-      }
-      throw new ApiError(0, 'Erreur de connexion au serveur');
-    }
-  },
-
   get: async <T>(url: string): Promise<T> => {
+    const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'GET',
-      headers: getAuthHeader(),
+      headers
     });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new AuthenticationError('Session expirée ou invalide');
-      }
-      throw new ApiError(`Erreur HTTP: ${response.status}`);
-    }
-
-    return response.json();
+    return handleResponse(response);
   },
 
   post: async <T>(url: string, data: unknown): Promise<T> => {
+    const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'POST',
-      headers: getAuthHeader(),
-      body: JSON.stringify(data),
+      headers,
+      body: JSON.stringify(data)
     });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new AuthenticationError('Session expirée ou invalide');
-      }
-      throw new ApiError(`Erreur HTTP: ${response.status}`);
-    }
-
-    return response.json();
+    return handleResponse(response);
   },
 
   put: async <T>(url: string, data: unknown): Promise<T> => {
+    const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'PUT',
-      headers: getAuthHeader(),
-      body: JSON.stringify(data),
+      headers,
+      body: JSON.stringify(data)
     });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new AuthenticationError('Session expirée ou invalide');
-      }
-      throw new ApiError(`Erreur HTTP: ${response.status}`);
-    }
-
-    return response.json();
+    return handleResponse(response);
   },
 
   delete: async <T>(url: string): Promise<T> => {
+    const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'DELETE',
-      headers: getAuthHeader(),
+      headers
     });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new AuthenticationError('Session expirée ou invalide');
-      }
-      throw new ApiError(`Erreur HTTP: ${response.status}`);
-    }
-
-    return response.json();
-  },
+    return handleResponse(response);
+  }
 }; 

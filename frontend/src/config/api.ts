@@ -1,18 +1,19 @@
 // URL de base de l'API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9083';
 
 // Configuration des endpoints de l'API
 export const API_ENDPOINTS = {
   auth: {
-    login: `${API_BASE_URL}/api/auth/login`,
+    login: `${API_BASE_URL}/api/v1/auth/login`,
     register: `${API_BASE_URL}/api/v1/auth/register`,
-    refreshToken: `${API_BASE_URL}/api/auth/refresh-token`,
+    refreshToken: `${API_BASE_URL}/api/v1/auth/refresh-token`,
     profile: `${API_BASE_URL}/api/v1/auth/profile`,
   },
   users: {
     list: `${API_BASE_URL}/api/v1/utilisateurs`,
     delete: (id: string) => `${API_BASE_URL}/api/v1/utilisateurs/${id}`,
-    update: (id: string) => `${API_BASE_URL}/api/v1/utilisateurs/${id}`
+    update: `${API_BASE_URL}/api/v1/utilisateurs`,
+    resetPassword: `${API_BASE_URL}/api/v1/utilisateurs/reset-password`
   },
   roles: {
     list: `${API_BASE_URL}/api/v1/roles`,
@@ -23,6 +24,8 @@ export const API_ENDPOINTS = {
   devis: {
     simuler: `${API_BASE_URL}/api/v1/devis/simuler`,
     enregistrer: `${API_BASE_URL}/api/v1/devis/enregistrer`,
+    produits: `${API_BASE_URL}/api/v1/devis/produits`,
+    categories: `${API_BASE_URL}/api/v1/devis/categories`,
   },
   souscription: {
     creer: `${API_BASE_URL}/api/v1/subscriptions`,
@@ -31,7 +34,12 @@ export const API_ENDPOINTS = {
     statut: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/statut`,
     gerererAttestation: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/attestation`,
   },
-  // Ajoutez d'autres endpoints ici
+  produit: {
+    list: `${API_BASE_URL}/api/v1/produits`,
+  },
+  categorieVehicule: {
+    list: `${API_BASE_URL}/api/v1/categories-vehicules`,
+  },
 } as const;
 
 // Configuration des options par défaut pour les requêtes API

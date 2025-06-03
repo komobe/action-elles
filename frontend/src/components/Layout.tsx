@@ -1,19 +1,19 @@
 import { Outlet } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
-const Layout = () => {
+const Layout = memo(() => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleSidebar = useCallback(() => {
+    setIsCollapsed(prev => !prev);
+  }, []);
 
-  const toggleMobile = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
+  const toggleMobile = useCallback(() => {
+    setIsMobileOpen(prev => !prev);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -36,6 +36,8 @@ const Layout = () => {
       </div>
     </div>
   );
-};
+});
+
+Layout.displayName = 'Layout';
 
 export default Layout; 

@@ -9,8 +9,9 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import SimulerDevis from '@pages/devis/SimulerDevis.tsx';
 import CreerSouscription from '../pages/souscriptions/CreerSouscription';
+import { memo } from 'react';
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+const PrivateRoute = memo(({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
@@ -27,9 +28,9 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>;
-};
+});
 
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+const PublicRoute = memo(({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
@@ -42,16 +43,23 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (user) {
-    // Rediriger vers la page précédente ou la page d'accueil
     const from = location.state?.from?.pathname || '/home';
     return <Navigate to={from} replace />;
   }
 
   return <>{children}</>;
-};
+});
 
-const AppRoutes = () => {
-  const { user } = useAuth();
+const AppRoutes = memo(() => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -75,6 +83,11 @@ const AppRoutes = () => {
       <Route path="*" element={<Navigate to={user ? "/home" : "/login"} replace />} />
     </Routes>
   );
-};
+});
+
+// Ajout des displayNames pour le débogage
+PrivateRoute.displayName = 'PrivateRoute';
+PublicRoute.displayName = 'PublicRoute';
+AppRoutes.displayName = 'AppRoutes';
 
 export default AppRoutes; 

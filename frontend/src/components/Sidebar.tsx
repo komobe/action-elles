@@ -9,7 +9,7 @@ import {
   faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ReactElement } from 'react';
+import { ReactElement, memo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface MenuItem {
@@ -34,10 +34,10 @@ const mainMenuItems: MenuItem[] = [
 
 //const bottomMenuItem: MenuItem = { path: '/about', label: 'À propos', icon: <FontAwesomeIcon icon={faCircleInfo} className="w-5 h-5" /> };
 
-const Sidebar = ({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }: SidebarProps) => {
+const Sidebar = memo(({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }: SidebarProps) => {
   const location = useLocation();
 
-  const isActiveRoute = (path: string) => {
+  const isActiveRoute = useCallback((path: string) => {
     if (path === '/home' && (location.pathname === '/' || location.pathname === '/home')) {
       return true;
     }
@@ -45,10 +45,11 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }: Sid
       return true;
     }
     return location.pathname === path;
-  };
+  }, [location.pathname]);
 
-  const renderMenuItem = (item: MenuItem) => (
+  const renderMenuItem = useCallback((item: MenuItem) => (
     <Link
+      key={item.path}
       to={item.path}
       className={`flex items-center w-full px-4 h-14
         ${isActiveRoute(item.path)
@@ -72,7 +73,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }: Sid
         <span className="sr-only">{item.label}</span>
       )}
     </Link>
-  );
+  ), [isActiveRoute, isCollapsed, toggleMobile]);
 
   return (
     <>
@@ -169,6 +170,8 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }: Sid
       </aside>
     </>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar; 

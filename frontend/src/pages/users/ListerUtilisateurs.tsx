@@ -1,17 +1,15 @@
-import { useState, useEffect } from 'react';
-import { http } from '@services/http';
-import { ApiResponse } from '@/types/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@contexts/ToastContext';
-import { Dialog } from 'primereact/dialog';
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { http } from '@services/http';
 import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
-import { DataTable, DataTablePageEvent, DataTableRowClassNameOptions } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { DataTable } from 'primereact/datatable';
+import { Dialog } from 'primereact/dialog';
+import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
-import { InputText } from 'primereact/inputtext';
-import { Password } from 'primereact/password';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
 
 interface User {
   id: string;
@@ -24,19 +22,43 @@ interface User {
 
 interface EditUserForm {
   username: string;
-  email: string;
   role: string;
   password?: string;
 }
 
 interface Role {
-  id: string;
   name: string;
   label: string;
 }
 
+interface ApiResponse {
+  data: User[];
+  metadata: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+    offset: number;
+    remainingElements: number;
+    remainingPages: number;
+  };
+  links: {
+    current: string;
+    first: string;
+    last: string;
+    next: string | null;
+    prev: string | null;
+  };
+  size: number;
+}
+
 const ListerUtilisateurs = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { success: showSuccess, error: showError } = useToast();
@@ -46,7 +68,6 @@ const ListerUtilisateurs = () => {
   const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
   const [editForm, setEditForm] = useState<EditUserForm>({
     username: '',
-    email: '',
     role: '',
     password: ''
   });
@@ -54,11 +75,6 @@ const ListerUtilisateurs = () => {
   const [newPassword, setNewPassword] = useState('');
   const [roles, setRoles] = useState<Role[]>([]);
 
-  const availableRoles = [
-    { label: 'Administrateur', value: 'ADMIN' },
-    { label: 'Utilisateur', value: 'USER' },
-    { label: 'Manager', value: 'MANAGER' }
-  ];
 
   useEffect(() => {
     fetchUsers();
@@ -67,28 +83,39 @@ const ListerUtilisateurs = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await http.get<{ status: string, data: Role[] }>(API_ENDPOINTS.roles.list);
+      const response = await http.get<{ status: string, data: string[] }>(API_ENDPOINTS.roles.list);
       if (response.status === 'success') {
-        setRoles(response.data);
+        // Transformer les rôles pour le format du Dropdown
+        const formattedRoles = response.data.map(role => ({
+          name: role,
+          label: role
+        }));
+        setRoles(formattedRoles);
       }
     } catch (error) {
       showError('Erreur lors du chargement des rôles');
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number = 1, size: number = pageSize) => {
     try {
       setIsLoading(true);
-      const response = await http.get<{ status: string, data: User[] }>(API_ENDPOINTS.users.list);
-      if (response.status === 'success') {
-        setUsers(response.data);
-      }
+      const response = await http.get<ApiResponse>(API_ENDPOINTS.users.list + `?page=${page}&size=${size}`);
+      setUsers(response.data);
+      setTotalRecords(response.metadata.totalElements);
+      setCurrentPage(response.metadata.number);
     } catch (error: any) {
       setError('Une erreur est survenue lors du chargement des utilisateurs');
       showError('Erreur de chargement des utilisateurs');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onPage = (event: { page?: number; first: number; rows: number }) => {
+    const newPage = (event.page ?? 0) + 1;
+    setCurrentPage(newPage);
+    fetchUsers(newPage, event.rows);
   };
 
   const handleDelete = async (userId: string) => {
@@ -108,15 +135,18 @@ const ListerUtilisateurs = () => {
     try {
       const updateData: Partial<EditUserForm> = {
         username: editForm.username,
-        email: editForm.email,
         role: editForm.role
       };
+
 
       if (editForm.password) {
         updateData.password = editForm.password;
       }
 
-      await http.put<{ status: string }>(API_ENDPOINTS.users.update(selectedUser.id), updateData);
+      await http.put<{ status: string }>(API_ENDPOINTS.users.update, {
+        id: selectedUser.id,
+        ...updateData
+      });
       showSuccess('Utilisateur mis à jour avec succès');
 
       setUsers(users.map(user =>
@@ -134,7 +164,8 @@ const ListerUtilisateurs = () => {
     if (!selectedUser) return;
 
     try {
-      await http.put<{ status: string }>(API_ENDPOINTS.users.update(selectedUser.id), {
+      await http.put<{ status: string }>(API_ENDPOINTS.users.resetPassword, {
+        id: selectedUser.id,
         password: newPassword
       });
       showSuccess('Mot de passe réinitialisé avec succès');
@@ -145,21 +176,7 @@ const ListerUtilisateurs = () => {
     }
   };
 
-  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
-    try {
-      await http.put<{ status: string }>(API_ENDPOINTS.users.update(userId), {
-        isActive: !currentStatus
-      });
-      setUsers(users.map(user =>
-        user.id === userId
-          ? { ...user, isActive: !currentStatus }
-          : user
-      ));
-      showSuccess(`Utilisateur ${currentStatus ? 'désactivé' : 'activé'} avec succès`);
-    } catch (error) {
-      showError(`Erreur lors de la ${currentStatus ? 'désactivation' : 'activation'} de l'utilisateur`);
-    }
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -175,7 +192,6 @@ const ListerUtilisateurs = () => {
     setSelectedUser(user);
     setEditForm({
       username: user.username,
-      email: user.email,
       role: user.role,
       password: ''
     });
@@ -236,305 +252,166 @@ const ListerUtilisateurs = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Gestion des Utilisateurs
-        </h1>
-
-        {error && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
-
-        <DataTable
-          value={users}
-          loading={isLoading}
-          paginator
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          rows={10}
-          tableStyle={{ minWidth: '100%' }}
-          emptyMessage="Aucun utilisateur trouvé"
-          scrollable={true}
-        >
-          <Column
-            field="username"
-            header="Utilisateur"
-            body={userTemplate}
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-          />
-          <Column
-            field="email"
-            header="Email"
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-          />
-          <Column
-            field="role"
-            header="Rôle"
-            body={rolesTemplate}
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-          />
-          <Column
-            field="createdAt"
-            header="Date de création"
-            body={dateTemplate}
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-          />
-          <Column
-            field="isActive"
-            header="Statut"
-            body={statusTemplate}
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-          />
-          <Column
-            body={actionsTemplate}
-            header="Actions"
-            className="py-4"
-            headerClassName="!text-gray-500 dark:!text-gray-300 !font-medium !uppercase !text-sm"
-            style={{ width: '180px' }}
-          />
-        </DataTable>
-      </div>
-
-      {/* Dialog de confirmation de suppression */}
-      <Dialog
-        visible={deleteDialogVisible}
-        onHide={() => setDeleteDialogVisible(false)}
-        header="Confirmer la suppression"
-        className="bg-white dark:bg-gray-800"
-        headerClassName="text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700"
-        contentClassName="text-gray-600 dark:text-gray-300"
-        closeIcon="pi pi-times"
-        closable
-        closeOnEscape
-        dismissableMask
-        footer={
-          <div className="flex gap-2 justify-end">
-            <Button
-              label="Annuler"
-              icon="pi pi-times"
-              onClick={() => setDeleteDialogVisible(false)}
-              className="p-button-text"
-              severity="secondary"
-            />
-            <Button
-              label="Supprimer"
-              icon="pi pi-trash"
-              onClick={() => selectedUser && handleDelete(selectedUser.id)}
-              severity="danger"
-            />
-          </div>
-        }
+    <div className="p-6">
+      <DataTable
+        value={users}
+        lazy
+        paginator
+        first={(currentPage - 1) * pageSize}
+        rows={pageSize}
+        totalRecords={totalRecords}
+        onPage={onPage}
+        loading={isLoading}
+        className="p-datatable-lg shadow-lg rounded-lg bg-white dark:bg-gray-800"
+        emptyMessage="Aucun utilisateur trouvé"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} utilisateurs"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        rowsPerPageOptions={[5, 10, 20, 50]}
       >
-        <p>Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
-      </Dialog>
+        <Column field="username" header="Nom d'utilisateur" body={userTemplate} />
+        <Column field="createdAt" header="Date de création" body={dateTemplate} />
+        <Column field="role" header="Rôle" body={rolesTemplate} />
+        <Column field="isActive" header="Statut" body={statusTemplate} />
+        <Column body={actionsTemplate} header="Actions" style={{ width: '200px' }} />
+      </DataTable>
 
-      {/* Dialog de modification */}
+      {/* Modal de modification */}
       <Dialog
         visible={editDialogVisible}
         onHide={() => setEditDialogVisible(false)}
-        header={
-          <div className="w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                Modifier l'utilisateur
-              </h2>
-              <button
-                onClick={() => {
-                  setEditDialogVisible(false);
-                  openPasswordDialog(selectedUser!);
-                }}
-                className="inline-flex items-center px-4 py-2 border-2 border-indigo-600 text-sm font-medium rounded-full text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-              >
-                <i className="pi pi-key mr-2 text-lg" />
-                Réinitialiser le mot de passe
-              </button>
-            </div>
-            <p className="text-base text-gray-600 dark:text-gray-400">
-              Modifiez les informations de l'utilisateur sélectionné
-            </p>
-          </div>
-        }
-        className="bg-white dark:bg-gray-800"
-        contentClassName="!p-0"
-        closeIcon="pi pi-times"
-        closable
-        closeOnEscape
-        dismissableMask
-        style={{ width: '800px', maxWidth: '90vw' }}
+        header="Modifier l'utilisateur"
+        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
         modal
         footer={
-          <div className="px-8 py-4 bg-gray-50 dark:bg-gray-700/50">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={() => setEditDialogVisible(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleEdit}
-                className="px-6 py-2 border border-transparent text-base font-medium rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                disabled={!editForm.username || !editForm.email || !editForm.role}
-              >
-                Enregistrer les modifications
-              </button>
-            </div>
-          </div>
-        }
-      >
-        <form className="p-8 space-y-8">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="username" className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nom d'utilisateur
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                    <i className="pi pi-user" />
-                  </span>
-                  <input
-                    id="username"
-                    type="text"
-                    value={editForm.username}
-                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                    className="appearance-none block w-full pl-10 px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base"
-                    placeholder="Entrez le nom d'utilisateur"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                    <i className="pi pi-envelope" />
-                  </span>
-                  <input
-                    id="email"
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="appearance-none block w-full pl-10 px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base"
-                    placeholder="Entrez l'adresse email"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="role" className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Rôle
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 z-10">
-                    <i className="pi pi-users" />
-                  </span>
-                  <Dropdown
-                    id="role"
-                    value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.value })}
-                    options={roles}
-                    optionLabel="label"
-                    optionValue="name"
-                    placeholder="Sélectionnez un rôle"
-                    className="w-full pl-10"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Informations complémentaires
-                </label>
-                <div className="bg-gray-50 dark:bg-gray-700/25 rounded-lg p-4">
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <div>
-                      <i className="pi pi-circle-fill mr-2 text-xs" style={{ color: selectedUser?.isActive ? '#22c55e' : '#ef4444' }} />
-                      {selectedUser?.isActive ? 'Actif' : 'Inactif'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-      </Dialog>
-
-      {/* Dialog de réinitialisation du mot de passe */}
-      <Dialog
-        visible={passwordDialogVisible}
-        onHide={() => setPasswordDialogVisible(false)}
-        header={
-          <div>
-            <h2 className="text-center text-2xl font-extrabold text-gray-900 dark:text-white">
-              Réinitialiser le mot de passe
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-              Définissez un nouveau mot de passe pour {selectedUser?.username}
-            </p>
-          </div>
-        }
-        className="bg-white dark:bg-gray-800"
-        contentClassName="!p-0"
-        closeIcon="pi pi-times"
-        closable
-        closeOnEscape
-        dismissableMask
-        style={{ width: '450px' }}
-        modal
-        footer={
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50">
+          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
             <button
-              onClick={handlePasswordReset}
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              disabled={!newPassword}
+              onClick={() => setEditDialogVisible(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
             >
-              Réinitialiser le mot de passe
+              Annuler
+            </button>
+            <button
+              onClick={handleEdit}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Enregistrer
             </button>
           </div>
         }
       >
-        <form className="p-6 space-y-6">
-          <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Nouveau mot de passe
-            </label>
-            <div className="mt-1">
+        <div className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nom d'utilisateur
+              </label>
+              <input
+                type="text"
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Rôle
+              </label>
+              <Dropdown
+                value={editForm.role}
+                options={roles}
+                onChange={(e) => setEditForm({ ...editForm, role: e.value })}
+                optionLabel="label"
+                optionValue="name"
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Modal de réinitialisation du mot de passe */}
+      <Dialog
+        visible={passwordDialogVisible}
+        onHide={() => setPasswordDialogVisible(false)}
+        header="Réinitialiser le mot de passe"
+        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
+        modal
+        footer={
+          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
+            <button
+              onClick={() => setPasswordDialogVisible(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handlePasswordReset}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Réinitialiser
+            </button>
+          </div>
+        }
+      >
+        <div className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nouveau mot de passe
+              </label>
               <div className="relative">
                 <input
-                  id="newPassword"
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white sm:text-sm pr-10"
-                  placeholder="Entrez le nouveau mot de passe"
+                  className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none pr-12"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 w-10 h-10 flex items-center justify-center bg-transparent border-none p-0"
                   onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
                 >
-                  {showPassword ? (
-                    <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  ) : (
-                    <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  )}
+                  <FontAwesomeIcon
+                    icon={showPassword ? faEyeSlash : faEye}
+                    className="h-5 w-5"
+                  />
                 </button>
               </div>
             </div>
           </div>
-        </form>
+        </div>
+      </Dialog>
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog
+        visible={deleteDialogVisible}
+        onHide={() => setDeleteDialogVisible(false)}
+        header="Confirmer la suppression"
+        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
+        modal
+        footer={
+          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
+            <button
+              onClick={() => setDeleteDialogVisible(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => selectedUser && handleDelete(selectedUser.id)}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Supprimer
+            </button>
+          </div>
+        }
+      >
+        <div className="p-6">
+          <p className="text-gray-700 dark:text-gray-300">
+            Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+          </p>
+        </div>
       </Dialog>
     </div>
   );

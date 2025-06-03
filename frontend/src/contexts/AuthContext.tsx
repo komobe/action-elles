@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@services/api';
+import { AuthenticationError, ApiError } from '@services/http';
 
 interface User {
   username: string;
@@ -21,75 +22,148 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [retryCount, setRetryCount] = useState(0);
+  const retryTimeoutRef = useRef<number>();
+  const isInitialMount = useRef(true);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
+
       if (!token) {
         setIsLoading(false);
+        if (!isInitialMount.current) {
+          navigate('/login', { replace: true });
+        }
         return;
       }
 
       const response = await authApi.getCurrentUser();
+
       if (response.status === 'success' && response.data) {
         setUser(response.data);
+        setIsLoading(false);
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
+        setIsLoading(false);
+        if (!isInitialMount.current) {
+          navigate('/login', { replace: true });
+        }
       }
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'utilisateur:', error);
-      localStorage.removeItem('token');
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      if (retryTimeoutRef.current) {
+        window.clearTimeout(retryTimeoutRef.current);
+      }
+
+      if (error instanceof AuthenticationError ||
+        (error instanceof ApiError && error.status === 400)) {
+        localStorage.removeItem('token');
+        setUser(null);
+        setIsLoading(false);
+        if (!isInitialMount.current) {
+          navigate('/login', { replace: true });
+        }
+      } else if (retryCount < 2) {
+        setRetryCount(prev => prev + 1);
+        retryTimeoutRef.current = window.setTimeout(() => {
+          loadUser();
+        }, 2000);
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
+        setIsLoading(false);
+        if (!isInitialMount.current) {
+          navigate('/login', { replace: true });
+        }
+      }
     }
-  };
+  }, [navigate, retryCount]);
 
   useEffect(() => {
+    setRetryCount(0);
     loadUser();
-  }, []);
+    isInitialMount.current = false;
 
-  const login = async (username: string, password: string): Promise<void> => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        window.clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, [loadUser]);
+
+  const handleStorageChange = useCallback((e: StorageEvent) => {
+    if (e.key === 'token') {
+      if (!e.newValue) {
+        setUser(null);
+        setIsLoading(false);
+        navigate('/login', { replace: true });
+      } else if (!user) {
+        setRetryCount(0);
+        loadUser();
+      }
+    }
+  }, [user, navigate, loadUser]);
+
+  useEffect(() => {
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [handleStorageChange]);
+
+  const login = useCallback(async (username: string, password: string): Promise<void> => {
     try {
+      setIsLoading(true);
       const response = await authApi.login(username, password);
 
       if (response.status === 'success' && response.data) {
         const { accessToken, user: userData } = response.data;
         localStorage.setItem('token', accessToken);
         setUser(userData);
+        setIsLoading(false);
         navigate('/home', { replace: true });
       } else {
+        setIsLoading(false);
         throw new Error('Réponse invalide du serveur');
       }
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
+      setIsLoading(false);
       throw error;
     }
-  };
+  }, [navigate]);
 
-  const register = async (username: string, password: string): Promise<void> => {
+  const register = useCallback(async (username: string, password: string): Promise<void> => {
     try {
+      setIsLoading(true);
       const response = await authApi.register(username, password);
 
       if (response.status === 'success' && response.data) {
         const { accessToken, user: userData } = response.data;
         localStorage.setItem('token', accessToken);
         setUser(userData);
+        setIsLoading(false);
         navigate('/home', { replace: true });
       } else {
+        setIsLoading(false);
         throw new Error('Réponse invalide du serveur');
       }
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
+      setIsLoading(false);
       throw error;
     }
-  };
+  }, [navigate]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
+    setIsLoading(false);
     navigate('/login', { replace: true });
-  };
+  }, [navigate]);
 
   const value = {
     user,

@@ -1,23 +1,37 @@
 import { useAuth } from '../contexts/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell, faCircleUser } from '@fortawesome/free-solid-svg-icons';
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface TopbarProps {
   isCollapsed: boolean;
 }
 
-const Topbar = ({ isCollapsed }: TopbarProps) => {
+const Topbar = memo(({ isCollapsed }: TopbarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
     setIsProfileOpen(false);
-  };
+  }, [logout, navigate]);
+
+  const toggleProfile = useCallback(() => {
+    setIsProfileOpen(prev => !prev);
+  }, []);
+
+  const handleProfileClick = useCallback(() => {
+    navigate('/profile');
+    setIsProfileOpen(false);
+  }, [navigate]);
+
+  const handleSettingsClick = useCallback(() => {
+    navigate('/settings');
+    setIsProfileOpen(false);
+  }, [navigate]);
 
   return (
     <div className={`fixed top-0 right-0 bg-white dark:bg-gray-800 z-20 border-b border-gray-200 dark:border-gray-700
@@ -35,7 +49,7 @@ const Topbar = ({ isCollapsed }: TopbarProps) => {
 
           <div className="relative">
             <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              onClick={toggleProfile}
               className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             >
               <FontAwesomeIcon icon={faCircleUser} className="w-6 h-6 text-gray-600 dark:text-gray-300" />
@@ -52,19 +66,13 @@ const Topbar = ({ isCollapsed }: TopbarProps) => {
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    navigate('/profile');
-                    setIsProfileOpen(false);
-                  }}
+                  onClick={handleProfileClick}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 >
                   Profil
                 </button>
                 <button
-                  onClick={() => {
-                    navigate('/settings');
-                    setIsProfileOpen(false);
-                  }}
+                  onClick={handleSettingsClick}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 >
                   Paramètres
@@ -82,6 +90,8 @@ const Topbar = ({ isCollapsed }: TopbarProps) => {
       </div>
     </div>
   );
-};
+});
+
+Topbar.displayName = 'Topbar';
 
 export default Topbar; 

@@ -1,41 +1,92 @@
 import { API_ENDPOINTS } from '@/config/api';
-import ActionButton from "@components/ui/ActionButton.tsx";
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { http } from '@services/http';
 import { MenuItem } from 'primereact/menuitem';
 import { Steps } from 'primereact/steps';
 import { classNames } from 'primereact/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { Button } from 'primereact/button';
 
 interface Vehicule {
   dateMiseEnCirculation: string;
-  numeroImmatriculation: string;
+  immatriculation: string;
   couleur: string;
   nombreDeSieges: number;
   nombreDePortes: number;
   categorieCode: string;
+  puissanceFiscale: number;
+  valeurNeuf: number;
+}
+
+interface PuissanceFiscale {
+  debut: number;
+  fin: number;
+  exactMatch: boolean;
+}
+
+interface Prime {
+  type: 'MONTANT' | 'POURCENTAGE';
+  valeur: number;
+}
+
+interface Garantie {
+  id: string;
+  libelle: string;
+  description: string;
+  code: string;
+  puissanceFiscale: PuissanceFiscale | null;
+  baseDeCalcul: string;
+  prime: Prime;
+  primeMinimum: number | null;
+  maxAge: number;
+  plafonne: boolean;
+}
+
+interface Categorie {
+  id: string;
+  code: string;
+  libelle: string;
+  description: string;
+}
+
+interface Produit {
+  id: string;
+  code: string | null;
+  nom: string;
+  description: string;
+  garanties: Garantie[];
+  categorieVehicules: Categorie[];
 }
 
 interface Assure {
-  adresse: string;
-  telephone: string;
   nom: string;
-  prenom: string;
+  prenoms: string;
+  sexe: string;
+  dateNaissance: string;
+  lieuNaissance: string;
   numeroCarteIdentite: string;
-  ville: string;
+  telephone: string;
+  adresse: string;
+  email: string;
 }
 
 interface SouscriptionData {
   vehicule: Vehicule;
   assure: Assure;
+  vehiculeValeurVenale: number;
+  produit: string;
 }
 
 interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
+}
+
+interface ApiResponse<T> {
+  status: string;
+  data: T;
 }
 
 const CreerSouscription = () => {
@@ -47,30 +98,63 @@ const CreerSouscription = () => {
   const [validationErrors, setValidationErrors] = useState<Partial<Record<string, string>>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [categories, setCategories] = useState<Categorie[]>([]);
+  const [produits, setProduits] = useState<Produit[]>([]);
+  const [categoriesDisponibles, setCategoriesDisponibles] = useState<Categorie[]>([]);
 
   const [formData, setFormData] = useState<SouscriptionData>({
     vehicule: {
       dateMiseEnCirculation: '',
-      numeroImmatriculation: '',
+      immatriculation: '',
       couleur: '',
       nombreDeSieges: 5,
       nombreDePortes: 4,
-      categorieCode: ''
+      categorieCode: '',
+      puissanceFiscale: 0,
+      valeurNeuf: 0
     },
     assure: {
-      adresse: '',
-      telephone: '',
       nom: '',
-      prenom: '',
+      prenoms: '',
+      sexe: '',
+      dateNaissance: '',
+      lieuNaissance: '',
       numeroCarteIdentite: '',
-      ville: ''
-    }
+      telephone: '',
+      adresse: '',
+      email: ''
+    },
+    vehiculeValeurVenale: 0,
+    produit: ''
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesResponse, produitsResponse] = await Promise.all([
+          http.get<ApiResponse<Categorie[]>>(API_ENDPOINTS.categorieVehicule.list),
+          http.get<ApiResponse<Produit[]>>(API_ENDPOINTS.produit.list)
+        ]);
+
+        if (categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        }
+        if (produitsResponse.data) {
+          setProduits(produitsResponse.data);
+        }
+      } catch (error) {
+        showError('Erreur lors du chargement des données');
+        console.error('Erreur:', error);
+      }
+    };
+
+    fetchData();
+  }, [showError]);
 
   const updateStepStatus = (stepIndex: number) => {
     const stepFields = {
-      0: ['dateMiseEnCirculation', 'numeroImmatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes'],
-      1: ['nom', 'prenom', 'numeroCarteIdentite', 'adresse', 'telephone', 'ville'],
+      0: ['produit', 'dateMiseEnCirculation', 'immatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes', 'puissanceFiscale', 'valeurNeuf'],
+      1: ['nom', 'prenoms', 'numeroCarteIdentite', 'email', 'sexe', 'dateNaissance', 'lieuNaissance', 'adresse', 'telephone'],
       2: []
     };
 
@@ -80,7 +164,11 @@ const CreerSouscription = () => {
     fields.forEach((field) => {
       let value = '';
       if (stepIndex === 0) {
-        value = String(formData.vehicule[field as keyof Vehicule] || '');
+        if (field === 'produit') {
+          value = String(formData.produit || '');
+        } else {
+          value = String(formData.vehicule[field as keyof Vehicule] || '');
+        }
       } else if (stepIndex === 1) {
         value = String(formData.assure[field as keyof Assure] || '');
       }
@@ -173,10 +261,45 @@ const CreerSouscription = () => {
     }
   };
 
+  const handleProduitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const produitSelectionne = produits.find(p => p.id === e.target.value);
+    if (produitSelectionne) {
+      setCategoriesDisponibles(produitSelectionne.categorieVehicules || []);
+      const categorieExiste = produitSelectionne.categorieVehicules?.some(
+        cat => cat.code === formData.vehicule.categorieCode
+      );
+      if (!categorieExiste) {
+        setFormData(prev => ({
+          ...prev,
+          produit: produitSelectionne.nom,
+          vehicule: {
+            ...prev.vehicule,
+            categorieCode: ''
+          }
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          produit: produitSelectionne.nom
+        }));
+      }
+    } else {
+      setCategoriesDisponibles([]);
+      setFormData(prev => ({
+        ...prev,
+        produit: '',
+        vehicule: {
+          ...prev.vehicule,
+          categorieCode: ''
+        }
+      }));
+    }
+  };
+
   const validateStep = (step: number): boolean => {
     const stepFields = {
-      0: ['dateMiseEnCirculation', 'numeroImmatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes'],
-      1: ['nom', 'prenom', 'numeroCarteIdentite', 'adresse', 'telephone', 'ville'],
+      0: ['produit', 'dateMiseEnCirculation', 'immatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes', 'puissanceFiscale', 'valeurNeuf'],
+      1: ['nom', 'prenoms', 'numeroCarteIdentite', 'email', 'sexe', 'dateNaissance', 'lieuNaissance', 'adresse', 'telephone'],
       2: []
     };
     const currentStepFields = stepFields[step as keyof typeof stepFields];
@@ -185,7 +308,11 @@ const CreerSouscription = () => {
     currentStepFields.forEach((field) => {
       let value = '';
       if (step === 0) {
-        value = String(formData.vehicule[field as keyof Vehicule] || '');
+        if (field === 'produit') {
+          value = String(formData.produit || '');
+        } else {
+          value = String(formData.vehicule[field as keyof Vehicule] || '');
+        }
       } else if (step === 1) {
         value = String(formData.assure[field as keyof Assure] || '');
       }
@@ -200,12 +327,18 @@ const CreerSouscription = () => {
               errors[field] = 'Numéro de téléphone invalide';
             }
             break;
-          case 'numeroImmatriculation':
-            if (!/^[A-Z0-9]{1,10}$/.test(value)) {
-              errors[field] = 'Numéro d\'immatriculation invalide';
+          case 'immatriculation':
+            if (!/^[A-Z0-9\s]+$/i.test(value)) {
+              errors[field] = 'Le numéro d\'immatriculation ne doit contenir que des lettres et des chiffres';
+            }
+            break;
+          case 'email':
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+              errors[field] = 'Adresse email invalide';
             }
             break;
           case 'dateMiseEnCirculation':
+          case 'dateNaissance':
             const date = new Date(value);
             const now = new Date();
             if (date > now) {
@@ -222,6 +355,18 @@ const CreerSouscription = () => {
             const portes = parseInt(value);
             if (isNaN(portes) || portes < 2 || portes > 5) {
               errors[field] = 'Le nombre de portes doit être entre 2 et 5';
+            }
+            break;
+          case 'puissanceFiscale':
+            const puissance = parseInt(value);
+            if (isNaN(puissance) || puissance < 1) {
+              errors[field] = 'La puissance fiscale doit être supérieure à 0';
+            }
+            break;
+          case 'valeurNeuf':
+            const valeur = parseFloat(value);
+            if (isNaN(valeur) || valeur <= 0) {
+              errors[field] = 'La valeur doit être supérieure à 0';
             }
             break;
           case 'numeroCarteIdentite':
@@ -259,7 +404,26 @@ const CreerSouscription = () => {
     setApiError(null);
 
     try {
-      const response = await http.post<{ status: string, data: any }>(API_ENDPOINTS.souscription.creer, formData);
+      const submitData: SouscriptionData = {
+        vehicule: {
+          ...formData.vehicule,
+          nombreDeSieges: Number(formData.vehicule.nombreDeSieges),
+          nombreDePortes: Number(formData.vehicule.nombreDePortes),
+          puissanceFiscale: Number(formData.vehicule.puissanceFiscale),
+          valeurNeuf: Number(formData.vehicule.valeurNeuf)
+        },
+        assure: {
+          ...formData.assure
+        },
+        vehiculeValeurVenale: Number(formData.vehiculeValeurVenale),
+        produit: formData.produit
+      };
+
+      const response = await http.post<{ status: string, data: any }>(
+        API_ENDPOINTS.souscription.creer,
+        submitData
+      );
+
       if (response.status === 'success') {
         showSuccess('Souscription créée avec succès');
         navigate('/souscriptions');
@@ -274,19 +438,9 @@ const CreerSouscription = () => {
 
         if (apiError.errors) {
           const newValidationErrors: Record<string, string> = {};
-
           Object.entries(apiError.errors).forEach(([field, messages]) => {
-            if (field.startsWith('vehicule.')) {
-              const vehiculeField = field.replace('vehicule.', '');
-              newValidationErrors[vehiculeField] = messages[0];
-            } else if (field.startsWith('assure.')) {
-              const assureField = field.replace('assure.', '');
-              newValidationErrors[assureField] = messages[0];
-            } else {
-              newValidationErrors[field] = messages[0];
-            }
+            newValidationErrors[field] = messages[0];
           });
-
           setValidationErrors(newValidationErrors);
           errorMessage = 'Veuillez corriger les erreurs dans le formulaire';
         } else if (apiError.message) {
@@ -296,15 +450,6 @@ const CreerSouscription = () => {
 
       setApiError(errorMessage);
       showError(errorMessage);
-
-      if (error.response?.data?.errors) {
-        const firstErrorField = Object.keys(error.response.data.errors)[0];
-        if (firstErrorField.startsWith('vehicule.')) {
-          setCurrentStep(0);
-        } else if (firstErrorField.startsWith('assure.')) {
-          setCurrentStep(1);
-        }
-      }
     } finally {
       setIsLoading(false);
     }
@@ -313,17 +458,30 @@ const CreerSouscription = () => {
   const renderField = (
     name: string,
     label: string,
-    type: 'text' | 'number' | 'date' | 'tel' | 'select',
+    type: 'text' | 'number' | 'date' | 'tel' | 'select' | 'email',
     options?: { value: string; label: string }[],
     isVehiculeField: boolean = true
   ) => {
     const error = validationErrors[name];
     const value = isVehiculeField
-      ? formData.vehicule[name as keyof Vehicule]
+      ? name === 'produit'
+        ? formData.produit
+        : formData.vehicule[name as keyof Vehicule]
       : formData.assure[name as keyof Assure];
-    const handleChange = isVehiculeField
-      ? handleVehiculeChange
-      : handleAssureChange as React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
+
+    const getChangeHandler = () => {
+      if (type === 'select') {
+        return isVehiculeField
+          ? name === 'produit'
+            ? handleProduitChange
+            : handleVehiculeChange
+          : handleAssureChange;
+      } else {
+        return isVehiculeField
+          ? handleVehiculeChange
+          : handleAssureChange;
+      }
+    };
 
     return (
       <div className="mb-4">
@@ -335,8 +493,8 @@ const CreerSouscription = () => {
             <select
               id={name}
               name={name}
-              value={value?.toString()}
-              onChange={handleChange}
+              value={value?.toString() || ''}
+              onChange={getChangeHandler() as React.ChangeEventHandler<HTMLSelectElement>}
               className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-white text-gray-900 sm:text-sm"
             >
               <option value="">Sélectionnez une option</option>
@@ -351,8 +509,8 @@ const CreerSouscription = () => {
               id={name}
               type={type}
               name={name}
-              value={value?.toString()}
-              onChange={handleChange}
+              value={value?.toString() || ''}
+              onChange={getChangeHandler() as React.ChangeEventHandler<HTMLInputElement>}
               className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-white text-gray-900 sm:text-sm"
               placeholder={`Entrez ${label.toLowerCase()}`}
               min={type === 'number' ? '0' : undefined}
@@ -381,17 +539,26 @@ const CreerSouscription = () => {
         return (
           <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderField('produit', 'Produit', 'select',
+                produits.length > 0 ? produits.map(prod => ({
+                  value: prod.id,
+                  label: prod.nom
+                })) : []
+              )}
               {renderField('dateMiseEnCirculation', 'Date de mise en circulation', 'date')}
-              {renderField('numeroImmatriculation', 'Numéro d\'immatriculation', 'text')}
+              {renderField('immatriculation', 'Numéro d\'immatriculation', 'text')}
               {renderField('couleur', 'Couleur', 'text')}
-              {renderField('categorieCode', 'Catégorie', 'select', [
-                { value: 'SUV', label: 'SUV' },
-                { value: 'BERLINE', label: 'Berline' },
-                { value: 'CITADINE', label: 'Citadine' },
-                { value: '4X4', label: '4x4' }
-              ])}
+              {renderField('categorieCode', 'Catégorie', 'select',
+                categoriesDisponibles.map(cat => ({
+                  value: cat.code,
+                  label: `${cat.code} - ${cat.libelle}`
+                }))
+              )}
               {renderField('nombreDeSieges', 'Nombre de sièges', 'number')}
               {renderField('nombreDePortes', 'Nombre de portes', 'number')}
+              {renderField('puissanceFiscale', 'Puissance fiscale', 'number')}
+              {renderField('valeurNeuf', 'Valeur à neuf', 'number')}
+              {renderField('vehiculeValeurVenale', 'Valeur vénale', 'number')}
             </div>
           </div>
         );
@@ -400,11 +567,17 @@ const CreerSouscription = () => {
           <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderField('nom', 'Nom', 'text', undefined, false)}
-              {renderField('prenom', 'Prénom', 'text', undefined, false)}
+              {renderField('prenoms', 'Prénoms', 'text', undefined, false)}
               {renderField('numeroCarteIdentite', 'Numéro de carte d\'identité', 'text', undefined, false)}
+              {renderField('email', 'Email', 'email', undefined, false)}
+              {renderField('sexe', 'Sexe', 'select', [
+                { value: 'M', label: 'Masculin' },
+                { value: 'F', label: 'Féminin' }
+              ], false)}
+              {renderField('dateNaissance', 'Date de naissance', 'date', undefined, false)}
+              {renderField('lieuNaissance', 'Lieu de naissance', 'text', undefined, false)}
               {renderField('adresse', 'Adresse', 'text', undefined, false)}
               {renderField('telephone', 'Téléphone', 'tel', undefined, false)}
-              {renderField('ville', 'Ville', 'text', undefined, false)}
             </div>
           </div>
         );
@@ -423,14 +596,26 @@ const CreerSouscription = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                     <div>
+                      <p className="text-gray-500 dark:text-gray-400">Produit</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {formData.produit}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-gray-500 dark:text-gray-400">Date de mise en circulation</p>
-                      <p
-                        className="font-medium text-gray-900 dark:text-white">{formatDate(formData.vehicule.dateMiseEnCirculation)}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {formatDate(formData.vehicule.dateMiseEnCirculation)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Valeur vénale</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {formData.vehiculeValeurVenale}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Numéro d'immatriculation</p>
-                      <p
-                        className="font-medium text-gray-900 dark:text-white">{formData.vehicule.numeroImmatriculation}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.immatriculation}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Couleur</p>
@@ -464,24 +649,32 @@ const CreerSouscription = () => {
                       <p className="font-medium text-gray-900 dark:text-white">{formData.assure.nom}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Prénom</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.prenom}</p>
+                      <p className="text-gray-500 dark:text-gray-400">Prénoms</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.prenoms}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Numéro de carte d'identité</p>
                       <p className="font-medium text-gray-900 dark:text-white">{formData.assure.numeroCarteIdentite}</p>
                     </div>
                     <div>
+                      <p className="text-gray-500 dark:text-gray-400">Email</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Sexe</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.sexe}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Date de naissance</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formatDate(formData.assure.dateNaissance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Lieu de naissance</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.lieuNaissance}</p>
+                    </div>
+                    <div>
                       <p className="text-gray-500 dark:text-gray-400">Téléphone</p>
                       <p className="font-medium text-gray-900 dark:text-white">{formData.assure.telephone}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 dark:text-gray-400">Ville</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.ville}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 dark:text-gray-400">Adresse</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.assure.adresse}</p>
                     </div>
                   </div>
                 </div>
@@ -555,7 +748,6 @@ const CreerSouscription = () => {
         </div>
       </div>
     </>
-
   );
 };
 

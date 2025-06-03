@@ -1,12 +1,24 @@
 import { Button } from 'primereact/button';
 import React, { useEffect, useState } from 'react';
 import { useMediaQuery } from '@hooks/useMediaQuery.ts';
-import { devisService, type SimulationDevisRequest, type SimulationResponse } from '@services/devis.ts';
+import { devisService, type SimulationDevisRequest, type SimulationResponse, type Produit, type Categorie } from '@services/devis.ts';
 
 const SimulerDevis = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formData, setFormData] = useState<SimulationDevisRequest>({} as SimulationDevisRequest);
+  const [selectedProduitId, setSelectedProduitId] = useState<string>('');
+  const [formData, setFormData] = useState<SimulationDevisRequest>({
+    produit: '',
+    categorie: '',
+    puissanceFiscale: 0,
+    dateDeMiseEnCirculation: '',
+    valeurNeuf: 0,
+    valeurVenale: 0
+  } as SimulationDevisRequest);
+
+  const [produits, setProduits] = useState<Produit[]>([]);
+  const [categoriesDisponibles, setCategoriesDisponibles] = useState<Categorie[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   type SimulationResponseData = SimulationResponse['data'];
 
@@ -33,16 +45,43 @@ const SimulerDevis = () => {
     }
   ];
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoadingData(true);
+      try {
+        const [produitsResponse, categoriesResponse] = await Promise.all([
+          devisService.getProduits(),
+          devisService.getCategories()
+        ]);
+
+        if (produitsResponse.status === 'success' && produitsResponse.data) {
+          setProduits(produitsResponse.data);
+        }
+
+        if (categoriesResponse.status === 'success' && categoriesResponse.data) {
+          setCategoriesDisponibles(categoriesResponse.data);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        setError('Erreur lors du chargement des données');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const validateStep = (step: number): boolean => {
     const currentStepFields = steps[step - 1].fields;
     const errors: Partial<Record<keyof SimulationDevisRequest, string>> = {};
 
-    if (currentStepFields.length === 0) return true; // Pour l'étape résultat
+    if (currentStepFields.length === 0) return true;
 
     currentStepFields.forEach((field) => {
       const value = formData[field as keyof SimulationDevisRequest];
 
-      if (!value) {
+      if (value === undefined || value === null || value === '') {
         errors[field as keyof SimulationDevisRequest] = 'Ce champ est requis';
       }
 
@@ -95,12 +134,35 @@ const SimulerDevis = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'puissanceFiscale' || name === 'valeurNeuf' || name === 'valeurVenale'
-        ? Number(value)
-        : value
-    }));
+
+    if (name === 'produit') {
+      const produitSelectionne = produits.find(p => p.id === value);
+      if (produitSelectionne) {
+        setSelectedProduitId(value);
+        setCategoriesDisponibles(produitSelectionne.categorieVehicules || []);
+        setFormData(prev => ({
+          ...prev,
+          [name]: produitSelectionne.nom,
+          categorie: ''
+        }));
+      } else {
+        setSelectedProduitId('');
+        setCategoriesDisponibles([]);
+        setFormData(prev => ({
+          ...prev,
+          [name]: '',
+          categorie: ''
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'puissanceFiscale' || name === 'valeurNeuf' || name === 'valeurVenale'
+          ? Number(value)
+          : value
+      }));
+    }
+
     if (validationErrors[name as keyof SimulationDevisRequest]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -147,13 +209,14 @@ const SimulerDevis = () => {
 
   const handleReset = () => {
     setFormData({
-      produit: 'Papillon',
-      categorie: '201',
-      puissanceFiscale: 5,
-      dateDeMiseEnCirculation: '2022-01-01',
-      valeurNeuf: 10000000,
-      valeurVenale: 6000000
+      produit: '',
+      categorie: '',
+      puissanceFiscale: 0,
+      dateDeMiseEnCirculation: '',
+      valeurNeuf: 0,
+      valeurVenale: 0
     });
+    setSelectedProduitId('');
     setResult(null);
     setError('');
     setValidationErrors({});
@@ -163,7 +226,6 @@ const SimulerDevis = () => {
   const handleSave = async (e?: React.FormEvent): Promise<void> => {
     e?.preventDefault();
 
-    // Guards clauses
     if (!result) {
       setError('Aucune simulation disponible');
       return;
@@ -222,6 +284,7 @@ const SimulerDevis = () => {
     options?: { value: string; label: string }[]
   ) => {
     const error = validationErrors[name];
+    const inputClassName = "appearance-none block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100";
 
     return (
       <div className="mb-4 last:mb-0">
@@ -233,10 +296,11 @@ const SimulerDevis = () => {
             <select
               id={name}
               name={name}
-              value={formData[name]?.toString()}
+              value={name === 'produit' ? selectedProduitId : formData[name]?.toString() || ''}
               onChange={handleChange}
-              className="appearance-none block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-white text-gray-900"
+              className={inputClassName}
             >
+              <option value="">Sélectionnez {label.toLowerCase()}</option>
               {options?.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -248,13 +312,12 @@ const SimulerDevis = () => {
               id={name}
               type={type}
               name={name}
-              value={formData[name]?.toString()}
+              value={formData[name]?.toString() || ''}
               onChange={handleChange}
               min={type === 'number' ? '0' : undefined}
               step={type === 'number' ? (name === 'puissanceFiscale' ? '1' : '100000') : undefined}
-              className="appearance-none block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-white text-gray-900"
+              className={inputClassName}
               placeholder={`Entrez ${label.toLowerCase()}`}
-              disabled={isLoading}
             />
           )}
           {error && (
@@ -324,12 +387,18 @@ const SimulerDevis = () => {
                       </h3>
                     </div>
                     <div className="space-y-4">
-                      {renderField('produit', 'Produit', 'select', [
-                        { value: 'Papillon', label: 'Papillon' }
-                      ])}
-                      {renderField('categorie', 'Catégorie', 'select', [
-                        { value: '201', label: '201' }
-                      ])}
+                      {renderField('produit', 'Produit', 'select',
+                        produits.map(prod => ({
+                          value: prod.id,
+                          label: prod.nom
+                        }))
+                      )}
+                      {renderField('categorie', 'Catégorie', 'select',
+                        categoriesDisponibles.map(cat => ({
+                          value: cat.code,
+                          label: `${cat.code} - ${cat.libelle}`
+                        }))
+                      )}
                       {renderField('puissanceFiscale', 'Puissance Fiscale', 'number')}
                     </div>
                   </div>

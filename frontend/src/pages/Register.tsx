@@ -90,174 +90,154 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-8">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Inscription
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Créez votre compte
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            Bienvenue
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Créez votre compte pour commencer
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 p-4" role="alert">
-              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
-            </div>
-          )}
-          <div className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nom d'utilisateur
-              </label>
-              <div className="mt-1">
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-white text-gray-900 sm:text-sm"
-                  placeholder="Choisissez un nom d'utilisateur"
-                  value={formData.username}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Mot de passe
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className={`appearance-none block w-full px-3 py-2 border ${validatePassword(formData.password) ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-white text-gray-900 sm:text-sm pr-10`}
-                  placeholder="Créez votre mot de passe"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onFocus={() => setShowCriteria(true)}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  ) : (
-                    <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirmer le mot de passe
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  required
-                  className={`appearance-none block w-full px-3 py-2 border ${formData.confirmPassword && formData.password !== formData.confirmPassword ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-white text-gray-900 sm:text-sm pr-10`}
-                  placeholder="Confirmez votre mot de passe"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? (
-                    <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  ) : (
-                    <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-                  )}
-                </button>
-              </div>
-              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                  Les mots de passe ne correspondent pas
-                </p>
-              )}
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading || !isFormValid()}
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Inscription en cours...
-                </span>
-              ) : (
-                'S\'inscrire'
-              )}
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center space-y-4 w-full">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors duration-200"
-              tabIndex={isLoading ? -1 : 0}
-            >
-              Déjà inscrit ? Se connecter
-            </Link>
-
-            <div className="w-full border-t border-gray-200 dark:border-gray-700 my-4"></div>
-
-            <button
-              type="button"
-              className="w-full text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center"
-              onClick={() => setShowCriteria(!showCriteria)}
-              disabled={isLoading}
-            >
-              {showCriteria ? (
-                <FontAwesomeIcon icon={faChevronUp} className="h-3 w-3 mr-1" />
-              ) : (
-                <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 mr-1" />
-              )}
-              <span>Critères du mot de passe</span>
-            </button>
-
-            {showCriteria && (
-              <div className="w-full bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-l-2 border-indigo-500 dark:border-indigo-400">
-                <ul className="space-y-1.5 text-xs">
-                  <li className={`flex items-center ${formData.password.length >= 8 ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                    <span className="mr-2">{formData.password.length >= 8 ? '✓' : '•'}</span>
-                    8 caractères minimum
-                  </li>
-                  <li className={`flex items-center ${/[A-Za-z]/.test(formData.password) ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                    <span className="mr-2">{/[A-Za-z]/.test(formData.password) ? '✓' : '•'}</span>
-                    Au moins une lettre
-                  </li>
-                  <li className={`flex items-center ${/[0-9]/.test(formData.password) ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                    <span className="mr-2">{/[0-9]/.test(formData.password) ? '✓' : '•'}</span>
-                    Au moins un chiffre
-                  </li>
-                </ul>
+        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-8 transition-all duration-300 hover:shadow-2xl">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 p-4 rounded-r-lg animate-fadeIn" role="alert">
+                <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
               </div>
             )}
-          </div>
-        </form>
+
+            <div className="space-y-6">
+              <div className="group">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nom d'utilisateur
+                </label>
+                <div className="relative">
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none"
+                    placeholder="Choisissez un nom d'utilisateur"
+                    value={formData.username}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="group">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    className={`block w-full px-4 py-3 rounded-lg border ${validatePassword(formData.password)
+                        ? 'border-red-300 dark:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500'
+                      } focus:ring-2 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none pr-12`}
+                    placeholder="Créez votre mot de passe"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    onFocus={() => setShowCriteria(true)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 w-10 h-10 flex items-center justify-center bg-transparent border-none p-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                    tabIndex={-1}
+                  >
+                    <FontAwesomeIcon
+                      icon={showPassword ? faEyeSlash : faEye}
+                      className="h-5 w-5"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="group">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Confirmer le mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    className={`block w-full px-4 py-3 rounded-lg border ${formData.confirmPassword && formData.password !== formData.confirmPassword
+                        ? 'border-red-300 dark:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500'
+                      } focus:ring-2 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none pr-12`}
+                    placeholder="Confirmez votre mot de passe"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 w-10 h-10 flex items-center justify-center bg-transparent border-none p-0"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={isLoading}
+                    tabIndex={-1}
+                  >
+                    <FontAwesomeIcon
+                      icon={showConfirmPassword ? faEyeSlash : faEye}
+                      className="h-5 w-5"
+                    />
+                  </button>
+                </div>
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    Les mots de passe ne correspondent pas
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="w-full flex justify-center items-center px-6 py-3 rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+                disabled={isLoading || !isFormValid()}
+              >
+                {isLoading ? (
+                  <span className="flex items-center space-x-3">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Inscription en cours...</span>
+                  </span>
+                ) : (
+                  'S\'inscrire'
+                )}
+              </button>
+            </div>
+
+            <div className="text-center mt-8">
+              <Link
+                to="/login"
+                className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-all duration-200 hover:-translate-y-0.5"
+                tabIndex={isLoading ? -1 : 0}
+              >
+                Déjà un compte ?
+                <span className="ml-1 group-hover:ml-2 transition-all duration-200">
+                  Se connecter
+                </span>
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
