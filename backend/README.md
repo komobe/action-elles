@@ -1,103 +1,94 @@
-# Action'Elles - Backend
+# Backend Action'Elles
 
-## Spécifications Techniques
+API REST développée avec Spring Boot et une architecture hexagonale.
 
-### ⚙️ Architecture Hexagonale (Ports & Adapters)
-- `domain/` : Logique métier (entités, services, interfaces)
-- `application/` : Cas d’utilisation (orchestration des règles métier)
-- `infrastructure/` : Couche technique (API REST, base de données, sécurité, config)
+## 🚀 Démarrage Rapide
 
-### Technologies
-- **Backend**
-  - Java 21
-  - Spring Boot 3.3.6
-    - Spring Data (base de données)
-    - Spring Security (sécurité)
-  - Maven 3.9+
+### Prérequis
+- Java 21
+- Maven 3.9+
+- Docker (optionnel)
 
-- **Base de données**
-  - PostgreSQL 15
-  - JPA/Hibernate (ORM)
+### Installation et Lancement
 
+#### Avec Docker
+```bash
+docker compose up -d --build
+```
 
-#### 📦 Infrastructure
-- Docker & Docker Compose
-  - Application Spring Boot
-  - PostgreSQL
-- JWT pour l’authentification
-- Swagger / OpenAPI pour la documentation
+#### Sans Docker
+```bash
+# Compilation
+mvn clean package
 
----
+# Lancement
+java -jar target/actionelles-*.jar
+```
 
-### 🔐 Fonctionnalités Techniques
+## 🏗️ Architecture
 
-| Catégorie     | Détails                                |
-|---------------|----------------------------------------|
-| Sécurité      | Authentification JWT, contrôle d’accès |
-| Validation    | Données via annotations Spring         |
-| Qualité       | Tests automatisés avec JUnit 5         |
-| Documentation | Swagger UI et OpenAPI                  |
+### Structure Hexagonale
+```
+src/
+├── domain/        # Logique métier
+├── application/   # Cas d'utilisation
+└── infrastructure/# API REST, DB, sécurité
+```
 
+### Stack Technique
+- Java 21
+- Spring Boot 3.3.6
+  - Spring Data (JPA/Hibernate)
+  - Spring Security (JWT)
+- PostgreSQL 15
+- Swagger/OpenAPI
 
-## 🚀 Installation & Lancement
+## 🔧 Configuration
 
-### ✅ Prérequis
-- [Java 21](https://adoptium.net/)
-- [Docker](https://www.docker.com/)
-- [Maven 3.9+](https://maven.apache.org/)
-
-### ⚙️ Configuration
-
-Créez un fichier `.env` à la racine :
-
+### Variables d'Environnement
 ```env
-APP_SERVER_URL=http://localhost
+# Serveur
 APP_SERVER_PORT=9090
+APP_SERVER_URL=http://localhost
 
-POSTGRES_SERVER=postgres
+# Base de données
 POSTGRES_DB=actionelle
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5432
 
+# Sécurité
 JWT_SECRET=votre_cle_secrete
 JWT_EXPIRATION=86400000
+
+# Données
 SEEDING=false
 ```
 
+## 📚 Documentation API
 
-### Démarrage
+- Swagger UI : http://localhost:9090/swagger-ui.html
+- OpenAPI : http://localhost:9090/v3/api-docs
+
+## 🧪 Tests
+
 ```bash
-# Étape 1 : Compiler l'application
-mvn clean package
+# Exécuter tous les tests
+mvn test
 
-# Étape 2 : Lancer les conteneurs
-docker compose up -d
-
-# Étape 3 : (optionnel) Initialiser des données
-SEEDING=true docker compose up -d
+# Tests avec couverture
+mvn verify
 ```
 
-## Documentation
-- Swagger UI : `http://localhost:9090/swagger-ui.html`
-- OpenAPI : `http://localhost:9090/v3/api-docs`
+## 🤝 Contribution
 
-## 🗂️ Structure du projet
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/amelioration`)
+3. Commit (`git commit -am 'Ajout de fonctionnalité'`)
+4. Push (`git push origin feature/amelioration`)
+5. Créer une Pull Request
 
-```
-src/
-├── main/
-│   ├── java/com/actionelles/
-│   │   ├── domain/          # Modèle métier
-│   │   ├── application/     # Cas d’utilisation
-│   │   ├── infrastructure/  # Contrôleurs, adaptateurs DB, config
-│   │   └── ActionEllesApplication.java
-│   └── resources/
-│       ├── application.yml
-│       └── ...
-└── test/
-```
+## 📞 Support
 
-## Support
 - Issues : https://github.com/komobe/action-elles/issues
 - Email : komobesokona@gmail.com
