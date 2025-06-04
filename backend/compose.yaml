@@ -1,9 +1,45 @@
 services:
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: actionelle_backend_app
+    container_name: actionelle_backend_app
     ports:
-      - '5432'
+      - "${APP_SERVER_PORT}:${APP_SERVER_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_SERVER:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-actionelle}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - APP_SERVER_URL=${APP_SERVER_URL:-http://localhost}
+      - APP_SERVER_PORT=${APP_SERVER_PORT:-9090}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - SEEDING=${SEEDING:-false}
+    depends_on:
+      - postgres
+    networks:
+      - actionelles_backend_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: actionelles_db_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-actionelle}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - actionelles_backend_network
+
+volumes:
+  postgres_data:
+    name: actionelles_postgres_data
+
+networks:
+  actionelles_backend_network:
+    name: actionelles_backend_network 

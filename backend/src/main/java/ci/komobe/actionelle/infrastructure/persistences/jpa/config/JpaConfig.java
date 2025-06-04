@@ -1,4 +1,4 @@
-package ci.komobe.actionelle.infrastructure.persistences.jpa;
+package ci.komobe.actionelle.infrastructure.persistences.jpa.config;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
@@ -10,5 +10,4 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EntityScan(basePackages = "ci.komobe.actionelle.infrastructure.persistences.jpa.entities")
 @EnableJpaRepositories(basePackages = "ci.komobe.actionelle.infrastructure.persistences.jpa.repositories")
 public class JpaConfig {
-  // La configuration par défaut de Spring Boot sera utilisée
 }

@@ -3,6 +3,9 @@ package ci.komobe.actionelle.domain.valueobjects;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/**
+ * @author Moro KONÉ 2025-05-28
+ */
 public record PuissanceFiscale(Integer debut, Integer fin) {
 
   public PuissanceFiscale {
