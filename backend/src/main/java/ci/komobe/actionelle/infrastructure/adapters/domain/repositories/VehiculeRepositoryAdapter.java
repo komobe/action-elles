@@ -8,6 +8,7 @@ import ci.komobe.actionelle.domain.utils.paginate.Pageable;
 import ci.komobe.actionelle.infrastructure.mappers.VehiculeMapper;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.mappers.PageMapper;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.VehiculeJpaRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Repository;
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@Transactional
 @AllArgsConstructor
 public class VehiculeRepositoryAdapter implements VehiculeRepository {
 

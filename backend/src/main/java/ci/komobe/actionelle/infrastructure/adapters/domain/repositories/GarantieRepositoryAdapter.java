@@ -7,6 +7,7 @@ import ci.komobe.actionelle.domain.utils.paginate.Pageable;
 import ci.komobe.actionelle.infrastructure.mappers.GarantieMapper;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.mappers.PageMapper;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.GarantieJpaRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Repository;
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@Transactional
 @AllArgsConstructor
 public class GarantieRepositoryAdapter implements GarantieRepository {
 

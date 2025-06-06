@@ -9,6 +9,7 @@ import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.ProduitEnti
 import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.VehiculeEntity;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.mappers.PageMapper;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.DevisJpaRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Repository;
  * @author Moro KONÉ 2025-05-30
  */
 @Repository
+@Transactional
 @AllArgsConstructor
 public class DevisRepositoryAdapter implements DevisRepository {
 

@@ -1,45 +1,55 @@
 services:
-  app:
-    build: 
+  action-elles-backend:
+    build:
       context: .
       dockerfile: Dockerfile
-    image: actionelle_backend_app
-    container_name: actionelle_backend_app
+      target: ${DOCKER_BUILD_TARGET:-development}
+    image: action-elles-backend
+    container_name: action-elles-api
     ports:
-      - "${APP_SERVER_PORT}:${APP_SERVER_PORT}"
+      - "${APP_SERVER_PORT:-9093}:9093"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_SERVER:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-actionelle}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST:-action-elles-db-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-action_elles}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - APP_SERVER_URL=${APP_SERVER_URL:-http://localhost}
-      - APP_SERVER_PORT=${APP_SERVER_PORT:-9090}
-      - JWT_SECRET=${JWT_SECRET}
+      - APP_SERVER_URL=${APP_SERVER_URL:-http://app}
+      - APP_SERVER_PORT=${APP_SERVER_PORT:-9093}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET est requis}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
       - SEEDING=${SEEDING:-false}
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED:-false}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-50}
+      - RATE_LIMIT_BY_DURATION=${RATE_LIMIT_BY_DURATION:-1m}
+    volumes:
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+      - ~/.m2:/root/.m2
     depends_on:
-      - postgres
+      - action-elles-db-postgres
     networks:
-      - actionelles_backend_network
+      - action-elles-network
 
-  postgres:
+  action-elles-db-postgres:
     image: postgres:15-alpine
-    container_name: actionelles_db_postgres
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-actionelle}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    container_name: action-elles-db-postgres
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGES_DB:-action_elles}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - action-elles-db-postgres-data:/var/lib/postgresql/data
     networks:
-      - actionelles_backend_network
+      - action-elles-network
 
 volumes:
-  postgres_data:
-    name: actionelles_postgres_data
+  action-elles-db-postgres-data:
+    name: action-elles-db-postgres-data
 
 networks:
-  actionelles_backend_network:
-    name: actionelles_backend_network 
+  action-elles-network:
+    name: action-elles-network

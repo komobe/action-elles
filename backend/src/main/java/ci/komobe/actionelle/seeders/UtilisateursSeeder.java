@@ -2,6 +2,7 @@ package ci.komobe.actionelle.seeders;
 
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 import ci.komobe.actionelle.domain.valueobjects.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +27,16 @@ public class UtilisateursSeeder {
 
   @Transactional
   public void seed() {
+    if (!repository.lister().isEmpty()) {
+      return;
+    }
+
     log.info("Seeding des utilisateurs...");
 
     List<Utilisateur> utilisateurs = List.of(
         // Administrateur
         Utilisateur.builder()
+            .id(IdGenerator.generateId())
             .username("admin")
             .password(passwordEncoder.encode("admin"))
             .role(Role.ADMIN)
@@ -38,6 +44,7 @@ public class UtilisateursSeeder {
 
         // Agent commercial
         Utilisateur.builder()
+            .id(IdGenerator.generateId())
             .username("agent")
             .password(passwordEncoder.encode("agent"))
             .role(Role.AMAZONE)
@@ -45,6 +52,7 @@ public class UtilisateursSeeder {
 
         // Utilisateur standard
         Utilisateur.builder()
+            .id(IdGenerator.generateId())
             .username("user")
             .password(passwordEncoder.encode("user"))
             .role(Role.DEFAULT)

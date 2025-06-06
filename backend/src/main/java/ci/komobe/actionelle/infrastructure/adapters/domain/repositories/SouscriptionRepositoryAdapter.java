@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
  * @author Moro KONÉ 2025-05-29
  */
 @Repository
+@Transactional
 @AllArgsConstructor
 public class SouscriptionRepositoryAdapter implements SouscriptionRepository {
 
@@ -27,7 +28,6 @@ public class SouscriptionRepositoryAdapter implements SouscriptionRepository {
   private final AssureJpaRepository assureJpaRepository;
   private final VehiculeJpaRepository vehiculeJpaRepository;
 
-  @Transactional
   @Override
   public void enregistrer(Souscription souscription) {
     var souscriptionEntity = souscriptionMapper.toEntity(souscription);

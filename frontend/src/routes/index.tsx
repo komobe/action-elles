@@ -42,9 +42,8 @@ const PublicRoute = memo(({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (user) {
-    const from = location.state?.from?.pathname || '/home';
-    return <Navigate to={from} replace />;
+  if (user && !location.state?.from) {
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;

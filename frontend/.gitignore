@@ -16,7 +16,7 @@ build
 .eslintcache
 
 # Environnement
-.env
+.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -53,3 +53,10 @@ coverage
 
 # Vite
 vite.config.ts.timestamp-*
+
+
+# Ignorer tous les fichiers .env*
+.env*
+
+# MAIS garder .env.example
+!.env.example

@@ -81,3 +81,9 @@ spring.log
 
 # BlueJ files
 *.ctxt
+
+# Ignorer tous les fichiers .env*
+.env*
+
+# MAIS garder .env.example
+!.env.example

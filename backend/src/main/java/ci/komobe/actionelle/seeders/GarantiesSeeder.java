@@ -2,21 +2,21 @@ package ci.komobe.actionelle.seeders;
 
 import ci.komobe.actionelle.domain.entities.Garantie;
 import ci.komobe.actionelle.domain.repositories.GarantieRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 import ci.komobe.actionelle.domain.valueobjects.Prime;
 import ci.komobe.actionelle.domain.valueobjects.PuissanceFiscale;
 import ci.komobe.actionelle.domain.valueobjects.TypeBaseCalcul;
 import ci.komobe.actionelle.domain.valueobjects.TypeMontantPrime;
+import java.math.BigDecimal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 /**
  * Seeder pour les garanties
- * 
+ *
  * @author Moro KONÉ 2025-06-03
  */
 @Slf4j
@@ -28,11 +28,16 @@ public class GarantiesSeeder {
 
   @Transactional
   public void seed() {
+    if (!repository.lister().isEmpty()) {
+      return;
+    }
+
     log.info("Seeding des garanties...");
 
     List<Garantie> garanties = List.of(
         // RC
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC 2 CV")
@@ -43,6 +48,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC 3-6 CV")
@@ -53,6 +59,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC 7-10 CV")
@@ -63,6 +70,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC 11-14 CV")
@@ -73,6 +81,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC 15-23 CV")
@@ -83,6 +92,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("RC")
             .libelle("Responsabilité Civile")
             .description("RC > 24 CV")
@@ -94,6 +104,7 @@ public class GarantiesSeeder {
             .build(),
         // Autres garanties
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("DOMMAGE")
             .libelle("Dommages")
             .description("Dommages 0-5 ans")
@@ -103,6 +114,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("TIERCE_COLLISION")
             .libelle("Tierce Collision")
             .description("Tierce Collision 0-8 ans")
@@ -112,6 +124,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("TIERCE_PLAFONNEE")
             .libelle("Tierce Plafonnée")
             .description("Tierce Plafonnée 0-10 ans")
@@ -122,6 +135,7 @@ public class GarantiesSeeder {
             .plafonne(true)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("VOL")
             .libelle("Vol")
             .description("Garantie vol")
@@ -131,6 +145,7 @@ public class GarantiesSeeder {
             .plafonne(false)
             .build(),
         Garantie.builder()
+            .id(IdGenerator.generateId())
             .code("INCENDIE")
             .libelle("Incendie")
             .description("Garantie incendie")

@@ -14,10 +14,11 @@
   <groupId>ci.komobe</groupId>
   <artifactId>actionelle</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>actionelle</name>
+  <name>action-elles</name>
   <description>Projet Action'Elles</description>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>21</java.version>
     <spring-boot.version>3.3.6</spring-boot.version>
     <org.mapstruct.version>1.6.3</org.mapstruct.version>
@@ -187,6 +188,14 @@
 
   <build>
     <plugins>
+      <!-- Resources Plugin -->
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
       <!-- Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -22,7 +22,17 @@ public class OpenApiConfig {
 
   @Bean
   public OpenAPI customOpenAPI() {
-    String url = String.format("%s:%d", serverUrl, serverPort);
+    // Nettoyage de l'URL pour éviter les erreurs de concaténation (suppression du
+    // slash final)
+    String cleanedServerUrl = serverUrl.replaceAll("/$", "");
+    String url;
+    if (cleanedServerUrl.matches(".*:[0-9]+$")) {
+      // L'URL contient déjà un port (ex: http://localhost:9090) donc on ne concatène
+      // pas le port
+      url = cleanedServerUrl;
+    } else {
+      url = String.format("%s:%d", cleanedServerUrl, serverPort);
+    }
 
     SecurityScheme securityScheme = new SecurityScheme()
         .type(SecurityScheme.Type.HTTP)

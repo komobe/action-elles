@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [retryCount, setRetryCount] = useState(0);
-  const retryTimeoutRef = useRef<number>();
+  const retryTimeoutRef = useRef<number | undefined>(undefined);
   const isInitialMount = useRef(true);
 
   const loadUser = useCallback(async () => {
@@ -32,7 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!token) {
         setIsLoading(false);
-        if (!isInitialMount.current) {
+        if (!isInitialMount.current && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          console.log('Redirection vers /login car pas de token');
           navigate('/login', { replace: true });
         }
         return;
@@ -43,11 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.status === 'success' && response.data) {
         setUser(response.data);
         setIsLoading(false);
+        setRetryCount(0);
       } else {
         localStorage.removeItem('token');
         setUser(null);
         setIsLoading(false);
-        if (!isInitialMount.current) {
+        if (!isInitialMount.current && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           navigate('/login', { replace: true });
         }
       }
@@ -61,44 +63,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('token');
         setUser(null);
         setIsLoading(false);
-        if (!isInitialMount.current) {
+        if (!isInitialMount.current && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           navigate('/login', { replace: true });
         }
-      } else if (retryCount < 2) {
+      } else if (retryCount < 1) {
         setRetryCount(prev => prev + 1);
         retryTimeoutRef.current = window.setTimeout(() => {
           loadUser();
-        }, 2000);
+        }, 1_000);
       } else {
         localStorage.removeItem('token');
         setUser(null);
         setIsLoading(false);
-        if (!isInitialMount.current) {
+        if (!isInitialMount.current && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           navigate('/login', { replace: true });
         }
       }
     }
   }, [navigate, retryCount]);
 
+  // Vérification périodique de l'utilisateur toutes les 10 minutes
   useEffect(() => {
     setRetryCount(0);
     loadUser();
     isInitialMount.current = false;
 
+    const intervalId = setInterval(() => {
+      loadUser();
+    }, 10 * 60 * 1000); // 10 minutes
+
     return () => {
       if (retryTimeoutRef.current) {
         window.clearTimeout(retryTimeoutRef.current);
       }
+      clearInterval(intervalId);
     };
   }, [loadUser]);
 
+  // Gestion améliorée des événements de stockage
   const handleStorageChange = useCallback((e: StorageEvent) => {
-    if (e.key === 'token') {
+    // Ne traiter que les événements provenant d'autres onglets
+    if (e.key === 'token' && e.storageArea === localStorage) {
+      console.log('Changement détecté dans le token depuis un autre onglet');
+
+      // Si le token a été supprimé dans un autre onglet
       if (!e.newValue) {
         setUser(null);
         setIsLoading(false);
-        navigate('/login', { replace: true });
-      } else if (!user) {
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          navigate('/login', { replace: true });
+        }
+      }
+      // Si un nouveau token a été défini dans un autre onglet et que nous ne sommes pas connectés
+      else if (!user && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         setRetryCount(0);
         loadUser();
       }
@@ -165,13 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate('/login', { replace: true });
   }, [navigate]);
 
-  const value = {
-    user,
-    isLoading,
-    login,
-    register,
-    logout
-  };
+  const value = { user, isLoading, login, register, logout };
 
   return (
     <AuthContext.Provider value={value}>

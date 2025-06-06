@@ -6,17 +6,18 @@ import ci.komobe.actionelle.domain.entities.Produit;
 import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.repositories.GarantieRepository;
 import ci.komobe.actionelle.domain.repositories.ProduitRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Seeder pour les produits
- * 
+ *
  * @author Moro KONÉ 2025-06-03
  */
 @Slf4j
@@ -28,58 +29,77 @@ public class ProduitsSeeder {
   private final GarantieRepository garantieRepository;
   private final CategorieVehiculeRepository categorieVehiculeRepository;
 
+  @SafeVarargs
+  private static <T> List<T> buildGaranties(List<T> base, T... others) {
+    List<T> result = new ArrayList<>(base);
+    Collections.addAll(result, others);
+    return result;
+  }
+
   @Transactional
   public void seed() {
+    if (!produitRepository.lister().isEmpty()) {
+      return;
+    }
+
     log.info("Seeding des produits...");
 
     // Récupération des garanties
-    Garantie rc = garantieRepository.chercherParCode("RC").orElseThrow();
+    List<Garantie> rc = garantieRepository.lister()
+        .stream().filter(g -> g.getCode().equals("RC"))
+        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+    Garantie dommage = garantieRepository.chercherParCode("DOMMAGE").orElseThrow();
+    Garantie tierceCollison = garantieRepository.chercherParCode("TIERCE_COLLISION").orElseThrow();
+    Garantie tiercePlafonne = garantieRepository.chercherParCode("TIERCE_PLAFONNEE").orElseThrow();
     Garantie vol = garantieRepository.chercherParCode("VOL").orElseThrow();
-    Garantie dom = garantieRepository.chercherParCode("DOM").orElseThrow();
-    Garantie inc = garantieRepository.chercherParCode("INC").orElseThrow();
-    Garantie bdg = garantieRepository.chercherParCode("BDG").orElseThrow();
+    Garantie incendie = garantieRepository.chercherParCode("INCENDIE").orElseThrow();
 
     // Récupération des catégories
-    CategorieVehicule vp = categorieVehiculeRepository.chercherParCode("VP").orElseThrow();
-    CategorieVehicule tpm = categorieVehiculeRepository.chercherParCode("TPM").orElseThrow();
-    CategorieVehicule tpma = categorieVehiculeRepository.chercherParCode("TPMA").orElseThrow();
-    CategorieVehicule deuxRoues = categorieVehiculeRepository.chercherParCode("2R").orElseThrow();
+    CategorieVehicule categorie201 = categorieVehiculeRepository.chercherParCode("201").orElseThrow();
+    CategorieVehicule categorie202 = categorieVehiculeRepository.chercherParCode("202").orElseThrow();
+    CategorieVehicule categorie203 = categorieVehiculeRepository.chercherParCode("203").orElseThrow();
+    CategorieVehicule categorie204 = categorieVehiculeRepository.chercherParCode("204").orElseThrow();
 
     List<Produit> produits = List.of(
-        // Produit Tiers Simple
+        // Produit Papillon
         Produit.builder()
-            .code("TIERS")
-            .nom("Assurance au Tiers")
-            .description("Assurance minimale obligatoire")
-            .garanties(List.of(rc))
-            .categorieVehicules(List.of(vp, tpm, tpma, deuxRoues))
+            .id(IdGenerator.generateId())
+            .code("Papillon")
+            .nom("Papillon")
+            .description("RC, DOMMAGE, VOL")
+            .garanties(buildGaranties(rc, dommage, vol))
+            .categorieVehicules(List.of(categorie201, categorie202, categorie203, categorie204))
             .build(),
 
-        // Produit Tiers Étendu
+        // Produit Douby
         Produit.builder()
-            .code("TIERS_PLUS")
-            .nom("Assurance au Tiers Étendue")
-            .description("Assurance au tiers avec garanties supplémentaires")
-            .garanties(List.of(rc, vol, inc))
-            .categorieVehicules(List.of(vp, tpm, tpma))
+            .id(IdGenerator.generateId())
+            .code("Douby")
+            .nom("Douby")
+            .description("RC, DOMMAGE, TIERCE COLLISION")
+            .garanties(buildGaranties(rc, dommage, tierceCollison))
+            .categorieVehicules(List.of(categorie202))
             .build(),
 
-        // Produit Tous Risques
+        // Produit Douyou
         Produit.builder()
-            .code("TOUS_RISQUES")
-            .nom("Assurance Tous Risques")
-            .description("Protection complète pour votre véhicule")
-            .garanties(List.of(rc, vol, dom, inc, bdg))
-            .categorieVehicules(List.of(vp, tpm))
+            .id(IdGenerator.generateId())
+            .code("Douyou")
+            .nom("Douyou")
+            .description("RC, DOMMAGE, COLLISION, INCENDIE")
+            .garanties(buildGaranties(rc, dommage, tierceCollison, incendie))
+            .categorieVehicules(List.of(categorie201, categorie202))
             .build(),
 
-        // Produit Deux Roues
+        // Produit Toutourisquou
         Produit.builder()
-            .code("2ROUES")
-            .nom("Assurance Deux Roues")
-            .description("Spécial motos et scooters")
-            .garanties(List.of(rc, vol, inc))
-            .categorieVehicules(List.of(deuxRoues))
+            .id(IdGenerator.generateId())
+            .code("Toutourisquou")
+            .nom("Toutourisquou")
+            .description("Toutes garanties")
+            .garanties(buildGaranties(rc, dommage, tierceCollison, tiercePlafonne, vol, incendie))
+            .categorieVehicules(List.of(categorie201))
             .build());
 
     produits.forEach(produit -> {

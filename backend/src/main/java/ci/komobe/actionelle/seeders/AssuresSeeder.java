@@ -2,6 +2,7 @@ package ci.komobe.actionelle.seeders;
 
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.repositories.AssureRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,11 +25,16 @@ public class AssuresSeeder {
 
   @Transactional
   public void seed() {
+    if (!repository.lister().isEmpty()) {
+      return;
+    }
+
     log.info("Seeding des assurés...");
 
     List<Assure> assures = List.of(
         // Assuré test 1
         Assure.builder()
+            .id(IdGenerator.generateId())
             .nom("SERY")
             .prenoms("Serge")
             .email("serge.sery@actionelle.ci")
@@ -42,6 +48,7 @@ public class AssuresSeeder {
 
         // Assuré test 2
         Assure.builder()
+            .id(IdGenerator.generateId())
             .nom("TOURE")
             .prenoms("Aminata")
             .email("aminata.toure@actionelle.ci")
@@ -55,6 +62,7 @@ public class AssuresSeeder {
 
         // Assuré test 3
         Assure.builder()
+            .id(IdGenerator.generateId())
             .nom("KOUASSI")
             .prenoms("Jean")
             .email("jean.kouassi@actionelle.ci")
@@ -68,6 +76,7 @@ public class AssuresSeeder {
 
         // Assuré test 4
         Assure.builder()
+            .id(IdGenerator.generateId())
             .nom("KOUASSI")
             .prenoms("Jean")
             .email("jean.kouassi@actionelle.ci")

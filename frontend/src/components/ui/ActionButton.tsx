@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { Button } from "primereact/button";
 import React from "react";
 
-type Variant = 'primary' | 'danger' | 'secondary';
+type Variant = 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' | 'help';
 
 type ActionButtonProps = {
   isLoading?: boolean;
@@ -14,16 +14,20 @@ type ActionButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600',
-  danger: 'bg-red-600 hover:bg-red-700 text-white border border-red-600',
+  success: 'bg-green-600 hover:bg-green-700 text-white border border-green-600',
+  info: 'bg-blue-600 hover:bg-blue-700 text-white border border-blue-600',
   secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+  contrast: 'bg-gray-800 hover:bg-gray-900 text-white border border-gray-800',
+  warning: 'bg-yellow-600 hover:bg-yellow-700 text-white border border-yellow-600',
+  danger: 'bg-red-600 hover:bg-red-700 text-white border border-red-600',
+  help: 'bg-purple-600 hover:bg-purple-700 text-white border border-purple-600',
 };
 
 export default function ActionButton(
   {
     isLoading = false,
     validationErrors = {},
-    variant = 'primary',
+    variant = 'success',
     children,
     className,
     ...props

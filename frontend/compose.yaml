@@ -1,16 +1,21 @@
 services:
-  frontend:
+  action-elles-frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: actionelle_frontend
+      target: ${NODE_ENV:-development}
+    container_name: action-elles-frontend
     ports:
-      - "${FRONTEND_PORT:-80}:80"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:9090}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:9093}
+      - NODE_ENV=${NODE_ENV:-development}
+    volumes:
+      - .:/app
+      - /app/node_modules
     networks:
-      - actionelles_frontend_network
+      - action-elles-network
 
 networks:
-  actionelles_frontend_network:
-    name: actionelles_frontend_network 
+  action-elles-network:
+    name: action-elles-network
