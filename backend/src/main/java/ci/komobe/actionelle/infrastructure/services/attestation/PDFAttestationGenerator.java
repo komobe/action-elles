@@ -2,7 +2,6 @@ package ci.komobe.actionelle.infrastructure.services.attestation;
 
 import ci.komobe.actionelle.application.commons.services.attestation.AttestationFormat;
 import ci.komobe.actionelle.application.commons.services.attestation.AttestationGenerator;
-import ci.komobe.actionelle.application.commons.services.qrcode.QRCodeGenerator;
 import ci.komobe.actionelle.application.features.souscription.dto.AttestationDto;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.valueobjects.Valeur;
@@ -16,7 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * Implémentation du générateur d'attestation au format PDF
@@ -30,18 +28,12 @@ public class PDFAttestationGenerator implements AttestationGenerator {
   private static final Font TITLE_FONT = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
   private static final Font NORMAL_FONT = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-  private final QRCodeGenerator qrCodeGenerator;
+  private final GenererAttestationQrCode genererAttestationQrCode;
 
   @Override
   public byte[] generate(AttestationDto data) {
     try {
-      // Générer le QR Code avec l'URL absolue
-      String qrCodeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-          .path("/api/v1/subscriptions/{id}/attestation")
-          .buildAndExpand(data.getNumero())
-          .toUriString();
-
-      var qrCode = qrCodeGenerator.generate(qrCodeUrl);
+      var attestationQrCode = genererAttestationQrCode.generate(data.getNumero());
 
       Document document = new Document();
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -73,9 +65,9 @@ public class PDFAttestationGenerator implements AttestationGenerator {
       document.add(new Paragraph("Produit souscrit: " + data.getProduit().getNom(), NORMAL_FONT));
 
       // QR Code
-      if (qrCode != null) {
+      if (attestationQrCode != null) {
         document.add(new Paragraph(" ")); // Espace
-        Image qrCodeImage = Image.getInstance(qrCode);
+        Image qrCodeImage = Image.getInstance(attestationQrCode);
         qrCodeImage.setAlignment(Element.ALIGN_CENTER);
         document.add(qrCodeImage);
       }
@@ -84,7 +76,7 @@ public class PDFAttestationGenerator implements AttestationGenerator {
 
       return outputStream.toByteArray();
     } catch (Exception e) {
-      throw new RuntimeException("Erreur lors de la génération du PDF", e);
+      throw new IllegalArgumentException("Erreur lors de la génération du PDF", e);
     }
   }
 

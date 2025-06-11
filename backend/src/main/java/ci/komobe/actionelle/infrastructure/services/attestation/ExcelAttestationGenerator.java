@@ -2,7 +2,6 @@ package ci.komobe.actionelle.infrastructure.services.attestation;
 
 import ci.komobe.actionelle.application.commons.services.attestation.AttestationFormat;
 import ci.komobe.actionelle.application.commons.services.attestation.AttestationGenerator;
-import ci.komobe.actionelle.application.commons.services.qrcode.QRCodeGenerator;
 import ci.komobe.actionelle.application.features.souscription.dto.AttestationDto;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.valueobjects.Valeur;
@@ -22,7 +21,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * Implémentation Excel de l'AttestationGenerator
@@ -34,11 +32,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class ExcelAttestationGenerator implements AttestationGenerator {
 
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-  private final QRCodeGenerator qrCodeGenerator;
+  private final GenererAttestationQrCode genererAttestationQrCode;
 
   @Override
   public byte[] generate(AttestationDto data) {
+    // Générer le QR Code avec l'URL absolue
     try (Workbook workbook = new XSSFWorkbook()) {
+
+      var attestationQrCode = genererAttestationQrCode.generate(data.getNumero());
       Sheet sheet = workbook.createSheet("Attestation");
 
       // Styles
@@ -68,15 +69,8 @@ public class ExcelAttestationGenerator implements AttestationGenerator {
       createDataRow(sheet, rowNum++, "Produit souscrit",
           data.getProduit().getNom(), normalStyle);
 
-      // QR Code avec l'URL absolue
-      String qrCodeUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-          .path("/api/v1/subscriptions/{id}/attestation")
-          .buildAndExpand(data.getNumero())
-          .toUriString();
-
-      var qrCode = qrCodeGenerator.generate(qrCodeUrl);
-      if (qrCode != null) {
-        int pictureIdx = workbook.addPicture(qrCode, Workbook.PICTURE_TYPE_PNG);
+      if (attestationQrCode != null) {
+        int pictureIdx = workbook.addPicture(attestationQrCode, Workbook.PICTURE_TYPE_PNG);
         CreationHelper helper = workbook.getCreationHelper();
         Drawing<?> drawing = sheet.createDrawingPatriarch();
         ClientAnchor anchor = helper.createClientAnchor();
@@ -97,7 +91,7 @@ public class ExcelAttestationGenerator implements AttestationGenerator {
       return outputStream.toByteArray();
 
     } catch (Exception e) {
-      throw new RuntimeException("Erreur lors de la génération du fichier Excel", e);
+      throw new IllegalArgumentException("Erreur lors de la génération du fichier Excel", e);
     }
   }
 

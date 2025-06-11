@@ -101,7 +101,7 @@ class CreerSouscriptionUseCaseTest {
       // Then
       assertThat(souscriptionRepository.lister()).hasSize(1);
 
-      Souscription souscription = souscriptionRepository.lister().get(0);
+      Souscription souscription = souscriptionRepository.lister().getFirst();
       assertThat(souscription)
           .isNotNull()
           .satisfies(s -> {
