@@ -21,9 +21,11 @@ import java.time.LocalDate;
  */
 public record SimulerPrimeUseCase(
     ProduitRepository produitRepository,
-    PrimeCalculator primeCalculator) {
+    PrimeCalculator primeCalculator,
+    SimulerPrimePresenter<?> presenter
+) {
 
-  public void execute(SimulerPrimeCommand command, SimulerPrimePresenter<?> presenter) {
+  public void execute(SimulerPrimeCommand command) {
     Produit produit = getProduit(command);
 
     BigDecimal primeTotale = primeCalculator.calculPrime(produit, command);

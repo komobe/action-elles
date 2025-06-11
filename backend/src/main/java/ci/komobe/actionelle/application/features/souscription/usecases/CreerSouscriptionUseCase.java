@@ -18,7 +18,6 @@ import ci.komobe.actionelle.domain.repositories.ProduitRepository;
 import ci.komobe.actionelle.domain.repositories.SouscriptionRepository;
 import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 
 /**
@@ -37,26 +36,27 @@ public class CreerSouscriptionUseCase {
 
   @Transactional
   public void execute(CreerSouscriptionCommand command) {
-    Vehicule vehicule = recupererVehicule(command.getVehicule());
-    Assure assure = recupererAssure(command.getAssure());
-    BigDecimal vehiculeValeurVenale = command.getVehiculeValeurVenale();
+    Vehicule vehicule = obtenirOuCreerVehicule(command.getVehicule());
+    Assure assure = obtenirOuCreerAssure(command.getAssure());
+    Produit produit = obtenirProduit(command.getProduit());
 
-    if (vehiculeValeurVenale.compareTo(vehicule.getValeurNeuf().getMontant()) > 0) {
-      throw new IllegalArgumentException("La valeur vénale du véhicule ne peut pas être supérieure à sa valeur à neuf");
-    }
-
-    Produit produit = produitRepository.chercherParNom(command.getProduit())
-        .orElseThrow(
-            () -> new ProduitErreur("Le produit " + command.getProduit() + " n'existe pas"));
-
-    Souscription souscription = assure.souscrire(vehicule, produit, vehiculeValeurVenale);
+    Souscription souscription = assure.souscrire(
+        vehicule, produit,
+        command.getVehiculeValeurVenale()
+    );
 
     assureRepository.enregistrer(assure);
     vehiculeRepository.enregistrer(vehicule);
     souscriptionRepository.enregistrer(souscription);
   }
 
-  private Assure recupererAssure(CreerAssureCommand assureData) {
+  private Produit obtenirProduit(String nomProduit) {
+    return produitRepository.chercherParNom(nomProduit)
+        .orElseThrow(
+            () -> new ProduitErreur("Le produit " + nomProduit + " n'existe pas"));
+  }
+
+  private Assure obtenirOuCreerAssure(CreerAssureCommand assureData) {
     String numeroCarteIdentite = assureData.getNumeroCarteIdentite();
     var assureExistant = assureRepository.chercherParNumeroCarteIdentite(numeroCarteIdentite);
     Assure assureCreerDepuisCommande = AssureFactory.factory(assureData);
@@ -65,8 +65,8 @@ public class CreerSouscriptionUseCase {
     return assureAEnregistrer;
   }
 
-  private Vehicule recupererVehicule(CreerVehiculeCommand vehiculeData) {
-    CategorieVehicule categorieVehicule = getCategorieVehicule(vehiculeData.getCategorieCode());
+  private Vehicule obtenirOuCreerVehicule(CreerVehiculeCommand vehiculeData) {
+    CategorieVehicule categorieVehicule = obtenirCategorieVehicule(vehiculeData.getCategorieCode());
     String immatriculation = vehiculeData.getImmatriculation();
     var vehiculeExistant = vehiculeRepository.chercherParImmatriculation(immatriculation);
     Vehicule vehiculeCreerDepuisCommande = VehiculeFactory.factory(vehiculeData, categorieVehicule);
@@ -75,11 +75,9 @@ public class CreerSouscriptionUseCase {
     return vehiculeAEnregistrer;
   }
 
-  private CategorieVehicule getCategorieVehicule(String categorieCode) {
-    return categorieVehiculeRepository
-        .chercherParCode(categorieCode)
-        .orElseThrow(
-            () -> new VehiculeErreur(
-                "La catégorie de véhicule " + categorieCode + " n'existe pas"));
+  private CategorieVehicule obtenirCategorieVehicule(String categorieCode) {
+    return categorieVehiculeRepository.chercherParCode(categorieCode)
+        .orElseThrow(() -> new VehiculeErreur(
+            "La catégorie de véhicule " + categorieCode + " n'existe pas"));
   }
 }

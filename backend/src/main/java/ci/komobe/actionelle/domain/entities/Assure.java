@@ -22,6 +22,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Assure {
 
+  private static final BigDecimal VALEUR_VENALE_MINIMUM = BigDecimal.ONE;
+  private static final String DEVISE_DEFAUT = "XOF";
+
   private String id;
   private String numeroCarteIdentite;
   private String nom;
@@ -32,15 +35,11 @@ public class Assure {
   private String email;
   private String telephone;
   private String adresse;
-  private String profession;
 
   /**
-   * Met à jour les informations modifiables de l'assuré. Les champs immuables
-   * (nom, prenoms, lieu
-   * de naissance, date naissance, numeroCarteIdentite) ne peuvent pas être
-   * modifiés.
+   * Met à jour les informations modifiables de l'assuré. Les champs immuables (nom, prenoms, lieu
+   * de naissance, date naissance, numeroCarteIdentite) ne peuvent pas être modifiés.
    *
-   * @param assure L'assuré contenant les nouvelles informations
    * @throws IllegalArgumentException si on tente de modifier un champ immuable
    */
   public void mettreAjourDepuis(Assure assure) {
@@ -52,8 +51,7 @@ public class Assure {
   }
 
   /**
-   * Vérifie si l'assuré est différent de l'assuré fourni. La comparaison se fait
-   * sur les champs
+   * Vérifie si l'assuré est différent de l'assuré fourni. La comparaison se fait sur les champs
    * d'identification (nom, prenoms, numeroCarteIdentite).
    *
    * @param assure L'assuré à comparer
@@ -70,13 +68,11 @@ public class Assure {
   }
 
   /**
-   * Vérifie que les informations d'identité de l'assuré ne sont pas modifiées.
-   * Ces informations
+   * Vérifie que les informations d'identité de l'assuré ne sont pas modifiées. Ces informations
    * sont considérées comme immuables une fois l'assuré créé.
    *
    * @param assure L'assuré contenant les nouvelles informations
-   * @throws IllegalArgumentException si une tentative de modification des
-   *                                  informations d'identité
+   * @throws IllegalArgumentException si une tentative de modification des informations d'identité
    *                                  est détectée
    */
   private void verifierInformationsIdentite(Assure assure) {
@@ -108,8 +104,7 @@ public class Assure {
   }
 
   /**
-   * Met à jour les informations de contact de l'assuré. Ces informations sont
-   * modifiables et
+   * Met à jour les informations de contact de l'assuré. Ces informations sont modifiables et
    * comprennent l'email, le téléphone, la ville et l'adresse.
    *
    * @param assure L'assuré contenant les nouvelles informations de contact
@@ -131,33 +126,57 @@ public class Assure {
     if (assure.sexe != null) {
       this.sexe = assure.sexe;
     }
-    if (assure.profession != null) {
-      this.profession = assure.profession;
-    }
   }
 
   /**
    * Souscrit un véhicule à un produit pour l'assuré.
-   *
-   * @param vehicule             Le véhicule à souscrire
-   * @param produit              Le produit de souscription
-   * @param vehiculeValeurVenale La valeur vénale du véhicule
-   * @return La souscription créée
-   * @throws SouscriptionErreur si le véhicule n'est pas éligible au produit ou
-   *                            si la valeur
-   *                            vénale du véhicule est inférieure à 1
    */
-  public Souscription souscrire(Vehicule vehicule, Produit produit,
+  public Souscription souscrire(
+      Vehicule vehicule, Produit produit,
+      BigDecimal vehiculeValeurVenale
+  ) {
+
+    validerParametresSouscription(vehicule, produit, vehiculeValeurVenale);
+    validerCompatibiliteProduitVehicule(produit, vehicule);
+    validerValeurVenale(vehiculeValeurVenale, vehicule);
+
+    return Souscription.creer(this, vehicule, produit,
+        Valeur.of(vehiculeValeurVenale, DEVISE_DEFAUT));
+  }
+
+  private void validerParametresSouscription(Vehicule vehicule, Produit produit,
       BigDecimal vehiculeValeurVenale) {
-    if (!produit.estEligible(vehicule)) {
-      throw new SouscriptionErreur("Le véhicule n'est pas éligible au produit");
+    if (vehicule == null) {
+      throw new IllegalArgumentException("Le véhicule est obligatoire pour la souscription");
     }
+    if (produit == null) {
+      throw new IllegalArgumentException("Le produit est obligatoire pour la souscription");
+    }
+    if (vehiculeValeurVenale == null) {
+      throw new IllegalArgumentException("La valeur vénale est obligatoire pour la souscription");
+    }
+  }
 
-    if (vehiculeValeurVenale.compareTo(BigDecimal.ZERO) < 0) {
+  private void validerCompatibiliteProduitVehicule(Produit produit, Vehicule vehicule) {
+    if (produit.nePeutPasAssurer(vehicule)) {
       throw new SouscriptionErreur(
-          "La valeur vénale du véhicule ne peut pas être inférieure à 1 FCFA");
+          String.format("Le produit '%s' ne peut pas assurer ce véhicule de catégorie '%s'",
+              produit.getNom(), vehicule.getCategorie().getCode()));
+    }
+  }
+
+  private void validerValeurVenale(BigDecimal vehiculeValeurVenale, Vehicule vehicule) {
+    if (vehiculeValeurVenale.compareTo(VALEUR_VENALE_MINIMUM) < 0) {
+      throw new SouscriptionErreur(
+          String.format(
+              "La valeur vénale du véhicule doit être d'au moins %s FCFA", VALEUR_VENALE_MINIMUM));
     }
 
-    return Souscription.creer(this, vehicule, produit, Valeur.of(vehiculeValeurVenale, "XOF"));
+    if (vehiculeValeurVenale.compareTo(vehicule.getValeurNeuf().getMontant()) > 0) {
+      throw new SouscriptionErreur(
+          String.format(
+              "La valeur vénale (%s FCFA) ne peut pas être supérieure à la valeur à neuf (%s FCFA)",
+              vehiculeValeurVenale, vehicule.getValeurNeuf().getMontant()));
+    }
   }
 }

@@ -69,7 +69,7 @@ public class ProduitsSeeder {
             .nom("Papillon")
             .description("RC, DOMMAGE, VOL")
             .garanties(buildGaranties(rc, dommage, vol))
-            .categorieVehicules(List.of(categorie201, categorie202, categorie203, categorie204))
+            .categoriesVehicules(List.of(categorie201, categorie202, categorie203, categorie204))
             .build(),
 
         // Produit Douby
@@ -79,7 +79,7 @@ public class ProduitsSeeder {
             .nom("Douby")
             .description("RC, DOMMAGE, TIERCE COLLISION")
             .garanties(buildGaranties(rc, dommage, tierceCollison))
-            .categorieVehicules(List.of(categorie202))
+            .categoriesVehicules(List.of(categorie202))
             .build(),
 
         // Produit Douyou
@@ -89,7 +89,7 @@ public class ProduitsSeeder {
             .nom("Douyou")
             .description("RC, DOMMAGE, COLLISION, INCENDIE")
             .garanties(buildGaranties(rc, dommage, tierceCollison, incendie))
-            .categorieVehicules(List.of(categorie201, categorie202))
+            .categoriesVehicules(List.of(categorie201, categorie202))
             .build(),
 
         // Produit Toutourisquou
@@ -99,7 +99,7 @@ public class ProduitsSeeder {
             .nom("Toutourisquou")
             .description("Toutes garanties")
             .garanties(buildGaranties(rc, dommage, tierceCollison, tiercePlafonne, vol, incendie))
-            .categorieVehicules(List.of(categorie201))
+            .categoriesVehicules(List.of(categorie201))
             .build());
 
     produits.forEach(produit -> {

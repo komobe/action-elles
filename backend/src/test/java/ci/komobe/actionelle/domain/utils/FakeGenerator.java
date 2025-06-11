@@ -270,7 +270,7 @@ public class FakeGenerator {
         .id(IdGenerator.generateId())
         .nom("Papillon")
         .description("RC, DOMMAGE, VOL")
-        .categorieVehicules(List.of(categories.get(CATEGORIE_201_CODE)))
+        .categoriesVehicules(List.of(categories.get(CATEGORIE_201_CODE)))
         .garanties(extraireGaranties(garantiesParCode, CODE_RC, CODE_DOMMAGE, CODE_VOL))
         .build());
 
@@ -279,7 +279,7 @@ public class FakeGenerator {
         .id(IdGenerator.generateId())
         .nom("Douby")
         .description("RC, DOMMAGE, TIERCE COLLISION")
-        .categorieVehicules(List.of(categories.get(CATEGORIE_202_CODE)))
+        .categoriesVehicules(List.of(categories.get(CATEGORIE_202_CODE)))
         .garanties(extraireGaranties(garantiesParCode, CODE_RC, CODE_DOMMAGE, CODE_TIERCE_COLLISION))
         .build());
 
@@ -288,7 +288,7 @@ public class FakeGenerator {
         .id(IdGenerator.generateId())
         .nom("Douyou")
         .description("RC, DOMMAGE, COLLISION, INCENDIE")
-        .categorieVehicules(List.of(categories.get(CATEGORIE_201_CODE), categories.get(CATEGORIE_202_CODE)))
+        .categoriesVehicules(List.of(categories.get(CATEGORIE_201_CODE), categories.get(CATEGORIE_202_CODE)))
         .garanties(extraireGaranties(garantiesParCode, CODE_RC, CODE_DOMMAGE, CODE_TIERCE_COLLISION, CODE_INCENDIE))
         .build());
 
@@ -297,7 +297,7 @@ public class FakeGenerator {
         .id(IdGenerator.generateId())
         .nom("Toutourisquou")
         .description("Toutes garanties")
-        .categorieVehicules(List.of(categories.get(CATEGORIE_201_CODE)))
+        .categoriesVehicules(List.of(categories.get(CATEGORIE_201_CODE)))
         .garanties(garanties)
         .build());
 

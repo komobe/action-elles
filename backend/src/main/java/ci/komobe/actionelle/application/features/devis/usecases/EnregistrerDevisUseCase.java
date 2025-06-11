@@ -36,7 +36,7 @@ public class EnregistrerDevisUseCase {
     var produit = produitRepository.chercherParNom(command.getProduit())
         .orElseThrow(() -> new ProduitErreur("Le produit n'existe pas"));
 
-    var categorie = produit.recupererCategorieParCode(command.getCategorie())
+    var categorie = produit.chercherCategorieParCode(command.getCategorie())
         .orElseThrow(() -> new CategorieVehiculeException("La catégorie n'existe pas"));
 
     String vehiculeImmatriculation = command.getVehiculeImmatriculation();

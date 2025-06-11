@@ -99,7 +99,6 @@ class ModifierAssureUseCaseTest {
         .email("old.email@exemple.ci")
         .telephone("+2250742362857")
         .adresse("Abidjan Yopougon")
-        .profession("Enseignante")
         .build();
 
     when(assureRepository.chercherParId(command.getId())).thenReturn(Optional.of(assure));
@@ -145,7 +144,6 @@ class ModifierAssureUseCaseTest {
         .email("old.email@exemple.ci")
         .telephone("+2250742362857")
         .adresse("Abidjan Yopougon")
-        .profession("Enseignante")
         .build();
 
     when(assureRepository.chercherParId(command.getId())).thenReturn(Optional.of(assure));

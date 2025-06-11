@@ -7,7 +7,9 @@ import static org.mockito.Mockito.when;
 
 import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
 import ci.komobe.actionelle.application.features.devis.commands.SimulerPrimeCommand;
+import ci.komobe.actionelle.application.features.devis.dto.SimulationPrimeResult;
 import ci.komobe.actionelle.application.features.devis.presenters.DefaultSimulerPrimePresenter;
+import ci.komobe.actionelle.application.features.devis.presenters.SimulerPrimePresenter;
 import ci.komobe.actionelle.domain.exceptions.ProduitErreur;
 import ci.komobe.actionelle.domain.repositories.InMemoryProduitRepository;
 import java.math.BigDecimal;
@@ -30,13 +32,15 @@ class SimulerPrimeUseCaseTest {
 
   @Mock
   private PrimeCalculator primeCalculator;
+  private SimulerPrimePresenter<SimulationPrimeResult> presenter;
 
   private SimulerPrimeUseCase useCase;
 
   @BeforeEach
   void setUp() {
     var produitRepository = new InMemoryProduitRepository();
-    useCase = new SimulerPrimeUseCase(produitRepository, primeCalculator);
+    presenter = new DefaultSimulerPrimePresenter();
+    useCase = new SimulerPrimeUseCase(produitRepository, primeCalculator, presenter);
   }
 
   @Test
@@ -53,10 +57,8 @@ class SimulerPrimeUseCaseTest {
 
     when(primeCalculator.calculPrime(any(), any())).thenReturn(BigDecimal.valueOf(50_000));
 
-    var presenter = new DefaultSimulerPrimePresenter();
-
     // When
-    useCase.execute(command, presenter);
+    useCase.execute(command);
     var result = presenter.present();
 
     // Then
@@ -75,10 +77,8 @@ class SimulerPrimeUseCaseTest {
     command.setDateDeMiseEnCirculation(LocalDate.of(2020, 1, 1));
     command.setCategorie("201");
 
-    var presenter = new DefaultSimulerPrimePresenter();
-
     // Then
-    assertThatThrownBy(() -> useCase.execute(command, presenter))
+    assertThatThrownBy(() -> useCase.execute(command))
         .isInstanceOf(ProduitErreur.class)
         .hasMessage("Produit non trouvé");
   }
