@@ -1,10 +1,5 @@
-import { http } from './http';
-import { API_ENDPOINTS } from '../config/api';
-
-interface ApiResponse<T> {
-  status: string;
-  data: T;
-}
+import {ApiResponse, http} from './http';
+import {API_ENDPOINTS} from '../config/api';
 
 interface AuthResponse {
   accessToken: string;
@@ -23,11 +18,11 @@ interface UserProfile {
 
 export const authApi = {
   login: async (username: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-    return http.post(API_ENDPOINTS.auth.login, { username, password });
+    return http.post(API_ENDPOINTS.auth.login, {username, password});
   },
 
-  register: async (username: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-    return http.post(API_ENDPOINTS.auth.register, { username, password });
+  register: async (username: string, password: string): Promise<ApiResponse<unknown>> => {
+    return http.post(API_ENDPOINTS.auth.register, {username, password});
   },
 
   getCurrentUser: async (): Promise<ApiResponse<UserProfile>> => {

@@ -3,11 +3,12 @@ package ci.komobe.actionelle.application.features.vehicule.usecases;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeException;
-import ci.komobe.actionelle.application.features.vehicule.VehiculeErreur;
+
 import ci.komobe.actionelle.application.features.vehicule.commands.CreerVehiculeCommand;
 import ci.komobe.actionelle.application.features.vehicule.commands.ModifierVehiculeCommand;
 import ci.komobe.actionelle.domain.entities.Vehicule;
+import ci.komobe.actionelle.domain.exceptions.CategorieVehiculeErreur;
+import ci.komobe.actionelle.domain.exceptions.VehiculeErreur;
 import ci.komobe.actionelle.domain.repositories.InMemoryCategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.repositories.InMemoryVehiculeRepository;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
@@ -54,7 +55,7 @@ class ModifierVehiculeUseCaseTest {
 
     // When
     assertThatThrownBy(() -> useCase.execute(command))
-        .isInstanceOf(CategorieVehiculeException.class)
+        .isInstanceOf(CategorieVehiculeErreur.class)
         .hasMessage("La catégorie de véhicule " + categorieCode + " n'existe pas");
 
     // Then

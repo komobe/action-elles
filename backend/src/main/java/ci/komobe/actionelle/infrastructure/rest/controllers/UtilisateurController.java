@@ -59,7 +59,7 @@ public class UtilisateurController {
   }
 
   @PostMapping
-  public void inscrireUtilisateur(@Valid InscriptionUtilisateurCommand command) {
+  public void inscrireUtilisateur(InscriptionUtilisateurCommand command) {
     var useCase = new InscrireUtilisateur(utilisateurRepository, passwordProvider);
     useCase.executer(command);
   }

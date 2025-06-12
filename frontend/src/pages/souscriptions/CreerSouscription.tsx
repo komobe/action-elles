@@ -4,10 +4,11 @@ import { http } from '@services/http';
 import { MenuItem } from 'primereact/menuitem';
 import { Steps } from 'primereact/steps';
 import { classNames } from 'primereact/utils';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '@contexts/ToastContext.tsx';
 import { Button } from 'primereact/button';
+import { produitHttpService } from "@services/produit.http-service.ts";
 
 interface Vehicule {
   dateMiseEnCirculation: string;
@@ -57,7 +58,7 @@ interface Produit {
   nom: string;
   description: string;
   garanties: Garantie[];
-  categorieVehicules: Categorie[];
+  categoriesVehicules: Categorie[];
 }
 
 interface Assure {
@@ -84,10 +85,6 @@ interface ApiError {
   errors?: Record<string, string[]>;
 }
 
-interface ApiResponse<T> {
-  status: string;
-  data: T;
-}
 
 const CreerSouscription = () => {
   const navigate = useNavigate();
@@ -98,7 +95,6 @@ const CreerSouscription = () => {
   const [validationErrors, setValidationErrors] = useState<Partial<Record<string, string>>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [categories, setCategories] = useState<Categorie[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [categoriesDisponibles, setCategoriesDisponibles] = useState<Categorie[]>([]);
 
@@ -131,14 +127,8 @@ const CreerSouscription = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesResponse, produitsResponse] = await Promise.all([
-          http.get<ApiResponse<Categorie[]>>(API_ENDPOINTS.categorieVehicule.list),
-          http.get<ApiResponse<Produit[]>>(API_ENDPOINTS.produit.list)
-        ]);
+        const produitsResponse = await produitHttpService.lister();
 
-        if (categoriesResponse.data) {
-          setCategories(categoriesResponse.data);
-        }
         if (produitsResponse.data) {
           setProduits(produitsResponse.data);
         }
@@ -264,14 +254,14 @@ const CreerSouscription = () => {
   const handleProduitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const produitSelectionne = produits.find(p => p.id === e.target.value);
     if (produitSelectionne) {
-      setCategoriesDisponibles(produitSelectionne.categorieVehicules || []);
-      const categorieExiste = produitSelectionne.categorieVehicules?.some(
+      setCategoriesDisponibles(produitSelectionne.categoriesVehicules || []);
+      const categorieExiste = produitSelectionne.categoriesVehicules?.some(
         cat => cat.code === formData.vehicule.categorieCode
       );
       if (!categorieExiste) {
         setFormData(prev => ({
           ...prev,
-          produit: produitSelectionne.nom,
+          produit: produitSelectionne.id,
           vehicule: {
             ...prev.vehicule,
             categorieCode: ''
@@ -280,7 +270,7 @@ const CreerSouscription = () => {
       } else {
         setFormData(prev => ({
           ...prev,
-          produit: produitSelectionne.nom
+          produit: produitSelectionne.id
         }));
       }
     } else {
@@ -292,6 +282,20 @@ const CreerSouscription = () => {
           ...prev.vehicule,
           categorieCode: ''
         }
+      }));
+    }
+  };
+
+  const handleVehiculeValeurVenaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      vehiculeValeurVenale: Number(value)
+    }));
+    if (validationErrors['vehiculeValeurVenale']) {
+      setValidationErrors(prev => ({
+        ...prev,
+        vehiculeValeurVenale: ''
       }));
     }
   };
@@ -338,37 +342,42 @@ const CreerSouscription = () => {
             }
             break;
           case 'dateMiseEnCirculation':
-          case 'dateNaissance':
+          case 'dateNaissance': {
             const date = new Date(value);
             const now = new Date();
             if (date > now) {
               errors[field] = 'La date ne peut pas être dans le futur';
             }
             break;
-          case 'nombreDeSieges':
+          }
+          case 'nombreDeSieges': {
             const sieges = parseInt(value);
             if (isNaN(sieges) || sieges < 1 || sieges > 9) {
               errors[field] = 'Le nombre de sièges doit être entre 1 et 9';
             }
             break;
-          case 'nombreDePortes':
+          }
+          case 'nombreDePortes': {
             const portes = parseInt(value);
             if (isNaN(portes) || portes < 2 || portes > 5) {
               errors[field] = 'Le nombre de portes doit être entre 2 et 5';
             }
             break;
-          case 'puissanceFiscale':
+          }
+          case 'puissanceFiscale': {
             const puissance = parseInt(value);
             if (isNaN(puissance) || puissance < 1) {
               errors[field] = 'La puissance fiscale doit être supérieure à 0';
             }
             break;
-          case 'valeurNeuf':
+          }
+          case 'valeurNeuf': {
             const valeur = parseFloat(value);
             if (isNaN(valeur) || valeur <= 0) {
               errors[field] = 'La valeur doit être supérieure à 0';
             }
             break;
+          }
           case 'numeroCarteIdentite':
             if (!/^[A-Z0-9]{5,}$/.test(value.toUpperCase())) {
               errors[field] = 'Numéro de carte d\'identité invalide';
@@ -404,6 +413,10 @@ const CreerSouscription = () => {
     setApiError(null);
 
     try {
+      // Récupérer le nom du produit à partir de l'ID
+      const produitSelectionne = produits.find(p => p.id === formData.produit);
+      const nomProduit = produitSelectionne?.nom || '';
+
       const submitData: SouscriptionData = {
         vehicule: {
           ...formData.vehicule,
@@ -416,7 +429,7 @@ const CreerSouscription = () => {
           ...formData.assure
         },
         vehiculeValeurVenale: Number(formData.vehiculeValeurVenale),
-        produit: formData.produit
+        produit: nomProduit
       };
 
       const response = await http.post<{ status: string, data: any }>(
@@ -466,7 +479,9 @@ const CreerSouscription = () => {
     const value = isVehiculeField
       ? name === 'produit'
         ? formData.produit
-        : formData.vehicule[name as keyof Vehicule]
+        : name === 'vehiculeValeurVenale'
+          ? formData.vehiculeValeurVenale
+          : formData.vehicule[name as keyof Vehicule]
       : formData.assure[name as keyof Assure];
 
     const getChangeHandler = () => {
@@ -478,14 +493,17 @@ const CreerSouscription = () => {
           : handleAssureChange;
       } else {
         return isVehiculeField
-          ? handleVehiculeChange
+          ? name === 'vehiculeValeurVenale'
+            ? handleVehiculeValeurVenaleChange
+            : handleVehiculeChange
           : handleAssureChange;
       }
     };
 
     return (
       <div className="mb-4">
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor={name}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label}
         </label>
         <div>
@@ -598,11 +616,15 @@ const CreerSouscription = () => {
                     <div>
                       <p className="text-gray-500 dark:text-gray-400">Produit</p>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        {formData.produit}
+                        {(() => {
+                          const produitSelectionne = produits.find(p => p.id === formData.produit);
+                          return produitSelectionne?.nom || formData.produit;
+                        })()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Date de mise en circulation</p>
+                      <p className="text-gray-500 dark:text-gray-400">Date de mise en
+                        circulation</p>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {formatDate(formData.vehicule.dateMiseEnCirculation)}
                       </p>
@@ -653,7 +675,8 @@ const CreerSouscription = () => {
                       <p className="font-medium text-gray-900 dark:text-white">{formData.assure.prenoms}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Numéro de carte d'identité</p>
+                      <p className="text-gray-500 dark:text-gray-400">Numéro de carte
+                        d'identité</p>
                       <p className="font-medium text-gray-900 dark:text-white">{formData.assure.numeroCarteIdentite}</p>
                     </div>
                     <div>
@@ -701,10 +724,12 @@ const CreerSouscription = () => {
       <h1 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white pb-12 pt-5 gap-4">
         Nouvelle Souscription
       </h1>
-      <div className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
+      <div
+        className="bg-white dark:bg-gray-800 shadow-lg w-full max-w-7xl mx-auto min-h-[calc(100vh-7rem)]">
         <div className="p-6">
           {apiError && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+            <div
+              className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
               <p className="text-sm text-red-600 dark:text-red-400">
                 {apiError}
               </p>

@@ -1,6 +1,10 @@
 package ci.komobe.actionelle.infrastructure.rest.controllers;
 
+import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
+import ci.komobe.actionelle.application.features.utilisateur.commands.InscriptionUtilisateurCommand;
+import ci.komobe.actionelle.application.features.utilisateur.usecases.InscrireUtilisateur;
 import ci.komobe.actionelle.domain.exceptions.UtilisateurErreur;
+import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.entities.UtilisateurEntity;
 import ci.komobe.actionelle.infrastructure.persistences.jpa.repositories.UtilisateurJpaRepository;
 import ci.komobe.actionelle.infrastructure.rest.dto.LoginRequest;
@@ -9,6 +13,7 @@ import ci.komobe.actionelle.infrastructure.rest.dto.LoginResponse.UserInfo;
 import ci.komobe.actionelle.infrastructure.security.services.JwtService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +40,8 @@ public class LoginController {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final UtilisateurJpaRepository utilisateurJpaRepository;
+  private final UtilisateurRepository utilisateurRepository;
+  private final PasswordProvider passwordProvider;
 
 
   @PostMapping("/login")
@@ -81,5 +88,11 @@ public class LoginController {
       String token = authHeader.substring(TOKEN_PREFIX.length());
       jwtService.blacklistToken(token);
     }
+  }
+
+  @PostMapping("/register")
+  public void register(@Valid @RequestBody InscriptionUtilisateurCommand command) {
+    var useCase = new InscrireUtilisateur(utilisateurRepository, passwordProvider);
+    useCase.executer(command);
   }
 }

@@ -1,34 +1,8 @@
-import { API_CONFIG, API_ENDPOINTS } from '../config/api';
-
-// Routes qui ne nécessitent pas de token
-const PUBLIC_ROUTES = [
-  API_ENDPOINTS.auth.login,
-  API_ENDPOINTS.auth.register
-];
-
-const isPublicRoute = (url: string): boolean => {
-  return PUBLIC_ROUTES.some(route => route && url.includes(route));
-};
-
-export class HttpError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'HttpError';
-  }
-}
-
-export class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class ApiError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-    this.name = 'ApiError';
-  }
+export interface ApiResponse<T> {
+  status: 'success' | 'error';
+  data?: T;
+  message?: string;
+  isAuthError?: boolean;
 }
 
 const getAuthHeader = (): Record<string, string> => {
@@ -44,33 +18,41 @@ const getAuthHeader = (): Record<string, string> => {
   };
 };
 
-const createAbortController = (timeout: number) => {
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), timeout);
-  return controller;
-};
-
 const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    if (response.status === 401) {
-      localStorage.removeItem('token');
-      throw new AuthenticationError('Session expirée ou invalide');
-    }
-    const errorData = await response.json().catch(() => ({}));
-    throw new ApiError(response.status, errorData.message || `Erreur HTTP: ${response.status}`);
-  }
-
   try {
     const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      return {
+        status: 'error',
+        message: 'Session expirée ou invalide',
+        _isAuthError: true
+      };
+    }
+
     return data;
   } catch (error) {
     console.error('Erreur lors du parsing de la réponse:', error);
-    throw new ApiError(500, 'Erreur lors du traitement de la réponse');
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      return {
+        status: 'error',
+        message: 'Session expirée ou invalide',
+        _isAuthError: true
+      };
+    }
+
+    return {
+      status: 'error',
+      message: `Erreur HTTP: ${response.status}`
+    };
   }
 };
 
 export const http = {
-  get: async <T>(url: string): Promise<T> => {
+  get: async <T>(url: string): Promise<ApiResponse<T>> => {
     const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'GET',
@@ -79,7 +61,7 @@ export const http = {
     return handleResponse(response);
   },
 
-  post: async <T>(url: string, data: unknown): Promise<T> => {
+  post: async <T>(url: string, data: unknown): Promise<ApiResponse<T>> => {
     const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'POST',
@@ -89,7 +71,7 @@ export const http = {
     return handleResponse(response);
   },
 
-  put: async <T>(url: string, data: unknown): Promise<T> => {
+  put: async <T>(url: string, data: unknown): Promise<ApiResponse<T>> => {
     const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'PUT',
@@ -99,7 +81,7 @@ export const http = {
     return handleResponse(response);
   },
 
-  delete: async <T>(url: string): Promise<T> => {
+  delete: async <T>(url: string): Promise<ApiResponse<T>> => {
     const headers = getAuthHeader();
     const response = await fetch(url, {
       method: 'DELETE',
@@ -107,4 +89,4 @@ export const http = {
     });
     return handleResponse(response);
   }
-}; 
+};

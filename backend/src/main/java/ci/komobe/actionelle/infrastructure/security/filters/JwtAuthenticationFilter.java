@@ -21,6 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+  private static final String AUTH_PREFIX = "/api/v1/auth";
+
   private final JwtService jwtService;
   private final CustomUserDetailsService userDetailsService;
 
@@ -41,8 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     final String authHeader = request.getHeader("Authorization");
 
-    if (request.getRequestURI().equals("/api/login")
-        || request.getRequestURI().equals("/api/logout")) {
+    if (
+        request.getRequestURI().equals(AUTH_PREFIX + "/login")
+            || request.getRequestURI().equals(AUTH_PREFIX + "/logout")
+            || request.getRequestURI().equals(AUTH_PREFIX + "/register")
+    ) {
       filterChain.doFilter(request, response);
       return;
     }

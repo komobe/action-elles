@@ -1,7 +1,14 @@
 import { Button } from 'primereact/button';
 import React, { useEffect, useState } from 'react';
 import { useMediaQuery } from '@hooks/useMediaQuery.ts';
-import { devisService, type SimulationDevisRequest, type SimulationResponse, type Produit, type Categorie } from '@services/devis.ts';
+import {
+  type Categorie,
+  devisService,
+  type Produit,
+  type SimulationDevisRequest,
+  type SimulationResponse
+} from '@services/devis.ts';
+import { produitHttpService } from "@services/produit.http-service.ts";
 
 const SimulerDevis = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -11,6 +18,7 @@ const SimulerDevis = () => {
     produit: '',
     categorie: '',
     puissanceFiscale: 0,
+    vehiculeImmatriculation: '',
     dateDeMiseEnCirculation: '',
     valeurNeuf: 0,
     valeurVenale: 0
@@ -30,13 +38,13 @@ const SimulerDevis = () => {
   const steps = [
     {
       number: 1,
-      title: 'Informations du véhicule',
-      fields: ['produit', 'categorie', 'puissanceFiscale']
+      title: 'Informations du produit',
+      fields: ['produit', 'categorie']
     },
     {
       number: 2,
-      title: 'Valeurs du véhicule',
-      fields: ['dateDeMiseEnCirculation', 'valeurNeuf', 'valeurVenale']
+      title: 'Informations du véhicule',
+      fields: ['puissanceFiscale', 'vehiculeImmatriculation', 'dateDeMiseEnCirculation', 'valeurNeuf', 'valeurVenale']
     },
     {
       number: 3,
@@ -49,17 +57,10 @@ const SimulerDevis = () => {
     const fetchData = async () => {
       setIsLoadingData(true);
       try {
-        const [produitsResponse, categoriesResponse] = await Promise.all([
-          devisService.getProduits(),
-          devisService.getCategories()
-        ]);
+        const produitsResponse = await produitHttpService.lister();
 
         if (produitsResponse.status === 'success' && produitsResponse.data) {
           setProduits(produitsResponse.data);
-        }
-
-        if (categoriesResponse.status === 'success' && categoriesResponse.data) {
-          setCategoriesDisponibles(categoriesResponse.data);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -109,6 +110,10 @@ const SimulerDevis = () => {
           errors.valeurVenale = 'La valeur vénale ne peut pas être supérieure à la valeur à neuf';
         }
       }
+
+      if (field === 'vehiculeImmatriculation' && (value as string).trim() === '') {
+        errors.vehiculeImmatriculation = 'L\'immatriculation est requise';
+      }
     });
 
     setValidationErrors(errors);
@@ -139,7 +144,7 @@ const SimulerDevis = () => {
       const produitSelectionne = produits.find(p => p.id === value);
       if (produitSelectionne) {
         setSelectedProduitId(value);
-        setCategoriesDisponibles(produitSelectionne.categorieVehicules || []);
+        setCategoriesDisponibles(produitSelectionne.categoriesVehicules || []);
         setFormData(prev => ({
           ...prev,
           [name]: produitSelectionne.nom,
@@ -191,7 +196,7 @@ const SimulerDevis = () => {
 
     try {
       const response = await devisService.simuler(formData);
-      if (response.status === 'success') {
+      if (response.status === 'success' && response.data) {
         setResult(response.data);
         setValidationErrors({});
         setCurrentStep(3);
@@ -212,6 +217,7 @@ const SimulerDevis = () => {
       produit: '',
       categorie: '',
       puissanceFiscale: 0,
+      vehiculeImmatriculation: '',
       dateDeMiseEnCirculation: '',
       valeurNeuf: 0,
       valeurVenale: 0
@@ -231,13 +237,12 @@ const SimulerDevis = () => {
       return;
     }
 
-    const { quoteReference, price, endDate, metadata }: SimulationResponseData = result;
-
+    const { quoteReference, price, endDate }: SimulationResponseData = result;
     setIsLoading(true);
     setError('');
 
     try {
-      const enregistrerDevisRequest = { quoteReference, price, endDate, ...metadata };
+      const enregistrerDevisRequest = { quoteReference, price, endDate, ...formData };
       const response = await devisService.enregistrer(enregistrerDevisRequest);
       if (response.status === 'error') {
         setError(response.message ?? 'Erreur lors de l\'enregistrement');
@@ -288,7 +293,8 @@ const SimulerDevis = () => {
 
     return (
       <div className="mb-4 last:mb-0">
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor={name}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label}
         </label>
         <div>
@@ -357,10 +363,11 @@ const SimulerDevis = () => {
                   {step.title}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`absolute w-1/4 h-0.5 left-${index === 0 ? '1/4' : '1/2'} ${currentStep > step.number
-                    ? 'bg-indigo-600'
-                    : 'bg-gray-300'
-                    }`} />
+                  <div
+                    className={`absolute w-1/4 h-0.5 left-${index === 0 ? '1/4' : '1/2'} ${currentStep > step.number
+                      ? 'bg-indigo-600'
+                      : 'bg-gray-300'
+                      }`} />
                 )}
               </div>
             ))}
@@ -372,49 +379,51 @@ const SimulerDevis = () => {
           <div className="lg:col-span-8 space-y-6">
             <form onSubmit={(e) => e.preventDefault()}>
               {error && (
-                <div className="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 p-4 mb-6" role="alert">
+                <div className="bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 p-4 mb-6"
+                  role="alert">
                   <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
                 </div>
               )}
 
               <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Informations du véhicule - visible en desktop ou à l'étape 1 en mobile */}
+                <div className="space-y-6">
+                  {/* Informations du produit - visible en desktop ou à l'étape 1 en mobile */}
                   <div className={`${!isDesktop && currentStep !== 1 ? 'hidden' : 'block'}`}>
-                    <div className="hidden lg:block mb-4">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Informations du véhicule
-                      </h3>
-                    </div>
-                    <div className="space-y-4">
-                      {renderField('produit', 'Produit', 'select',
-                        produits.map(prod => ({
-                          value: prod.id,
-                          label: prod.nom
-                        }))
-                      )}
-                      {renderField('categorie', 'Catégorie', 'select',
-                        categoriesDisponibles.map(cat => ({
-                          value: cat.code,
-                          label: `${cat.code} - ${cat.libelle}`
-                        }))
-                      )}
-                      {renderField('puissanceFiscale', 'Puissance Fiscale', 'number')}
-                    </div>
+                    <fieldset className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                      <legend className="text-lg font-medium text-gray-900 dark:text-white px-2">
+                        Informations du produit
+                      </legend>
+                      <div className="grid lg:grid-cols-2 gap-4">
+                        {renderField('produit', 'Produit', 'select',
+                          produits.map(prod => ({
+                            value: prod.id,
+                            label: prod.nom
+                          }))
+                        )}
+                        {renderField('categorie', 'Catégorie', 'select',
+                          categoriesDisponibles.map(cat => ({
+                            value: cat.code,
+                            label: `${cat.code} - ${cat.libelle}`
+                          }))
+                        )}
+                      </div>
+                    </fieldset>
                   </div>
 
-                  {/* Valeurs du véhicule - visible en desktop ou à l'étape 2 en mobile */}
+                  {/* Informations du véhicule - visible en desktop ou à l'étape 2 en mobile */}
                   <div className={`${!isDesktop && currentStep !== 2 ? 'hidden' : 'block'}`}>
-                    <div className="hidden lg:block mb-4">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Valeurs du véhicule
-                      </h3>
-                    </div>
-                    <div className="space-y-4">
-                      {renderField('dateDeMiseEnCirculation', 'Date de mise en circulation', 'date')}
-                      {renderField('valeurNeuf', 'Valeur à neuf', 'number')}
-                      {renderField('valeurVenale', 'Valeur vénale', 'number')}
-                    </div>
+                    <fieldset className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                      <legend className="text-lg font-medium text-gray-900 dark:text-white px-2">
+                        Informations du véhicule
+                      </legend>
+                      <div className="grid lg:grid-cols-2 gap-4">
+                        {renderField('vehiculeImmatriculation', 'Immatriculation', 'text')}
+                        {renderField('dateDeMiseEnCirculation', 'Date de mise en circulation', 'date')}
+                        {renderField('puissanceFiscale', 'Puissance Fiscale', 'number')}
+                        {renderField('valeurNeuf', 'Valeur à neuf', 'number')}
+                        {renderField('valeurVenale', 'Valeur vénale', 'number')}
+                      </div>
+                    </fieldset>
                   </div>
                 </div>
 
@@ -427,14 +436,17 @@ const SimulerDevis = () => {
                         <div
                           className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Prime d'assurance</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Prime
+                              d'assurance</p>
                             <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                               {formatMontant(result.price)}
                             </p>
                           </div>
                           <div className="mt-2 flex items-center justify-between text-xs">
-                            <span className="text-gray-500 dark:text-gray-400">Référence</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{result.quoteReference}</span>
+                            <span
+                              className="text-gray-500 dark:text-gray-400">Référence</span>
+                            <span
+                              className="font-medium text-gray-900 dark:text-white">{result.quoteReference}</span>
                           </div>
                           <div className="mt-1 flex items-center justify-between text-xs">
                             <span className="text-gray-500 dark:text-gray-400">Valable jusqu'au</span>
@@ -448,33 +460,54 @@ const SimulerDevis = () => {
                           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
                             Récapitulatif
                           </h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Produit</span>
-                              <span className="font-medium">{formData.produit}</span>
+
+                          {/* Informations du produit */}
+                          <div className="mb-4">
+                            <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Informations du produit
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Produit</span>
+                                <span className="font-medium">{formData.produit}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Catégorie</span>
+                                <span className="font-medium">{formData.categorie}</span>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Catégorie</span>
-                              <span className="font-medium">{formData.categorie}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Puissance</span>
-                              <span className="font-medium">{formData.puissanceFiscale} CV</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Valeur à neuf</span>
-                              <span className="font-medium">{formatMontant(formData.valeurNeuf)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Valeur vénale</span>
-                              <span className="font-medium">{formatMontant(formData.valeurVenale)}</span>
+                          </div>
+
+                          {/* Informations du véhicule */}
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Informations du véhicule
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Puissance</span>
+                                <span className="font-medium">{formData.puissanceFiscale} CV</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Immatriculation</span>
+                                <span className="font-medium">{formData.vehiculeImmatriculation}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Valeur à neuf</span>
+                                <span className="font-medium">{formatMontant(formData.valeurNeuf)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Valeur vénale</span>
+                                <span className="font-medium">{formatMontant(formData.valeurVenale)}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg">
                           <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                            Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours. Pour
+                            Cette simulation est valable
+                            pendant {calculateDaysRemaining(result.endDate)} jours. Pour
                             souscrire, contactez votre agent.
                           </p>
                         </div>
@@ -506,9 +539,11 @@ const SimulerDevis = () => {
                   >
                     {isLoading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
                           fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                          <circle className="opacity-25" cx="12" cy="12" r="10"
+                            stroke="currentColor"
                             strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -534,9 +569,11 @@ const SimulerDevis = () => {
                   >
                     {isLoading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
                           fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                          <circle className="opacity-25" cx="12" cy="12" r="10"
+                            stroke="currentColor"
                             strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -554,7 +591,8 @@ const SimulerDevis = () => {
           </div>
 
           {/* Résultat */}
-          <div className={`lg:col-span-4 ${!result && currentStep !== 3 ? 'hidden lg:block' : ''}`}>
+          <div
+            className={`lg:col-span-4 ${!result && currentStep !== 3 ? 'hidden lg:block' : ''}`}>
             {result ? (
               <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg h-full">
                 <div>
@@ -562,7 +600,8 @@ const SimulerDevis = () => {
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       Résultat
                     </h2>
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                    <span
+                      className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
                       Ref: {result.quoteReference}
                     </span>
                   </div>
@@ -572,69 +611,93 @@ const SimulerDevis = () => {
                     <div
                       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Prime d'assurance</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Prime
+                          d'assurance</p>
                         <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                           {formatMontant(result.price)}
                         </p>
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs">
-                        <span className="text-gray-500 dark:text-gray-400">Valable jusqu'au</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{formatDate(result.endDate)}</span>
+                        <span
+                          className="text-gray-500 dark:text-gray-400">Valable jusqu'au</span>
+                        <span
+                          className="font-medium text-gray-900 dark:text-white">{formatDate(result.endDate)}</span>
                       </div>
                     </div>
 
                     {/* Récapitulatif du véhicule */}
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                             d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 2v4M8 2v4M3 10h18" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                            d="M16 2v4M8 2v4M3 10h18" />
                         </svg>
-                        Informations du véhicule
+                        Récapitulatif
                       </h3>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Produit</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formData.produit}</span>
+
+                      {/* Informations du produit */}
+                      <div className="mb-3">
+                        <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                          Informations du produit
+                        </h4>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Produit</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formData.produit}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Catégorie</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formData.categorie}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Catégorie</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{formData.categorie}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Puissance Fiscale</span>
-                          <span
-                            className="font-medium text-gray-900 dark:text-white">{formData.puissanceFiscale} CV</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Mise en circulation</span>
-                          <span
-                            className="font-medium text-gray-900 dark:text-white">{formatDate(formData.dateDeMiseEnCirculation)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Valeur à neuf</span>
-                          <span
-                            className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurNeuf)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Valeur vénale</span>
-                          <span
-                            className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurVenale)}</span>
+                      </div>
+
+                      {/* Informations du véhicule */}
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                          Informations du véhicule
+                        </h4>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Puissance Fiscale</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formData.puissanceFiscale} CV</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Immatriculation</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formData.vehiculeImmatriculation}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Mise en circulation</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formatDate(formData.dateDeMiseEnCirculation)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Valeur à neuf</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurNeuf)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">Valeur vénale</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{formatMontant(formData.valeurVenale)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded-lg">
                       <div className="flex items-start">
-                        <svg className="w-3 h-3 text-indigo-500 mt-0.5 mr-1 flex-shrink-0" fill="none"
+                        <svg className="w-3 h-3 text-indigo-500 mt-0.5 mr-1 flex-shrink-0"
+                          fill="none"
                           stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                          Cette simulation est valable pendant {calculateDaysRemaining(result.endDate)} jours
-                          (jusqu'au {formatDate(result.endDate)}). Pour souscrire à cette offre, veuillez contacter
+                          Cette simulation est valable
+                          pendant {calculateDaysRemaining(result.endDate)} jours
+                          (jusqu'au {formatDate(result.endDate)}). Pour souscrire à cette offre,
+                          veuillez contacter
                           votre agent.
                         </p>
                       </div>
@@ -643,11 +706,13 @@ const SimulerDevis = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 h-full flex items-center justify-center rounded-lg">
+              <div
+                className="bg-gray-50 dark:bg-gray-700/50 p-4 h-full flex items-center justify-center rounded-lg">
                 <div className="text-center">
                   <div
                     className="bg-gray-100 dark:bg-gray-600 p-3 mx-auto mb-2 w-12 h-12 flex items-center justify-center rounded-lg">
-                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor"
+                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                         d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>

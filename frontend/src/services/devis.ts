@@ -1,4 +1,4 @@
-import { http } from './http';
+import { http, type ApiResponse } from './http';
 import { API_ENDPOINTS } from '../config/api';
 
 
@@ -6,6 +6,7 @@ export interface VehiculeInfo {
   produit: string;
   categorie: string;
   puissanceFiscale: number;
+  vehiculeImmatriculation: string;
   dateDeMiseEnCirculation: string;
   valeurNeuf: number;
   valeurVenale: number;
@@ -27,7 +28,7 @@ export interface Produit {
   nom: string;
   description: string;
   garanties: Array<any>;
-  categorieVehicules: Array<Categorie>;
+  categoriesVehicules: Array<Categorie>;
 }
 
 export interface Categorie {
@@ -43,26 +44,14 @@ export interface SimulationResponse {
   data: DevisData & {
     metadata: VehiculeInfo;
   };
-  message?: string; // Pour les messages d'erreur ou d'information
-}
-
-export interface ApiResponse<T> {
-  status: 'success' | 'error';
-  data: T;
   message?: string;
 }
 
 export const devisService = {
-  simuler: async (data: SimulationDevisRequest): Promise<SimulationResponse> => {
-    return http.post(API_ENDPOINTS.devis.simuler, data);
+  simuler: async (data: SimulationDevisRequest): Promise<ApiResponse<SimulationResponse['data']>> => {
+    return http.post<SimulationResponse['data']>(API_ENDPOINTS.devis.simuler, data);
   },
-  enregistrer: async (data: EnregistrerDevisRequest): Promise<{ status: string, message: string }> => {
+  enregistrer: async (data: EnregistrerDevisRequest): Promise<ApiResponse<{ status: string, message: string }>> => {
     return http.post<{ status: string, message: string }>(API_ENDPOINTS.devis.enregistrer, data);
   },
-  getProduits: async (): Promise<ApiResponse<Produit[]>> => {
-    return http.get(API_ENDPOINTS.produit.list);
-  },
-  getCategories: async (): Promise<ApiResponse<Categorie[]>> => {
-    return http.get(API_ENDPOINTS.categorieVehicule.list);
-  }
 }; 
