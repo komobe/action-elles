@@ -5,11 +5,12 @@ import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierMo
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.exceptions.UtilisateurErreur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author Moro KONÉ 2025-06-03
  */
-@lombok.RequiredArgsConstructor
+@RequiredArgsConstructor
 public class ModifierMotPasseUseCase {
 
   private final UtilisateurRepository utilisateurRepository;

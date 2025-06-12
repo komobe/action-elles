@@ -2,13 +2,13 @@ package ci.komobe.actionelle.infrastructure.rest.controllers;
 
 import ci.komobe.actionelle.application.commons.providers.PasswordProvider;
 import ci.komobe.actionelle.application.features.utilisateur.commands.InscriptionUtilisateurCommand;
-import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierUtilisateurCommand;
 import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierMotPasseCommand;
+import ci.komobe.actionelle.application.features.utilisateur.commands.ModifierUtilisateurCommand;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.InscrireUtilisateur;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.ListerUtilisateurs;
+import ci.komobe.actionelle.application.features.utilisateur.usecases.ModifierMotPasseUseCase;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.ModifierUtilisateurUseCase;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.RecupererUtilisateurParUsername;
-import ci.komobe.actionelle.application.features.utilisateur.usecases.ModifierMotPasseUseCase;
 import ci.komobe.actionelle.application.features.utilisateur.usecases.SupprimerUtilisateurUseCase;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;

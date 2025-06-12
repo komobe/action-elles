@@ -3,12 +3,11 @@ package ci.komobe.actionelle.seeders;
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Seeder pour les catégories de véhicules
@@ -18,7 +17,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CategorieVehiculesSeeder {
+public class CategorieVehiculeSeeder {
 
   private final CategorieVehiculeRepository repository;
 

@@ -4,13 +4,12 @@ import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
 import ci.komobe.actionelle.domain.valueobjects.Role;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Seeder pour les utilisateurs
@@ -20,7 +19,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UtilisateursSeeder {
+public class UtilisateurSeeder {
 
   private final UtilisateurRepository repository;
   private final PasswordEncoder passwordEncoder;

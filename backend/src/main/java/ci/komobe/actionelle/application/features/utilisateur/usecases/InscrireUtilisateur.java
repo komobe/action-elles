@@ -6,22 +6,17 @@ import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.exceptions.UtilisateurErreur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Moro KONÉ 2025-05-30
  */
+@RequiredArgsConstructor
 public class InscrireUtilisateur {
 
   private final UtilisateurRepository utilisateurRepository;
   private final PasswordProvider passwordProvider;
-
-  public InscrireUtilisateur(
-      UtilisateurRepository utilisateurRepository,
-      PasswordProvider passwordProvider) {
-    this.utilisateurRepository = utilisateurRepository;
-    this.passwordProvider = passwordProvider;
-  }
 
   public void executer(InscriptionUtilisateurCommand command) {
     if (command.username() == null || !StringUtils.hasText(command.username())) {

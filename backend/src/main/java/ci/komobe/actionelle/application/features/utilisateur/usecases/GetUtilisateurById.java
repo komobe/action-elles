@@ -3,12 +3,12 @@ package ci.komobe.actionelle.application.features.utilisateur.usecases;
 import ci.komobe.actionelle.domain.entities.Utilisateur;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author Moro KONÉ 2025-05-31
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class GetUtilisateurById {
 
   private final UtilisateurRepository utilisateurRepository;

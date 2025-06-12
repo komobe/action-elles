@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DatabaseSeeder {
 
-  private final UtilisateursSeeder utilisateursSeeder;
-  private final CategorieVehiculesSeeder categorieVehiculesSeeder;
-  private final GarantiesSeeder garantiesSeeder;
-  private final ProduitsSeeder produitsSeeder;
-  private final AssuresSeeder assuresSeeder;
+  private final UtilisateurSeeder utilisateurSeeder;
+  private final CategorieVehiculeSeeder categorieVehiculeSeeder;
+  private final GarantieSeeder garantieSeeder;
+  private final ProduitSeeder produitSeeder;
+  private final AssureSeeder assureSeeder;
 
   /**
    * Exécute tous les seeders dans l'ordre des dépendances
@@ -29,15 +29,15 @@ public class DatabaseSeeder {
     log.info("Démarrage du seeding de la base de données...");
 
     // 1. Données de référence
-    categorieVehiculesSeeder.seed();
-    garantiesSeeder.seed();
+    categorieVehiculeSeeder.seed();
+    garantieSeeder.seed();
 
     // 2. Produits (dépend des catégories et garanties)
-    produitsSeeder.seed();
+    produitSeeder.seed();
 
     // 3. Utilisateurs et Assurés (indépendants)
-    utilisateursSeeder.seed();
-    assuresSeeder.seed();
+    utilisateurSeeder.seed();
+    assureSeeder.seed();
 
     log.info("Seeding terminé avec succès.");
   }

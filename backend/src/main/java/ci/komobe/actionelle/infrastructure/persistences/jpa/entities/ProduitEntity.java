@@ -31,20 +31,12 @@ public class ProduitEntity {
   private String description;
 
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(
-      name = "produit_garanties",
-      joinColumns = @JoinColumn(name = "produit_id"),
-      inverseJoinColumns = @JoinColumn(name = "garantie_id")
-  )
+  @JoinTable(name = "produit_garanties", joinColumns = @JoinColumn(name = "produit_id"), inverseJoinColumns = @JoinColumn(name = "garantie_id"))
   private List<GarantieEntity> garanties = new ArrayList<>();
 
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(
-      name = "produit_categorie_vehicules",
-      joinColumns = @JoinColumn(name = "produit_id"),
-      inverseJoinColumns = @JoinColumn(name = "categorie_vehicule_id")
-  )
-  private List<CategorieVehiculeEntity> categorieVehicules = new ArrayList<>();
+  @JoinTable(name = "produit_categorie_vehicules", joinColumns = @JoinColumn(name = "produit_id"), inverseJoinColumns = @JoinColumn(name = "categorie_vehicule_id"))
+  private List<CategorieVehiculeEntity> categoriesVehicules = new ArrayList<>();
 
   @OneToMany(mappedBy = "produit", fetch = FetchType.LAZY)
   private List<DevisEntity> simulationsDevis = new ArrayList<>();
@@ -52,4 +44,3 @@ public class ProduitEntity {
   @OneToMany(mappedBy = "produit", fetch = FetchType.LAZY)
   private List<SouscriptionEntity> souscriptions = new ArrayList<>();
 }
-

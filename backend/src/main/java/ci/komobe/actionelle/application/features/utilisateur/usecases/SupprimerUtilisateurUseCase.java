@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Cas d'utilisation pour la suppression d'un utilisateur
- * 
+ *
  * @author Moro KONÉ 2025-06-01
  */
 @RequiredArgsConstructor

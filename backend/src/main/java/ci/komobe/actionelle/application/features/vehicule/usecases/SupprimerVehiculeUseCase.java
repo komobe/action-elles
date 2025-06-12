@@ -1,8 +1,8 @@
 package ci.komobe.actionelle.application.features.vehicule.usecases;
 
-import ci.komobe.actionelle.application.features.vehicule.VehiculeErreur;
 import ci.komobe.actionelle.application.features.vehicule.commands.SupprimerVehiculeCommand;
 import ci.komobe.actionelle.domain.entities.Vehicule;
+import ci.komobe.actionelle.domain.exceptions.VehiculeErreur;
 import ci.komobe.actionelle.domain.repositories.VehiculeRepository;
 
 /**

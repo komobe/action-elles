@@ -10,6 +10,7 @@ import ci.komobe.actionelle.application.features.vehicule.commands.ModifierVehic
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.repositories.InMemoryCategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.repositories.InMemoryVehiculeRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,7 @@ class ModifierVehiculeUseCaseTest {
   void modificationVehiculeEchecCarCategorieInexistant() {
     // Given
     String categorieCode = "notfound";
+    var vehiculeId = IdGenerator.generateId();
     var vehiculeData = CreerVehiculeCommand.builder()
         .dateMiseEnCirculation(LocalDate.of(2024, 1, 1))
         .immatriculation("123456789012345")
@@ -46,7 +48,7 @@ class ModifierVehiculeUseCaseTest {
         .build();
 
     var command = ModifierVehiculeCommand.builder()
-        .id("123456789012345")
+        .id(vehiculeId)
         .vehiculeData(vehiculeData)
         .build();
 
@@ -65,6 +67,7 @@ class ModifierVehiculeUseCaseTest {
   @DisplayName("Echec de la modification d'un véhicule car l'immatriculation n'existe pas")
   void modificationVehiculeEchecCarImmatriculationInexistant() {
     // Given
+    var vehiculeId = IdGenerator.generateId();
     var vehiculeData = CreerVehiculeCommand.builder()
         .dateMiseEnCirculation(LocalDate.of(2024, 1, 1))
         .immatriculation("123456789012345")
@@ -75,7 +78,7 @@ class ModifierVehiculeUseCaseTest {
         .build();
 
     var command = ModifierVehiculeCommand.builder()
-        .id("123456789012345")
+        .id(vehiculeId)
         .vehiculeData(vehiculeData)
         .build();
 

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProduitsSeeder {
+public class ProduitSeeder {
 
   private final ProduitRepository produitRepository;
   private final GarantieRepository garantieRepository;

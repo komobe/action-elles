@@ -5,12 +5,12 @@ import ci.komobe.actionelle.domain.repositories.CategorieVehiculeRepository;
 import ci.komobe.actionelle.domain.repositories.GarantieRepository;
 import ci.komobe.actionelle.domain.repositories.ProduitRepository;
 import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
-import ci.komobe.actionelle.seeders.AssuresSeeder;
-import ci.komobe.actionelle.seeders.CategorieVehiculesSeeder;
+import ci.komobe.actionelle.seeders.AssureSeeder;
+import ci.komobe.actionelle.seeders.CategorieVehiculeSeeder;
 import ci.komobe.actionelle.seeders.DatabaseSeeder;
-import ci.komobe.actionelle.seeders.GarantiesSeeder;
-import ci.komobe.actionelle.seeders.ProduitsSeeder;
-import ci.komobe.actionelle.seeders.UtilisateursSeeder;
+import ci.komobe.actionelle.seeders.GarantieSeeder;
+import ci.komobe.actionelle.seeders.ProduitSeeder;
+import ci.komobe.actionelle.seeders.UtilisateurSeeder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
@@ -44,7 +44,7 @@ public class SeederConfig {
       if (args.containsOption("seeds")) {
         if (isProdProfile()) {
           log.error("Les seeds sont interdits en production !");
-          throw new RuntimeException("Les seeds sont interdits en production !");
+          throw new UnsupportedOperationException("Les seeds sont interdits en production !");
         }
 
         String seedValue = args.getOptionValues("seeds").get(0);
@@ -54,11 +54,11 @@ public class SeederConfig {
           log.info("Démarrage du seeding...");
 
           // Création manuelle des seeders
-          var assuresSeeder = new AssuresSeeder(assureRepository);
-          var categorieVehiculesSeeder = new CategorieVehiculesSeeder(categorieVehiculeRepository);
-          var garantiesSeeder = new GarantiesSeeder(garantieRepository);
-          var produitsSeeder = new ProduitsSeeder(produitRepository, garantieRepository, categorieVehiculeRepository);
-          var utilisateursSeeder = new UtilisateursSeeder(utilisateurRepository, passwordEncoder);
+          var assuresSeeder = new AssureSeeder(assureRepository);
+          var categorieVehiculesSeeder = new CategorieVehiculeSeeder(categorieVehiculeRepository);
+          var garantiesSeeder = new GarantieSeeder(garantieRepository);
+          var produitsSeeder = new ProduitSeeder(produitRepository, garantieRepository, categorieVehiculeRepository);
+          var utilisateursSeeder = new UtilisateurSeeder(utilisateurRepository, passwordEncoder);
 
           // Création du DatabaseSeeder
           var databaseSeeder = new DatabaseSeeder(

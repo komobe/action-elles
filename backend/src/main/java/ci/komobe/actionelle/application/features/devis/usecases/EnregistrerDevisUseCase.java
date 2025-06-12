@@ -2,9 +2,9 @@ package ci.komobe.actionelle.application.features.devis.usecases;
 
 import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
 import ci.komobe.actionelle.application.features.devis.commands.EnregistrerDevisCommand;
-import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeException;
 import ci.komobe.actionelle.domain.entities.Devis;
 import ci.komobe.actionelle.domain.entities.Vehicule;
+import ci.komobe.actionelle.domain.exceptions.CategorieVehiculeErreur;
 import ci.komobe.actionelle.domain.exceptions.DevisErreur;
 import ci.komobe.actionelle.domain.exceptions.ProduitErreur;
 import ci.komobe.actionelle.domain.repositories.DevisRepository;
@@ -37,7 +37,7 @@ public class EnregistrerDevisUseCase {
         .orElseThrow(() -> new ProduitErreur("Le produit n'existe pas"));
 
     var categorie = produit.chercherCategorieParCode(command.getCategorie())
-        .orElseThrow(() -> new CategorieVehiculeException("La catégorie n'existe pas"));
+        .orElseThrow(() -> new CategorieVehiculeErreur("La catégorie n'existe pas"));
 
     String vehiculeImmatriculation = command.getVehiculeImmatriculation();
     var vehiculeOptional = vehiculeRepository.chercherParImmatriculation(vehiculeImmatriculation);

@@ -40,7 +40,7 @@ public class CategorieVehiculeEntity {
   @Column()
   private String description;
 
-  @ManyToMany(mappedBy = "categorieVehicules", fetch = FetchType.LAZY)
+  @ManyToMany(mappedBy = "categoriesVehicules", fetch = FetchType.LAZY)
   private List<ProduitEntity> produits = new ArrayList<>();
 
   @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)

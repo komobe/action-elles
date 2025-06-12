@@ -3,13 +3,12 @@ package ci.komobe.actionelle.seeders;
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.repositories.AssureRepository;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
 
 /**
  * Seeder pour les assurés
@@ -19,7 +18,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AssuresSeeder {
+public class AssureSeeder {
 
   private final AssureRepository repository;
 

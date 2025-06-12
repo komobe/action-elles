@@ -3,6 +3,7 @@ package ci.komobe.actionelle.application.features.vehicule;
 import ci.komobe.actionelle.application.features.vehicule.commands.CreerVehiculeCommand;
 import ci.komobe.actionelle.domain.entities.CategorieVehicule;
 import ci.komobe.actionelle.domain.entities.Vehicule;
+import ci.komobe.actionelle.domain.exceptions.VehiculeErreur;
 import ci.komobe.actionelle.domain.utils.IdGenerator;
 import ci.komobe.actionelle.domain.valueobjects.Valeur;
 

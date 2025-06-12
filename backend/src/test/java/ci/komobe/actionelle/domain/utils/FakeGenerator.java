@@ -80,7 +80,8 @@ public class FakeGenerator {
     LocalDate dateMiseEnCirculation = LocalDate.now().minusYears(random.nextInt(MAX_AGE_VEHICULE_ANNEES));
 
     Valeur valeurNeuf = genererValeurNeuf(random);
-    // Valeur valeurVenale = calculerValeurVenale(valeurNeuf, dateMiseEnCirculation);
+    // Valeur valeurVenale = calculerValeurVenale(valeurNeuf,
+    // dateMiseEnCirculation);
 
     return Vehicule.builder()
         .id(IdGenerator.generateId())
@@ -352,7 +353,7 @@ public class FakeGenerator {
 
     // Autres utilisateurs de test
     creerUtilisateur(utilisateurs, "gabriella", "monsupermotdepasse", Role.AMAZONE);
-    creerUtilisateur(utilisateurs, "stephanie", "autrepassword", Role.DEFAULT);
+    creerUtilisateur(utilisateurs, "stephanie", "autrepassword", Role.AMAZONE);
     creerUtilisateur(utilisateurs, "robine", "monsupermotdepasse", Role.AMAZONE);
 
     return utilisateurs;

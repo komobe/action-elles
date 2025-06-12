@@ -11,6 +11,7 @@ import ci.komobe.actionelle.application.features.assure.commands.ModifierAssureC
 import ci.komobe.actionelle.domain.entities.Assure;
 import ci.komobe.actionelle.domain.exceptions.AssureErreur;
 import ci.komobe.actionelle.domain.repositories.AssureRepository;
+import ci.komobe.actionelle.domain.utils.IdGenerator;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import java.time.LocalDate;
@@ -40,6 +41,7 @@ class ModifierAssureUseCaseTest {
   @DisplayName("Test que la modification d'un assuré échoue car assuré non trouvé")
   void modificationAssureEchoueCarAssureNonTrouve() {
     // Given
+    var assureId = IdGenerator.generateId();
     var assureData = CreerAssureCommand.builder()
         .numeroCarteIdentite("CI4839201745")
         .nom("Boucher")
@@ -53,7 +55,7 @@ class ModifierAssureUseCaseTest {
         .build();
 
     var command = ModifierAssureCommand.builder()
-        .id("ASS-001")
+        .id(assureId)
         .assureData(assureData)
         .build();
 
@@ -71,6 +73,7 @@ class ModifierAssureUseCaseTest {
   @DisplayName("Test que la modification d'un assuré échoue car email existe déjà")
   void modificationAssureEchoueCarEmailExiste() {
     // Given
+    var assureId = IdGenerator.generateId();
     var assureData = CreerAssureCommand.builder()
         .numeroCarteIdentite("CI4839201745")
         .nom("Boucher")
@@ -84,12 +87,12 @@ class ModifierAssureUseCaseTest {
         .build();
 
     var command = ModifierAssureCommand.builder()
-        .id("ASS-001")
+        .id(assureId)
         .assureData(assureData)
         .build();
 
     var assure = Assure.builder()
-        .id("ASS-001")
+        .id(assureId)
         .numeroCarteIdentite("CI4839201745")
         .nom("Boucher")
         .prenoms("Léa")
@@ -116,6 +119,7 @@ class ModifierAssureUseCaseTest {
   @DisplayName("Test que la modification d'un assuré se fait avec succès")
   void modificationAssureSeFaitAvecSucces() {
     // Given
+    var assureId = IdGenerator.generateId();
     var assureData = CreerAssureCommand.builder()
         .numeroCarteIdentite("CI4839201745")
         .nom("Boucher")
@@ -129,12 +133,12 @@ class ModifierAssureUseCaseTest {
         .build();
 
     var command = ModifierAssureCommand.builder()
-        .id("ASS-001")
+        .id(assureId)
         .assureData(assureData)
         .build();
 
     var assure = Assure.builder()
-        .id("ASS-001")
+        .id(assureId)
         .numeroCarteIdentite("CI4839201745")
         .nom("Boucher")
         .prenoms("Léa")

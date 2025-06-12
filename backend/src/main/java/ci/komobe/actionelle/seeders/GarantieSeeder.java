@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GarantiesSeeder {
+public class GarantieSeeder {
 
   private final GarantieRepository repository;
 

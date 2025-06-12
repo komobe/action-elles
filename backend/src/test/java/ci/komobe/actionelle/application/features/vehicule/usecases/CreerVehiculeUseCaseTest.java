@@ -3,7 +3,7 @@ package ci.komobe.actionelle.application.features.vehicule.usecases;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import ci.komobe.actionelle.application.features.vehicule.VehiculeErreur;
+import ci.komobe.actionelle.domain.exceptions.VehiculeErreur;
 import ci.komobe.actionelle.application.features.vehicule.commands.CreerVehiculeCommand;
 import ci.komobe.actionelle.domain.entities.Vehicule;
 import ci.komobe.actionelle.domain.repositories.InMemoryVehiculeRepository;

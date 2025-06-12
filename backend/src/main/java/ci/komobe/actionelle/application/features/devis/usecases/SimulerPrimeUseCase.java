@@ -4,8 +4,8 @@ import ci.komobe.actionelle.application.commons.services.prime.PrimeCalculator;
 import ci.komobe.actionelle.application.features.devis.commands.SimulerPrimeCommand;
 import ci.komobe.actionelle.application.features.devis.dto.SimulationPrimeResult;
 import ci.komobe.actionelle.application.features.devis.presenters.SimulerPrimePresenter;
-import ci.komobe.actionelle.application.features.vehicule.CategorieVehiculeException;
 import ci.komobe.actionelle.domain.entities.Produit;
+import ci.komobe.actionelle.domain.exceptions.CategorieVehiculeErreur;
 import ci.komobe.actionelle.domain.exceptions.ProduitErreur;
 import ci.komobe.actionelle.domain.repositories.ProduitRepository;
 import ci.komobe.actionelle.domain.utils.QuoteReferenceGenerator;
@@ -48,6 +48,6 @@ public record SimulerPrimeUseCase(
       return produit;
     }
 
-    throw new CategorieVehiculeException("Produit catégorie non trouvée");
+    throw new CategorieVehiculeErreur("Produit catégorie non trouvée");
   }
 }

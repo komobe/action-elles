@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,4 +43,10 @@ public abstract class ProduitCommandBase {
   @DecimalMin(value = "0.0", message = "Le taux de prime doit être supérieur ou égal à 0")
   @DecimalMax(value = "100.0", message = "Le taux de prime doit être inférieur ou égal à 100")
   private BigDecimal tauxPrime;
+
+  @NotNull(message = "Les garanties sont obligatoires")
+  private List<String> garanties;
+
+  @NotNull(message = "Les catégories de véhicules sont obligatoires")
+  private List<String> categoriesVehicules;
 }

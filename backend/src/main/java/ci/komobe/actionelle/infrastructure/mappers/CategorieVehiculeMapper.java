@@ -21,4 +21,3 @@ public interface CategorieVehiculeMapper {
   @InheritInverseConfiguration
   CategorieVehiculeEntity toEntity(CategorieVehicule categorieVehicule);
 }
-

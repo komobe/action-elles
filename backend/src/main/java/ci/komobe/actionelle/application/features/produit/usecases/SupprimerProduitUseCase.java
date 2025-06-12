@@ -3,9 +3,7 @@ package ci.komobe.actionelle.application.features.produit.usecases;
 import ci.komobe.actionelle.domain.exceptions.ProduitErreur;
 import ci.komobe.actionelle.domain.repositories.ProduitRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class SupprimerProduitUseCase {
 
