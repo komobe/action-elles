@@ -1,0 +1,24 @@
+/* Variables CSS personnalisées */
+:root {
+  --primary-color: #4f46e5;
+  --primary-color-text: #ffffff;
+  --primary-200: #a5b4fc;
+
+  /* Variables additionnelles pour cohérence */
+  --primary-hover: #4338ca;
+  --primary-focus: #3730a3;
+
+  /* Variables pour les états */
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+
+  /* Variables pour les bordures */
+  --border-radius: 0;
+  --border-radius-sm: 0;
+  --border-radius-lg: 0;
+
+  /* Variables pour les ombres (désactivées) */
+  --shadow-none: none;
+}

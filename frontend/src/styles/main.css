@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Configuration de base */
+@layer base {
+  * {
+    box-sizing: border-box;
+    box-shadow: none !important;
+  }
+
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    line-height: 1.6;
+  }
+
+  #root {
+    @apply min-h-screen w-full;
+  }
+
+  /* Layout spécifique pour les pages d'accueil */
+  .app-landing {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+  }
+}
+
+/* Composants personnalisés */
+@layer components {
+
+  /* Layout */
+  .app {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* Navigation */
+  .app-nav {
+    @apply border-b border-gray-200 dark:border-gray-700 pb-4 mb-8;
+  }
+
+  .app-nav ul {
+    @apply flex gap-8 list-none p-0 m-0;
+  }
+
+  .app-nav a {
+    @apply text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium;
+  }
+
+  /* Typographie */
+  h1 {
+    @apply text-4xl font-bold mb-4 text-gray-900 dark:text-white;
+  }
+
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-gray-900 dark:text-white mb-4;
+  }
+
+  p {
+    @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+  }
+
+  /* Formulaires de base */
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800;
+    border-radius: 0;
+  }
+
+  /* Styles pour les inputs HTML natifs */
+  input,
+  select,
+  textarea {
+    @apply w-full px-3 py-2 text-base leading-6 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border-radius: 0;
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    @apply border-gray-400 dark:border-gray-500;
+  }
+
+  /* Boutons de formulaire */
+  .form-button {
+    @apply px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: 0;
+  }
+
+  .form-button-secondary {
+    @apply px-4 py-2 font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600;
+    border-radius: 0;
+  }
+
+  /* Utilitaires */
+  .card {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6;
+    border-radius: 0;
+  }
+
+  .divider {
+    @apply border-t border-gray-200 dark:border-gray-700 my-6;
+  }
+
+  /* Pages d'authentification */
+  .auth-page {
+    @apply min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8;
+  }
+
+  .auth-container {
+    @apply w-full max-w-md space-y-8;
+  }
+
+  .auth-header {
+    @apply text-center;
+  }
+
+  .auth-title {
+    @apply text-3xl font-bold text-gray-900 dark:text-white mb-2;
+  }
+
+  .auth-subtitle {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .auth-form {
+    @apply mt-8 space-y-6;
+  }
+
+  .auth-form-group {
+    @apply space-y-2;
+  }
+
+  .auth-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .auth-button {
+    @apply w-full flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: 0;
+  }
+
+  .auth-link {
+    @apply text-center text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300;
+
+  }
+
+  /* Messages d'erreur */
+  .error-message {
+    @apply bg-red-50 dark:bg-red-900/50 border-l-4 border-red-400 p-4 text-sm text-red-700 dark:text-red-200;
+    border-radius: 0;
+  }
+
+  /* Logo et animations */
+  .logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
+  }
+
+  .logo:hover {
+    filter: none;
+  }
+
+  .logo.react:hover {
+    filter: none;
+  }
+
+  .read-the-docs {
+    color: #888;
+  }
+}
+
+/* Suppression globale des ombres */
+@layer utilities {
+
+  .shadow,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl,
+  .shadow-inner {
+    box-shadow: none !important;
+  }
+
+  *:focus {
+    box-shadow: none !important;
+  }
+}
+
+/* Animations */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
