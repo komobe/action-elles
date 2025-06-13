@@ -29,7 +29,7 @@ const LabeledInput: React.FC<LabeledInputProps> = ({
   return (
     <div className={className}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        {label}
+        {label}{required && <span className='text-red-700'> *</span>}
       </label>
       <InputText
         id={id}

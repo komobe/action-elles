@@ -8,6 +8,8 @@ import ci.komobe.actionelle.domain.repositories.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
+ * Use Case pour modifier le mot de passe d'un utilisateur
+ *
  * @author Moro KONÉ 2025-06-03
  */
 @RequiredArgsConstructor
@@ -17,21 +19,31 @@ public class ModifierMotPasseUseCase {
   private final PasswordProvider passwordProvider;
 
   public void execute(ModifierMotPasseCommand command) {
-    Utilisateur utilisateur = utilisateurRepository.chercherParId(command.getId())
-        .orElseThrow(() -> new UtilisateurErreur("Utilisateur non trouvé"));
-
-    String newPassword = command.getNewPassword();
-    String currentPassword = utilisateur.getPassword();
-
-    boolean matches = passwordProvider.matches(newPassword, currentPassword);
-    if (!matches) {
-      throw new UtilisateurErreur("Vous utilisez déjà ce mot de passe");
-    }
-
-    String nouveauMotPasseEncoder = passwordProvider.encode(newPassword);
-
-    utilisateur.modifieMotPasse(nouveauMotPasseEncoder);
-
+    Utilisateur utilisateur = recupererUtilisateur(command.getId());
+    String nouveauMotPasse = command.getNewPassword();
+    verifierMotPasseDifferent(nouveauMotPasse, utilisateur.getPassword());
+    String nouveauMotPasseCrypte = crypterMotPasse(nouveauMotPasse);
+    utilisateur.modifieMotPasse(nouveauMotPasse, nouveauMotPasseCrypte);
     utilisateurRepository.enregistrer(utilisateur);
   }
+
+  private Utilisateur recupererUtilisateur(String id) {
+    return utilisateurRepository.chercherParId(id)
+        .orElseThrow(() -> new UtilisateurErreur("Utilisateur non trouvé"));
+  }
+
+  private void verifierMotPasseDifferent(String nouveauMotPasse, String ancienMotPasse) {
+    if (motPasseIdentique(nouveauMotPasse, ancienMotPasse)) {
+      throw new UtilisateurErreur("Vous utilisez déjà ce mot de passe");
+    }
+  }
+
+  private String crypterMotPasse(String motPasse) {
+    return passwordProvider.encode(motPasse);
+  }
+
+  private boolean motPasseIdentique(String nouveauMotPasse, String ancienMotPasseEncode) {
+    return passwordProvider.matches(nouveauMotPasse, ancienMotPasseEncode);
+  }
 }
+

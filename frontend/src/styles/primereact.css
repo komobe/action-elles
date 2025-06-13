@@ -76,7 +76,6 @@
 .p-dropdown,
 .p-multiselect,
 .p-calendar {
-  width: 100% !important;
   padding: 0.5rem 0.75rem !important;
   font-size: 1rem !important;
   line-height: 1.5 !important;

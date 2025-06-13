@@ -1,16 +1,17 @@
+import { LabeledDropdown } from '@/components/form/LabeledDropdown';
+import LabeledInput from '@/components/form/LabeledInput';
+import LabeledPassword from '@/components/form/LabeledPassword';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@contexts/ToastContext';
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { http } from '@services/http';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
-import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+// Types
 interface User {
   id: string;
   username: string;
@@ -31,164 +32,176 @@ interface Role {
   label: string;
 }
 
-interface ApiResponse {
-  data: User[];
-  metadata: {
-    number: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
-    first: boolean;
-    last: boolean;
-    offset: number;
-    remainingElements: number;
-    remainingPages: number;
-  };
-  links: {
-    current: string;
-    first: string;
-    last: string;
-    next: string | null;
-    prev: string | null;
-  };
-  size: number;
-}
+// Constants
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
+
+const MESSAGES = {
+  SUCCESS: {
+    USER_DELETED: 'Utilisateur supprimé avec succès',
+    USER_UPDATED: 'Utilisateur mis à jour avec succès',
+    PASSWORD_RESET: 'Mot de passe réinitialisé avec succès',
+  },
+  ERROR: {
+    LOADING_USERS: 'Erreur de chargement des utilisateurs',
+    LOADING_ROLES: 'Erreur lors du chargement des rôles',
+    DELETING_USER: 'Erreur lors de la suppression de l\'utilisateur',
+    UPDATING_USER: 'Erreur lors de la mise à jour de l\'utilisateur',
+    RESETTING_PASSWORD: 'Erreur lors de la réinitialisation du mot de passe',
+    GENERIC: 'Une erreur est survenue',
+  },
+} as const;
 
 const ListerUtilisateurs = () => {
+  // State Management
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { success: showSuccess, error: showError } = useToast();
+
+  // Dialog States
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogVisible, setEditDialogVisible] = useState(false);
   const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // Form States
   const [editForm, setEditForm] = useState<EditUserForm>({
     username: '',
     role: '',
     password: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [roles, setRoles] = useState<Role[]>([]);
 
+  // Hooks
+  const { success: showSuccess, error: showError } = useToast();
 
-  useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, []);
+  // Memoized Values
+  const isFormValid = useMemo(() => {
+    return editForm.username.trim() !== '' && editForm.role !== '';
+  }, [editForm.username, editForm.role]);
 
-  const fetchRoles = async () => {
+  const isPasswordValid = useMemo(() => {
+    return newPassword.trim().length >= 6; // Minimum password length
+  }, [newPassword]);
+
+  // API Calls
+  const fetchRoles = useCallback(async () => {
     try {
-      const response = await http.get<{ status: string, data: string[] }>(API_ENDPOINTS.roles.list);
-      if (response.status === 'success') {
-        // Transformer les rôles pour le format du Dropdown
+      const response = await http.get<string[]>(API_ENDPOINTS.roles.list);
+
+      if (response.status === 'success' && response.data) {
         const formattedRoles = response.data.map(role => ({
           name: role,
           label: role
         }));
+        console.log('Roles formatés:', formattedRoles); // Debug
         setRoles(formattedRoles);
       }
     } catch (error) {
-      showError('Erreur lors du chargement des rôles');
+      console.error('Error fetching roles:', error);
+      showError(MESSAGES.ERROR.LOADING_ROLES);
     }
-  };
+  }, [showError]);
 
-  const fetchUsers = async (page: number = 1, size: number = pageSize) => {
+  const fetchUsers = useCallback(async (page: number = 1, size: number = pageSize) => {
     try {
       setIsLoading(true);
-      const response = await http.get<ApiResponse>(API_ENDPOINTS.users.list + `?page=${page}&size=${size}`);
-      setUsers(response.data);
-      setTotalRecords(response.metadata.totalElements);
-      setCurrentPage(response.metadata.number);
+      setError(null);
+
+      const response = await http.get<User[]>(
+        `${API_ENDPOINTS.users.list}?page=${page}&size=${size}`
+      );
+
+      setUsers(response.data || []);
+      setTotalRecords(response.metadata?.totalElements || 0);
+      setCurrentPage(response.metadata?.number || page);
     } catch (error: any) {
-      setError('Une erreur est survenue lors du chargement des utilisateurs');
-      showError('Erreur de chargement des utilisateurs');
+      const errorMessage = error?.message || MESSAGES.ERROR.LOADING_USERS;
+      setError(errorMessage);
+      showError(errorMessage);
+      console.error('Error fetching users:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pageSize, showError]);
 
-  const onPage = (event: { page?: number; first: number; rows: number }) => {
+  // Event Handlers
+  const handlePageChange = useCallback((event: { page?: number; first: number; rows: number }) => {
     const newPage = (event.page ?? 0) + 1;
     setCurrentPage(newPage);
+    setPageSize(event.rows);
     fetchUsers(newPage, event.rows);
-  };
+  }, [fetchUsers]);
 
-  const handleDelete = async (userId: string) => {
+  const handleDeleteUser = useCallback(async (userId: string) => {
+    if (!userId) return;
+
     try {
       await http.delete(API_ENDPOINTS.users.delete(userId));
-      showSuccess('Utilisateur supprimé avec succès');
-      setUsers(users.filter(user => user.id !== userId));
-      setDeleteDialogVisible(false);
-    } catch (error) {
-      showError('Erreur lors de la suppression de l\'utilisateur');
-    }
-  };
 
-  const handleEdit = async () => {
-    if (!selectedUser) return;
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      showSuccess(MESSAGES.SUCCESS.USER_DELETED);
+      setDeleteDialogVisible(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showError(MESSAGES.ERROR.DELETING_USER);
+    }
+  }, [showSuccess, showError]);
+
+  const handleEditUser = useCallback(async () => {
+    if (!selectedUser || !isFormValid) return;
 
     try {
       const updateData: Partial<EditUserForm> = {
-        username: editForm.username,
+        username: editForm.username.trim(),
         role: editForm.role
       };
 
-
-      if (editForm.password) {
-        updateData.password = editForm.password;
+      if (editForm.password?.trim()) {
+        updateData.password = editForm.password.trim();
       }
 
       await http.put<{ status: string }>(API_ENDPOINTS.users.update, {
         id: selectedUser.id,
         ...updateData
       });
-      showSuccess('Utilisateur mis à jour avec succès');
 
-      setUsers(users.map(user =>
-        user.id === selectedUser.id
-          ? { ...user, ...updateData }
-          : user
-      ));
-      setEditDialogVisible(false);
+      setUsers(prevUsers =>
+        prevUsers.map(user => user.id === selectedUser.id ? { ...user, ...updateData } : user)
+      );
+
+      showSuccess(MESSAGES.SUCCESS.USER_UPDATED);
+      closeEditDialog();
     } catch (error) {
-      showError('Erreur lors de la mise à jour de l\'utilisateur');
+      console.error('Error updating user:', error);
+      showError(MESSAGES.ERROR.UPDATING_USER);
     }
-  };
+  }, [selectedUser, editForm, isFormValid, showSuccess, showError]);
 
-  const handlePasswordReset = async () => {
-    if (!selectedUser) return;
+  const handlePasswordReset = useCallback(async () => {
+    if (!selectedUser || !isPasswordValid) return;
 
     try {
       await http.put<{ status: string }>(API_ENDPOINTS.users.resetPassword, {
         id: selectedUser.id,
-        password: newPassword
+        newPassword: newPassword.trim()
       });
-      showSuccess('Mot de passe réinitialisé avec succès');
-      setPasswordDialogVisible(false);
-      setNewPassword('');
+
+      showSuccess(MESSAGES.SUCCESS.PASSWORD_RESET);
+      closePasswordDialog();
     } catch (error) {
-      showError('Erreur lors de la réinitialisation du mot de passe');
+      console.error('Error resetting password:', error);
+      showError(MESSAGES.ERROR.RESETTING_PASSWORD);
     }
-  };
+  }, [selectedUser, newPassword, isPasswordValid, showSuccess, showError]);
 
-
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const openEditDialog = (user: User) => {
+  // Dialog Management
+  const openEditDialog = useCallback((user: User) => {
     setSelectedUser(user);
     setEditForm({
       username: user.username,
@@ -196,77 +209,205 @@ const ListerUtilisateurs = () => {
       password: ''
     });
     setEditDialogVisible(true);
-  };
+  }, []);
 
-  const openDeleteDialog = (user: User) => {
+  const closeEditDialog = useCallback(() => {
+    setEditDialogVisible(false);
+    setSelectedUser(null);
+    setEditForm({ username: '', role: '', password: '' });
+  }, []);
+
+  const openDeleteDialog = useCallback((user: User) => {
     setSelectedUser(user);
     setDeleteDialogVisible(true);
-  };
+  }, []);
 
-  const openPasswordDialog = (user: User) => {
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogVisible(false);
+    setSelectedUser(null);
+  }, []);
+
+  const openPasswordDialog = useCallback((user: User) => {
     setSelectedUser(user);
     setNewPassword('');
     setPasswordDialogVisible(true);
-  };
+  }, []);
 
-  const userTemplate = (user: User) => {
-    return (
-      <div className="font-medium">{user.username}</div>
-    );
-  };
+  const closePasswordDialog = useCallback(() => {
+    setPasswordDialogVisible(false);
+    setSelectedUser(null);
+    setNewPassword('');
+  }, []);
 
-  const dateTemplate = (user: User) => {
-    return user.createdAt ? formatDate(user.createdAt) : 'N/A';
-  };
+  // Template Functions
+  const userTemplate = useCallback((user: User) => (
+    <div className="font-medium">{user.username}</div>
+  ), []);
 
-  const rolesTemplate = (user: User) => {
-    return <div className="font-bold">{user.role}</div>;
-  };
+  const dateTemplate = useCallback((user: User) => {
+    if (!user.createdAt) return <span className="text-gray-400">N/A</span>;
 
-  const statusTemplate = (user: User) => {
-    return (
-      <Tag
-        value={user.isActive ? 'Actif' : 'Inactif'}
-        severity={user.isActive ? 'success' : 'danger'}
+    const formattedDate = new Date(user.createdAt).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return <span>{formattedDate}</span>;
+  }, []);
+
+  const rolesTemplate = useCallback((user: User) => (
+    <div className="font-bold">{user.role}</div>
+  ), []);
+
+  const statusTemplate = useCallback((user: User) => (
+    <Tag
+      value={user.isActive ? 'Actif' : 'Inactif'}
+      severity={user.isActive ? 'success' : 'danger'}
+    />
+  ), []);
+
+  const actionsTemplate = useCallback((user: User) => (
+    <div className="flex gap-6 justify-center">
+      <i
+        className="pi pi-pencil cursor-pointer text-gray-600 hover:text-blue-600 transition-colors duration-200"
+        onClick={() => openEditDialog(user)}
+        title="Modifier l'utilisateur"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && openEditDialog(user)}
       />
-    );
-  };
+      <i
+        className="pi pi-key cursor-pointer text-gray-600 hover:text-yellow-600 transition-colors duration-200"
+        onClick={() => openPasswordDialog(user)}
+        title="Réinitialiser le mot de passe"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && openPasswordDialog(user)}
+      />
+      <i
+        className="pi pi-trash cursor-pointer text-gray-600 hover:text-red-600 transition-colors duration-200"
+        onClick={() => openDeleteDialog(user)}
+        title="Supprimer l'utilisateur"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && openDeleteDialog(user)}
+      />
+    </div>
+  ), [openEditDialog, openPasswordDialog, openDeleteDialog]);
 
-  const actionsTemplate = (user: User) => {
+  // Effects
+  useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, [fetchUsers, fetchRoles]);
+
+  // Form Handlers
+  const handleFormChange = useCallback((field: keyof EditUserForm, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  // Handler spécifique pour le dropdown si nécessaire
+  const handleRoleChange = useCallback((value: string) => {
+    console.log('Role selected:', value); // Debug
+    handleFormChange('role', value);
+  }, [handleFormChange]);
+
+  // Dialog Footers
+  const editDialogFooter = useMemo(() => (
+    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
+      <Button
+        label="Annuler"
+        icon="pi pi-times"
+        severity='danger'
+        onClick={closeEditDialog}
+      />
+      <Button
+        label="Enregistrer"
+        icon="pi pi-check"
+        severity='success'
+        onClick={handleEditUser}
+        disabled={!isFormValid}
+      />
+    </div>
+  ), [closeEditDialog, handleEditUser, isFormValid]);
+
+  const passwordDialogFooter = useMemo(() => (
+    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
+      <Button
+        label="Annuler"
+        icon="pi pi-times"
+        severity='danger'
+        onClick={closePasswordDialog}
+      />
+      <Button
+        label="Réinitialiser"
+        icon="pi pi-refresh"
+        severity='success'
+        onClick={handlePasswordReset}
+        disabled={!isPasswordValid}
+      />
+    </div>
+  ), [closePasswordDialog, handlePasswordReset, isPasswordValid]);
+
+  const deleteDialogFooter = useMemo(() => (
+    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
+      <Button
+        label="Annuler"
+        icon="pi pi-times"
+        onClick={closeDeleteDialog}
+        className="p-button-text p-button-secondary"
+      />
+      <Button
+        label="Supprimer"
+        icon="pi pi-trash"
+        onClick={() => selectedUser && handleDeleteUser(selectedUser.id)}
+        className="p-button-danger"
+      />
+    </div>
+  ), [closeDeleteDialog, handleDeleteUser, selectedUser]);
+
+  if (error && !isLoading) {
     return (
-      <div className="flex gap-6 justify-center">
-        <i
-          className="pi pi-pencil cursor-pointer text-gray-600"
-          onClick={() => openEditDialog(user)}
-        />
-        <i
-          className="pi pi-key cursor-pointer text-gray-600"
-          onClick={() => openPasswordDialog(user)}
-        />
-        <i
-          className="pi pi-trash cursor-pointer text-gray-600"
-          onClick={() => openDeleteDialog(user)}
-        />
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <i className="pi pi-exclamation-triangle text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Erreur</h3>
+              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <div className="mt-4">
+                <Button
+                  label="Réessayer"
+                  icon="pi pi-refresh"
+                  onClick={() => fetchUsers()}
+                  className="p-button-sm p-button-outlined p-button-danger"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
-  };
+  }
 
   return (
     <div className="p-6">
       <DataTable
+        dataKey="id"
         value={users}
-        lazy
-        paginator
+        size="small" paginator lazy
         first={(currentPage - 1) * pageSize}
-        rows={pageSize}
-        totalRecords={totalRecords}
-        onPage={onPage}
-        loading={isLoading}
+        rows={pageSize} totalRecords={totalRecords}
+        onPage={handlePageChange} loading={isLoading}
         className="p-datatable-lg shadow-lg rounded-lg bg-white dark:bg-gray-800"
         emptyMessage="Aucun utilisateur trouvé"
-        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} utilisateurs"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        rowsPerPageOptions={[5, 10, 20, 50]}
+        alwaysShowPaginator={false}
+        rowsPerPageOptions={PAGE_SIZE_OPTIONS}
       >
         <Column field="username" header="Nom d'utilisateur" body={userTemplate} />
         <Column field="createdAt" header="Date de création" body={dateTemplate} />
@@ -278,143 +419,92 @@ const ListerUtilisateurs = () => {
       {/* Modal de modification */}
       <Dialog
         visible={editDialogVisible}
-        onHide={() => setEditDialogVisible(false)}
-        header="Modifier l'utilisateur"
+        onHide={closeEditDialog}
+        header={`Modifier l'utilisateur: ${selectedUser?.username || ''}`}
         className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal
-        footer={
-          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-            <button
-              onClick={() => setEditDialogVisible(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleEdit}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Enregistrer
-            </button>
-          </div>
-        }
+        modal closeOnEscape focusOnShow
+        footer={editDialogFooter}
       >
         <div className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nom d'utilisateur
-              </label>
-              <input
-                type="text"
-                value={editForm.username}
-                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Rôle
-              </label>
-              <Dropdown
-                value={editForm.role}
-                options={roles}
-                onChange={(e) => setEditForm({ ...editForm, role: e.value })}
-                optionLabel="label"
-                optionValue="name"
-                className="w-full"
-              />
-            </div>
-          </div>
+          <LabeledInput
+            id="edit-username"
+            name="edit-username"
+            label="Nom d'utilisateur"
+            value={editForm.username}
+            onChange={(e) => handleFormChange('username', e.target.value)}
+            required
+          />
+
+          <LabeledDropdown
+            id="edit-role"
+            label="Rôle"
+            value={editForm.role}
+            options={roles}
+            onChange={handleRoleChange}
+            optionLabel="label"
+            optionValue="name"
+            placeholder="Sélectionner un rôle"
+            required
+          />
+          <LabeledPassword
+            id="edit-password"
+            name="edit-password"
+            label="Nouveau mot de passe (optionnel)"
+            value={editForm.password || ''}
+            placeholder="Laisser vide pour ne pas modifier"
+            onChange={(e) => handleFormChange('password', e.target.value)}
+          />
         </div>
       </Dialog>
 
       {/* Modal de réinitialisation du mot de passe */}
       <Dialog
         visible={passwordDialogVisible}
-        onHide={() => setPasswordDialogVisible(false)}
-        header="Réinitialiser le mot de passe"
+        onHide={closePasswordDialog}
+        header={`Réinitialiser le mot de passe: ${selectedUser?.username || ''}`}
         className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal
-        footer={
-          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-            <button
-              onClick={() => setPasswordDialogVisible(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handlePasswordReset}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Réinitialiser
-            </button>
-          </div>
-        }
+        modal closeOnEscape focusOnShow
+        footer={passwordDialogFooter}
       >
         <div className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nouveau mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm transition-all duration-200 ease-in-out transform hover:shadow-sm focus:shadow-md outline-none pr-12"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 w-10 h-10 flex items-center justify-center bg-transparent border-none p-0"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
-                  <FontAwesomeIcon
-                    icon={showPassword ? faEyeSlash : faEye}
-                    className="h-5 w-5"
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
+          <LabeledPassword
+            id="new-password"
+            name="new-password"
+            label="Nouveau mot de passe"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Entrez le nouveau mot de passe"
+            required
+          />
         </div>
       </Dialog>
 
       {/* Modal de confirmation de suppression */}
       <Dialog
         visible={deleteDialogVisible}
-        onHide={() => setDeleteDialogVisible(false)}
+        onHide={closeDeleteDialog}
         header="Confirmer la suppression"
         className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal
-        footer={
-          <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-            <button
-              onClick={() => setDeleteDialogVisible(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={() => selectedUser && handleDelete(selectedUser.id)}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Supprimer
-            </button>
-          </div>
-        }
+        modal closeOnEscape focusOnShow
+        footer={deleteDialogFooter}
       >
         <div className="p-6">
-          <p className="text-gray-700 dark:text-gray-300">
-            Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
-          </p>
+          <div className="flex items-center space-x-3">
+            <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
+            <div>
+              <p className="text-gray-700 dark:text-gray-300">
+                Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
+                <strong className="text-red-600">{selectedUser?.username}</strong> ?
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Cette action est irréversible.
+              </p>
+            </div>
+          </div>
         </div>
       </Dialog>
     </div>
   );
 };
 
-export default ListerUtilisateurs; 
+export default ListerUtilisateurs;
