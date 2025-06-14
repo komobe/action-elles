@@ -1,5 +1,5 @@
-import { http, type ApiResponse } from './http';
-import { API_ENDPOINTS } from '../config/api';
+import {httpClient} from './http/http-client';
+import {API_ENDPOINTS} from '../config/api';
 
 
 export interface VehiculeInfo {
@@ -47,11 +47,11 @@ export interface SimulationResponse {
   message?: string;
 }
 
-export const devisService = {
-  simuler: async (data: SimulationDevisRequest): Promise<ApiResponse<SimulationResponse['data']>> => {
-    return http.post<SimulationResponse['data']>(API_ENDPOINTS.devis.simuler, data);
+export const devisHttpService = {
+  simuler: async (data: SimulationDevisRequest) => {
+    return httpClient.post<SimulationResponse['data']>(API_ENDPOINTS.devis.simuler, data);
   },
-  enregistrer: async (data: EnregistrerDevisRequest): Promise<ApiResponse<{ status: string, message: string }>> => {
-    return http.post<{ status: string, message: string }>(API_ENDPOINTS.devis.enregistrer, data);
+  enregistrer: async (data: EnregistrerDevisRequest) => {
+    return httpClient.post<{ status: string, message: string }>(API_ENDPOINTS.devis.enregistrer, data);
   },
 }; 

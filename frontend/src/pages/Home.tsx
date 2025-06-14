@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../services/api';
+import {useEffect, useState} from 'react';
+import {useAuth} from '../contexts/AuthContext';
 
 interface UserProfile {
   id: string;
@@ -10,7 +9,6 @@ interface UserProfile {
 }
 
 const Home = () => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

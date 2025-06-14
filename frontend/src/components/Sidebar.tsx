@@ -8,9 +8,9 @@ import {
   faUsers,
   faXmark
 } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ReactElement, memo, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {memo, ReactElement, useCallback} from 'react';
+import {Link, useLocation} from 'react-router-dom';
 
 interface MenuItem {
   path: string;

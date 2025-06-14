@@ -1,9 +1,9 @@
 import LabeledInput from '@/components/form/LabeledInput';
 import LabeledPassword from '@/components/form/LabeledPassword';
-import { Button } from 'primereact/button';
-import React, { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import {Button} from 'primereact/button';
+import React, {useCallback, useState} from 'react';
+import {Link} from 'react-router-dom';
+import {useAuth} from '../contexts/AuthContext';
 
 interface FormData {
   username: string;
@@ -68,7 +68,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(formData.username.trim(), formData.password);
+      await login({ ...formData });
     } catch (error) {
       console.error("Erreur de connexion:", error);
       const errorMessage = getErrorMessage(error);

@@ -1,10 +1,10 @@
 import LabeledInput from '@/components/form/LabeledInput';
 import LabeledPassword from '@/components/form/LabeledPassword';
 import SubmitButton from '@/components/form/SubmitButton';
-import { Message } from 'primereact/message';
-import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import {Message} from 'primereact/message';
+import React, {useEffect, useRef, useState} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
+import {useAuth} from '../contexts/AuthContext';
 
 type FormData = {
   username: string;

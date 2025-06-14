@@ -1,14 +1,14 @@
-import { Button } from 'primereact/button';
-import React, { useEffect, useState } from 'react';
-import { useMediaQuery } from '@hooks/useMediaQuery.ts';
+import {Button} from 'primereact/button';
+import React, {useEffect, useState} from 'react';
+import {useMediaQuery} from '@hooks/useMediaQuery.ts';
 import {
   type Categorie,
-  devisService,
+  devisHttpService,
   type Produit,
   type SimulationDevisRequest,
   type SimulationResponse
-} from '@services/devis.ts';
-import { produitHttpService } from "@services/produit.http-service.ts";
+} from '@/services/devis.http-service';
+import {produitHttpService} from "@services/produit.http-service.ts";
 
 const SimulerDevis = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -195,7 +195,7 @@ const SimulerDevis = () => {
     setError('');
 
     try {
-      const response = await devisService.simuler(formData);
+      const response = await devisHttpService.simuler(formData);
       if (response.status === 'success' && response.data) {
         setResult(response.data);
         setValidationErrors({});
@@ -243,7 +243,7 @@ const SimulerDevis = () => {
 
     try {
       const enregistrerDevisRequest = { quoteReference, price, endDate, ...formData };
-      const response = await devisService.enregistrer(enregistrerDevisRequest);
+      const response = await devisHttpService.enregistrer(enregistrerDevisRequest);
       if (response.status === 'error') {
         setError(response.message ?? 'Erreur lors de l\'enregistrement');
       }

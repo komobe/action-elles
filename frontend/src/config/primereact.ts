@@ -1,5 +1,3 @@
-import { PrimeReactProvider } from 'primereact/api';
-
 // Configuration par défaut de PrimeReact
 export const PRIMEREACT_CONFIG = {
   ripple: false,

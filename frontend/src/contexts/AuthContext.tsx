@@ -1,3 +1,4 @@
+import {HttpResponse} from '@/services/http/response.type';
 import {
   createContext,
   ReactNode,
@@ -8,50 +9,64 @@ import {
   useRef,
   useState
 } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authApi } from '@services/api';
-import { ApiResponse } from "@services/http.ts";
+import {useLocation, useNavigate} from 'react-router-dom';
+import {configureHttpClient} from '@/services/http/http-client';
+import {authHttpService, UserInfo} from '@/services/auth.http-service';
 
-interface User {
+
+export interface Credentials {
   username: string;
-  roles: string[];
+  password: string;
 }
-
 interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<ApiResponse<unknown>>;
+  user: UserInfo | null;
+  isLoading: boolean;
+  login: (credentials: Credentials) => Promise<void>;
+  register: (credentials: Credentials) => Promise<HttpResponse<unknown>>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const LOGIN_PAGE = '/login';
+const REGISTER_PAGE = '/register';
+const PUBLIC_ROUTES = [LOGIN_PAGE, REGISTER_PAGE];
+
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
-  const TOKEN_KEY = 'token';
-  const USER_CHECK_INTERVAL = 10 * 60 * 1000;
-  const PUBLIC_ROUTES = useMemo(() => ['/login', '/register'], []);
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('token');
+  });
+  const isInitialMount = useRef(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Configure httpClient pour recuperer le token 
+  useEffect(() => {
+    configureHttpClient({
+      getToken: () => token,
+      removeToken: () => {
+        localStorage.removeItem('token');
+        setToken(null);
+      }
+    });
+  }, [token]);
 
   const isPublicRoute = useCallback((pathname: string): boolean => {
     return PUBLIC_ROUTES.includes(pathname);
-  }, [PUBLIC_ROUTES]);
-
-  const isProtectedRoute = useCallback((pathname: string): boolean => {
-    return !isPublicRoute(pathname);
-  }, [isPublicRoute]);
-
-  const getCurrentPath = useCallback((): string => {
-    return window.location.pathname;
   }, []);
 
-  const shouldRedirectToLogin = useCallback((isInitialMount: boolean): boolean => {
-    return !isInitialMount && isProtectedRoute(getCurrentPath());
-  }, [isProtectedRoute, getCurrentPath]);
+  const isLoginPage = useCallback((pathname: string): boolean => {
+    return LOGIN_PAGE === pathname
+  }, [])
 
-  const [user, setUser] = useState<User | null>(null);
-  const isInitialMount = useRef(true);
-  const retryTimeoutRef = useRef<number | undefined>(undefined);
-
-  const navigate = useNavigate();
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  }, []);
 
   const redirectToLogin = useCallback(() => {
     navigate('/login', { replace: true });
@@ -61,149 +76,96 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     navigate('/home', { replace: true });
   }, [navigate]);
 
-  const getToken = useCallback((): string | null => {
-    return localStorage.getItem(TOKEN_KEY);
-  }, [TOKEN_KEY]);
-
-  const setToken = useCallback((token: string): void => {
-    localStorage.setItem(TOKEN_KEY, token);
-  }, [TOKEN_KEY]);
-
-  const clearToken = useCallback((): void => {
-    localStorage.removeItem(TOKEN_KEY);
-  }, [TOKEN_KEY]);
-
-  const resetUserState = useCallback(() => {
-    clearToken();
-    setUser(null);
-  }, [clearToken]);
-
-  const setUserData = useCallback((userData: User, token: string) => {
-    setToken(token);
-    setUser(userData);
-  }, [setToken]);
-
   const loadUser = useCallback(async (): Promise<void> => {
     try {
-      const token = getToken();
-
       if (!token) {
-        if (shouldRedirectToLogin(isInitialMount.current)) {
-          redirectToLogin();
-        }
+        clearAuth();
         return;
       }
 
-      const response = await authApi.getCurrentUser();
-
-      if (response.isAuthError) {
-        if (!isPublicRoute(getCurrentPath())) {
-          resetUserState();
-          if (shouldRedirectToLogin(isInitialMount.current)) {
-            redirectToLogin();
-          }
-        }
-        return;
-      }
-
-      if (response.status === 'success' && response.data) {
+      const response = await authHttpService.getCurrentUser();
+      if (response.data) {
         setUser(response.data);
-      } else {
-        resetUserState();
-        if (shouldRedirectToLogin(isInitialMount.current)) {
-          redirectToLogin();
-        }
       }
     } catch (error) {
-      console.error('Erreur inattendue dans loadUser:', error);
+      clearAuth();
+    } finally {
+      setIsLoading(false);
     }
-  }, [getToken, resetUserState, redirectToLogin, shouldRedirectToLogin, isPublicRoute, getCurrentPath]);
+  }, [token, clearAuth]);
 
-  const handleStorageChange = useCallback((event: StorageEvent) => {
-    if (event.key !== TOKEN_KEY || event.storageArea !== localStorage) {
+  useEffect(() => {
+    if (isInitialMount.current || isLoading) return;
+
+    // Si on a un token mais pas d'utilisateur, on attend encore le chargement
+    if (token && !user) {
       return;
     }
 
-    const hasToken = Boolean(event.newValue);
-    const isOnProtectedRoute = isProtectedRoute(getCurrentPath());
-
-    if (!hasToken) {
-      setUser(null);
-      if (isOnProtectedRoute) {
-        redirectToLogin();
-      }
-    } else if (!user && isOnProtectedRoute) {
-      loadUser().catch(error => {
-        console.error('Erreur lors du rechargement de l\'utilisateur:', error);
-      });
+    // Rediriger vers login seulement s'il n'y a ni token ni utilisateur ET qu'on n'est pas sur une route publique
+    if (!token && !user && !isPublicRoute(location.pathname)) {
+      redirectToLogin();
     }
-  }, [user, redirectToLogin, loadUser, TOKEN_KEY, isProtectedRoute, getCurrentPath]);
+    // Rediriger vers home si on a un utilisateur ET un token ET qu'on veut aller sur la page login
+    else if (user && token && isLoginPage(location.pathname)) {
+      redirectToHome();
+    }
+  }, [user, token, location.pathname, isPublicRoute, redirectToLogin, redirectToHome, isLoading, isLoginPage]);
 
-  const login = useCallback(async (username: string, password: string): Promise<void> => {
+  const login = useCallback(async ({ username, password }: Credentials): Promise<void> => {
     try {
-      const response = await authApi.login(username, password);
+      setIsLoading(true);
+      const response = await authHttpService.login(username, password);
 
       if (response.status === 'success' && response.data) {
         const { accessToken, user: userData } = response.data;
-        setUserData(userData, accessToken);
+        localStorage.setItem('token', accessToken);
+        setToken(accessToken);
+        setUser(userData);
         redirectToHome();
       } else {
-        resetUserState();
+        clearAuth();
         throw new Error(response.message ?? 'Erreur de connexion');
       }
     } catch (error) {
-      resetUserState();
+      clearAuth();
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }, [setUserData, redirectToHome, resetUserState]);
+  }, [clearAuth, redirectToHome]);
 
-  const register = useCallback(async (username: string, password: string): Promise<ApiResponse<unknown>> => {
-    return await authApi.register(username, password);
+  const register = useCallback(async ({ username, password }: Credentials) => {
+    return await authHttpService.register(username, password);
   }, []);
 
   const logout = useCallback(() => {
-    resetUserState();
+    clearAuth();
     redirectToLogin();
-  }, [resetUserState, redirectToLogin]);
+  }, [clearAuth, redirectToLogin]);
 
+  // Initialize auth state - only runs once on mount
   useEffect(() => {
-    const timeoutId = retryTimeoutRef.current;
-
-    const initializeAuth = async () => {
-      try {
-        await loadUser();
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-      }
+    const initialize = async () => {
+      await loadUser();
+      isInitialMount.current = false;
     };
 
-    initializeAuth().finally(() => isInitialMount.current = false);
+    initialize();
+  }, []); // Empty dependency array - only runs once
 
-    const intervalId = setInterval(() => {
-      loadUser().catch(error => {
-        console.error('Erreur lors de la vérification périodique de l\'utilisateur:', error);
-      });
-    }, USER_CHECK_INTERVAL);
-
-    return () => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-      clearInterval(intervalId);
-    };
-  }, [loadUser, USER_CHECK_INTERVAL]);
-
+  // Set up periodic user check only when user is authenticated
   useEffect(() => {
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [handleStorageChange]);
+    if (!user || !token) return;
 
-  const contextValue: AuthContextType = useMemo(() => ({
-    user,
-    login,
-    register,
-    logout
-  }), [user, login, register, logout]);
+    const intervalId = setInterval(loadUser, USER_CHECK_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [user, token, loadUser]);
+
+  const contextValue = useMemo(() =>
+    ({ user, isLoading, login, register, logout }),
+    [user, isLoading, login, register, logout]
+  );
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -214,10 +176,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-
   return context;
 }

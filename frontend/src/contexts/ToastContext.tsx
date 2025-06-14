@@ -1,5 +1,5 @@
-import { createContext, useContext, useRef, ReactNode } from 'react';
-import { Toast } from 'primereact/toast';
+import {createContext, ReactNode, useContext, useRef} from 'react';
+import {Toast} from 'primereact/toast';
 
 type ToastType = 'success' | 'info' | 'warn' | 'error';
 

@@ -1,6 +1,11 @@
-import { useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleCheck, faCircleExclamation, faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons';
+import {useEffect} from 'react';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {
+  faCircleCheck,
+  faCircleExclamation,
+  faCircleInfo,
+  faXmark
+} from '@fortawesome/free-solid-svg-icons';
 
 export type ToastType = 'success' | 'error' | 'info';
 

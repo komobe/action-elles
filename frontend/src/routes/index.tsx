@@ -1,15 +1,15 @@
 import ListerSouscriptions from "@/pages/souscriptions/ListerSouscriptions";
 import ListerUtilisateurs from "@/pages/users/ListerUtilisateurs";
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import {Navigate, Route, Routes, useLocation} from 'react-router-dom';
 import Layout from '../components/Layout';
-import { useAuth } from '../contexts/AuthContext';
+import {useAuth} from '../contexts/AuthContext';
 import About from '../pages/About';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import SimulerDevis from '@pages/devis/SimulerDevis.tsx';
 import CreerSouscription from '../pages/souscriptions/CreerSouscription';
-import { memo } from 'react';
+import {memo} from 'react';
 
 const PrivateRoute = memo(({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
@@ -42,7 +42,7 @@ const PublicRoute = memo(({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (user && !location.state?.from) {
+  if (user && location.pathname === '/login') {
     return <Navigate to="/home" replace />;
   }
 

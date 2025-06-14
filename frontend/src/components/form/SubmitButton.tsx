@@ -1,4 +1,4 @@
-import { Button } from "primereact/button";
+import {Button} from "primereact/button";
 
 interface SubmitButtonProps {
   isDisabled: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
+import {Dropdown, DropdownChangeEvent} from 'primereact/dropdown';
 
 interface Option {
   [key: string]: any;

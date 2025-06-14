@@ -1,35 +1,22 @@
-import { LabeledDropdown } from '@/components/form/LabeledDropdown';
+import {LabeledDropdown} from '@/components/form/LabeledDropdown';
 import LabeledInput from '@/components/form/LabeledInput';
 import LabeledPassword from '@/components/form/LabeledPassword';
-import { API_ENDPOINTS } from '@/config/api';
-import { useToast } from '@contexts/ToastContext';
-import { http } from '@services/http';
-import { Button } from 'primereact/button';
-import { Column } from 'primereact/column';
-import { DataTable } from 'primereact/datatable';
-import { Dialog } from 'primereact/dialog';
-import { Tag } from 'primereact/tag';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
-// Types
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  createdAt: string;
-  isActive: boolean;
-}
+import {useToast} from '@contexts/ToastContext';
+import {Button} from 'primereact/button';
+import {Column} from 'primereact/column';
+import {DataTable} from 'primereact/datatable';
+import {Dialog} from 'primereact/dialog';
+import {Tag} from 'primereact/tag';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {User, utilisateurHttpService} from '@/services/utilisateur.http-service';
+import {Role, roleHttpService} from '@/services/role.http-service';
+import {isPaginatedResponse} from '@/services/http/helpers';
+import {formatDateFr} from '@/utils/dateUtils';
 
 interface EditUserForm {
   username: string;
   role: string;
   password?: string;
-}
-
-interface Role {
-  name: string;
-  label: string;
 }
 
 // Constants
@@ -91,16 +78,8 @@ const ListerUtilisateurs = () => {
   // API Calls
   const fetchRoles = useCallback(async () => {
     try {
-      const response = await http.get<string[]>(API_ENDPOINTS.roles.list);
-
-      if (response.status === 'success' && response.data) {
-        const formattedRoles = response.data.map(role => ({
-          name: role,
-          label: role
-        }));
-        console.log('Roles formatés:', formattedRoles); // Debug
-        setRoles(formattedRoles);
-      }
+      const response = await roleHttpService.lister();
+      setRoles(response || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
       showError(MESSAGES.ERROR.LOADING_ROLES);
@@ -108,22 +87,25 @@ const ListerUtilisateurs = () => {
   }, [showError]);
 
   const fetchUsers = useCallback(async (page: number = 1, size: number = pageSize) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
-      setError(null);
+      const response = await utilisateurHttpService.lister(page, size);
+      setUsers(response.data ?? []);
+      let totalElements = 0;
+      let number = page;
+      if (isPaginatedResponse(response)) {
+        totalElements = response.metadata?.totalElements ?? 0;
+        number = response.metadata?.number ?? page;
+      }
 
-      const response = await http.get<User[]>(
-        `${API_ENDPOINTS.users.list}?page=${page}&size=${size}`
-      );
-
-      setUsers(response.data || []);
-      setTotalRecords(response.metadata?.totalElements || 0);
-      setCurrentPage(response.metadata?.number || page);
-    } catch (error: any) {
-      const errorMessage = error?.message || MESSAGES.ERROR.LOADING_USERS;
+      setTotalRecords(totalElements);
+      setCurrentPage(number);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : MESSAGES.ERROR.LOADING_USERS;
       setError(errorMessage);
       showError(errorMessage);
-      console.error('Error fetching users:', error);
     } finally {
       setIsLoading(false);
     }
@@ -141,14 +123,12 @@ const ListerUtilisateurs = () => {
     if (!userId) return;
 
     try {
-      await http.delete(API_ENDPOINTS.users.delete(userId));
-
+      await utilisateurHttpService.supprimer(userId);
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       showSuccess(MESSAGES.SUCCESS.USER_DELETED);
       setDeleteDialogVisible(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error deleting user:', error);
       showError(MESSAGES.ERROR.DELETING_USER);
     }
   }, [showSuccess, showError]);
@@ -166,10 +146,7 @@ const ListerUtilisateurs = () => {
         updateData.password = editForm.password.trim();
       }
 
-      await http.put<{ status: string }>(API_ENDPOINTS.users.update, {
-        id: selectedUser.id,
-        ...updateData
-      });
+      await utilisateurHttpService.modifier(selectedUser.id, updateData);
 
       setUsers(prevUsers =>
         prevUsers.map(user => user.id === selectedUser.id ? { ...user, ...updateData } : user)
@@ -178,7 +155,6 @@ const ListerUtilisateurs = () => {
       showSuccess(MESSAGES.SUCCESS.USER_UPDATED);
       closeEditDialog();
     } catch (error) {
-      console.error('Error updating user:', error);
       showError(MESSAGES.ERROR.UPDATING_USER);
     }
   }, [selectedUser, editForm, isFormValid, showSuccess, showError]);
@@ -187,15 +163,10 @@ const ListerUtilisateurs = () => {
     if (!selectedUser || !isPasswordValid) return;
 
     try {
-      await http.put<{ status: string }>(API_ENDPOINTS.users.resetPassword, {
-        id: selectedUser.id,
-        newPassword: newPassword.trim()
-      });
-
+      await utilisateurHttpService.changerMot2Passe(selectedUser.id, newPassword.trim())
       showSuccess(MESSAGES.SUCCESS.PASSWORD_RESET);
       closePasswordDialog();
     } catch (error) {
-      console.error('Error resetting password:', error);
       showError(MESSAGES.ERROR.RESETTING_PASSWORD);
     }
   }, [selectedUser, newPassword, isPasswordValid, showSuccess, showError]);
@@ -246,20 +217,11 @@ const ListerUtilisateurs = () => {
 
   const dateTemplate = useCallback((user: User) => {
     if (!user.createdAt) return <span className="text-gray-400">N/A</span>;
-
-    const formattedDate = new Date(user.createdAt).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    return <span>{formattedDate}</span>;
+    return <span>{formatDateFr(user.createdAt)}</span>;
   }, []);
 
   const rolesTemplate = useCallback((user: User) => (
-    <div className="font-bold">{user.role}</div>
+    <Tag value={user.role} className="bg-gray-200 text-gray-800 border-none" />
   ), []);
 
   const statusTemplate = useCallback((user: User) => (
@@ -311,7 +273,6 @@ const ListerUtilisateurs = () => {
 
   // Handler spécifique pour le dropdown si nécessaire
   const handleRoleChange = useCallback((value: string) => {
-    console.log('Role selected:', value); // Debug
     handleFormChange('role', value);
   }, [handleFormChange]);
 
@@ -396,113 +357,120 @@ const ListerUtilisateurs = () => {
   }
 
   return (
-    <div className="p-6">
-      <DataTable
-        dataKey="id"
-        value={users}
-        size="small" paginator lazy
-        first={(currentPage - 1) * pageSize}
-        rows={pageSize} totalRecords={totalRecords}
-        onPage={handlePageChange} loading={isLoading}
-        className="p-datatable-lg shadow-lg rounded-lg bg-white dark:bg-gray-800"
-        emptyMessage="Aucun utilisateur trouvé"
-        alwaysShowPaginator={false}
-        rowsPerPageOptions={PAGE_SIZE_OPTIONS}
-      >
-        <Column field="username" header="Nom d'utilisateur" body={userTemplate} />
-        <Column field="createdAt" header="Date de création" body={dateTemplate} />
-        <Column field="role" header="Rôle" body={rolesTemplate} />
-        <Column field="isActive" header="Statut" body={statusTemplate} />
-        <Column body={actionsTemplate} header="Actions" style={{ width: '200px' }} />
-      </DataTable>
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Liste des utilisateurs
+        </h1>
+      </div>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <DataTable
+          dataKey="id" value={users}
+          size="small" paginator lazy
+          first={(currentPage - 1) * pageSize}
+          rows={pageSize} totalRecords={totalRecords}
+          onPage={handlePageChange} loading={isLoading}
+          emptyMessage="Aucun utilisateur trouvé"
+          alwaysShowPaginator={false}
+          rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+          tableStyle={{ minWidth: '50rem' }}
+        >
+          <Column field="username" header="Nom d'utilisateur" body={userTemplate} />
+          <Column field="createdAt" header="Date de création" body={dateTemplate} />
+          <Column field="role" header="Rôle" body={rolesTemplate} />
+          <Column field="isActive" header="Statut" body={statusTemplate} />
+          <Column body={actionsTemplate} header="Actions" style={{ width: '200px' }} />
+        </DataTable>
 
-      {/* Modal de modification */}
-      <Dialog
-        visible={editDialogVisible}
-        onHide={closeEditDialog}
-        header={`Modifier l'utilisateur: ${selectedUser?.username || ''}`}
-        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal closeOnEscape focusOnShow
-        footer={editDialogFooter}
-      >
-        <div className="p-6 space-y-6">
-          <LabeledInput
-            id="edit-username"
-            name="edit-username"
-            label="Nom d'utilisateur"
-            value={editForm.username}
-            onChange={(e) => handleFormChange('username', e.target.value)}
-            required
-          />
 
-          <LabeledDropdown
-            id="edit-role"
-            label="Rôle"
-            value={editForm.role}
-            options={roles}
-            onChange={handleRoleChange}
-            optionLabel="label"
-            optionValue="name"
-            placeholder="Sélectionner un rôle"
-            required
-          />
-          <LabeledPassword
-            id="edit-password"
-            name="edit-password"
-            label="Nouveau mot de passe (optionnel)"
-            value={editForm.password || ''}
-            placeholder="Laisser vide pour ne pas modifier"
-            onChange={(e) => handleFormChange('password', e.target.value)}
-          />
-        </div>
-      </Dialog>
+        {/* Modal de modification */}
+        <Dialog
+          visible={editDialogVisible}
+          onHide={closeEditDialog}
+          header={`Modifier l'utilisateur: ${selectedUser?.username || ''}`}
+          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
+          modal closeOnEscape focusOnShow
+          footer={editDialogFooter}
+        >
+          <div className="p-6 space-y-6">
+            <LabeledInput
+              id="edit-username"
+              name="edit-username"
+              label="Nom d'utilisateur"
+              value={editForm.username}
+              onChange={(e) => handleFormChange('username', e.target.value)}
+              required
+            />
 
-      {/* Modal de réinitialisation du mot de passe */}
-      <Dialog
-        visible={passwordDialogVisible}
-        onHide={closePasswordDialog}
-        header={`Réinitialiser le mot de passe: ${selectedUser?.username || ''}`}
-        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal closeOnEscape focusOnShow
-        footer={passwordDialogFooter}
-      >
-        <div className="p-6 space-y-6">
-          <LabeledPassword
-            id="new-password"
-            name="new-password"
-            label="Nouveau mot de passe"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Entrez le nouveau mot de passe"
-            required
-          />
-        </div>
-      </Dialog>
+            <LabeledDropdown
+              id="edit-role"
+              label="Rôle"
+              value={editForm.role}
+              options={roles}
+              onChange={handleRoleChange}
+              optionLabel="label"
+              optionValue="name"
+              placeholder="Sélectionner un rôle"
+              required
+            />
+            {false && <LabeledPassword
+              id="edit-password"
+              name="edit-password"
+              label="Nouveau mot de passe (optionnel)"
+              value={editForm.password || ''}
+              placeholder="Laisser vide pour ne pas modifier"
+              onChange={(e) => handleFormChange('password', e.target.value)}
+            />}
+          </div>
+        </Dialog>
 
-      {/* Modal de confirmation de suppression */}
-      <Dialog
-        visible={deleteDialogVisible}
-        onHide={closeDeleteDialog}
-        header="Confirmer la suppression"
-        className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-        modal closeOnEscape focusOnShow
-        footer={deleteDialogFooter}
-      >
-        <div className="p-6">
-          <div className="flex items-center space-x-3">
-            <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
-            <div>
-              <p className="text-gray-700 dark:text-gray-300">
-                Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
-                <strong className="text-red-600">{selectedUser?.username}</strong> ?
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Cette action est irréversible.
-              </p>
+        {/* Modal de réinitialisation du mot de passe */}
+        <Dialog
+          visible={passwordDialogVisible}
+          onHide={closePasswordDialog}
+          header={`Réinitialiser le mot de passe: ${selectedUser?.username || ''}`}
+          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
+          modal closeOnEscape focusOnShow
+          footer={passwordDialogFooter}
+        >
+          <div className="p-6 space-y-6">
+            <LabeledPassword
+              id="new-password"
+              name="new-password"
+              label="Nouveau mot de passe"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Entrez le nouveau mot de passe"
+              required
+            />
+          </div>
+        </Dialog>
+
+        {/* Modal de confirmation de suppression */}
+        <Dialog
+          visible={deleteDialogVisible}
+          onHide={closeDeleteDialog}
+          header="Confirmer la suppression"
+          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
+          modal closeOnEscape focusOnShow
+          footer={deleteDialogFooter}
+        >
+          <div className="p-6">
+            <div className="flex items-center space-x-3">
+              <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
+              <div>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
+                  <strong className="text-red-600">{selectedUser?.username}</strong> ?
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Cette action est irréversible.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </Dialog>
+        </Dialog>
+      </div>
     </div>
   );
 };

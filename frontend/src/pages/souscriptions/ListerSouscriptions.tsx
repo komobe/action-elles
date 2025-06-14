@@ -1,46 +1,12 @@
-import { useState, useEffect } from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { http } from '@services/http';
-import { API_ENDPOINTS } from '@/config/api';
-import { useToast } from '@contexts/ToastContext';
+import {Souscription, souscriptionHttpService} from '@/services/souscription.http-service';
+import {useToast} from '@contexts/ToastContext';
 import 'primeicons/primeicons.css';
-import { Button } from 'primereact/button';
-import { useNavigate } from 'react-router-dom';
+import {Button} from 'primereact/button';
+import {Column} from 'primereact/column';
+import {DataTable} from 'primereact/datatable';
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 
-interface Assure {
-  nom: string;
-  prenom: string;
-  sexe: string;
-  dateNaissance: string;
-  email: string;
-  numeroCarteIdentite: string;
-  telephone: string;
-  adresse: string;
-  ville: string;
-}
-
-interface Vehicule {
-  immatriculation: string;
-  dateMiseEnCirculation: string;
-  couleur: string;
-  nombreDeSieges: number;
-  nombreDePortes: number;
-  categorieCode: string;
-  puissanceFiscale: number;
-  carburant: string;
-  numeroChassis: string;
-}
-
-interface Souscription {
-  id: string;
-  assure: Assure;
-  vehicule: Vehicule;
-}
-
-interface ApiResponse {
-  data: Souscription[];
-}
 
 export default function ListerSouscriptions() {
   const navigate = useNavigate();
@@ -48,21 +14,12 @@ export default function ListerSouscriptions() {
   const [expandedRows, setExpandedRows] = useState<any>(null);
   const { error: showError } = useToast();
 
-  useEffect(() => {
-    fetchSouscriptions();
-  }, []);
+  useEffect(() => { fetchSouscriptions() }, []);
 
   const fetchSouscriptions = async () => {
     try {
-      const response = await http.get<ApiResponse>(API_ENDPOINTS.souscription.list);
-      if (response?.data) {
-        const souscriptionsWithId = (Array.isArray(response.data) ? response.data : [])
-          .map((s, index) => ({
-            ...s,
-            id: s.assure.numeroCarteIdentite || `souscription-${index}`
-          }));
-        setSouscriptions(souscriptionsWithId);
-      }
+      const response = await souscriptionHttpService.lister();
+      setSouscriptions(response.data || []);
     } catch (error) {
       showError('Erreur lors du chargement des souscriptions');
     }
@@ -81,7 +38,7 @@ export default function ListerSouscriptions() {
             <div className="space-y-3">
               <div>
                 <label className="text-sm text-gray-500">Nom complet</label>
-                <p className="font-medium">{data.assure.nom} {data.assure.prenom}</p>
+                <p className="font-medium">{data.assure.nom} {data.assure.prenoms}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Date de naissance</label>
@@ -98,8 +55,11 @@ export default function ListerSouscriptions() {
               <div>
                 <label className="text-sm text-gray-500">Contact</label>
                 <p className="font-medium">{data.assure.telephone}</p>
-                <p className="text-sm text-gray-500">{data.assure.email}</p>
               </div>
+              {data.assure.email && <div>
+                <label className="text-sm text-gray-500">Email</label>
+                <p className="font-medium">{data.assure.email}</p>
+              </div>}
               <div>
                 <label className="text-sm text-gray-500">Adresse</label>
                 <p className="font-medium">{data.assure.adresse}</p>
@@ -116,17 +76,16 @@ export default function ListerSouscriptions() {
                 <p className="font-medium">{data.vehicule.immatriculation}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-500">N° Chassis</label>
-                <p className="font-medium">{data.vehicule.numeroChassis}</p>
-              </div>
-              <div>
                 <label className="text-sm text-gray-500">Mise en circulation</label>
                 <p className="font-medium">{formatDate(data.vehicule.dateMiseEnCirculation)}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-500">Caractéristiques</label>
-                <p className="font-medium">{data.vehicule.couleur} - {data.vehicule.carburant}</p>
-                <p className="text-sm text-gray-500">
+                <label className="text-sm text-gray-500">Couleur</label>
+                <p className="font-medium"> {data.vehicule.couleur}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Nombre Portes / Nombre Sieges</label>
+                <p className="font-medium">
                   {data.vehicule.nombreDePortes} portes - {data.vehicule.nombreDeSieges} places
                 </p>
               </div>
@@ -136,7 +95,7 @@ export default function ListerSouscriptions() {
               </div>
               <div>
                 <label className="text-sm text-gray-500">Catégorie</label>
-                <p className="font-medium">Code {data.vehicule.categorieCode}</p>
+                <p className="font-medium">{data.vehicule.categorie.code} - {data.vehicule.categorie.libelle}</p>
               </div>
             </div>
           </div>
@@ -154,10 +113,10 @@ export default function ListerSouscriptions() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="px-6 pt-10 pb-2 flex justify-between items-center">
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Souscriptions
+          Liste des souscriptions
         </h1>
         <div className="flex justify-end gap-2">
           <Button

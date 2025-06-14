@@ -1,8 +1,8 @@
-import { useAuth } from '../contexts/AuthContext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faCircleUser } from '@fortawesome/free-solid-svg-icons';
-import { useState, memo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useAuth} from '../contexts/AuthContext';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faBell, faCircleUser} from '@fortawesome/free-solid-svg-icons';
+import {memo, useCallback, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 
 interface TopbarProps {
   isCollapsed: boolean;

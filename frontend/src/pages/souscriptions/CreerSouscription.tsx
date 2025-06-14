@@ -1,14 +1,14 @@
-import { API_ENDPOINTS } from '@/config/api';
-import { useMediaQuery } from '@hooks/useMediaQuery';
-import { http } from '@services/http';
-import { MenuItem } from 'primereact/menuitem';
-import { Steps } from 'primereact/steps';
-import { classNames } from 'primereact/utils';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@contexts/ToastContext.tsx';
-import { Button } from 'primereact/button';
-import { produitHttpService } from "@services/produit.http-service.ts";
+import {API_ENDPOINTS} from '@/config/api';
+import {useMediaQuery} from '@hooks/useMediaQuery';
+import {httpClient} from '@/services/http/http-client';
+import {MenuItem} from 'primereact/menuitem';
+import {Steps} from 'primereact/steps';
+import {classNames} from 'primereact/utils';
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useToast} from '@contexts/ToastContext.tsx';
+import {Button} from 'primereact/button';
+import {produitHttpService} from "@services/produit.http-service.ts";
 
 interface Vehicule {
   dateMiseEnCirculation: string;
@@ -432,7 +432,7 @@ const CreerSouscription = () => {
         produit: nomProduit
       };
 
-      const response = await http.post<{ status: string, data: any }>(
+      const response = await httpClient.post<{ status: string, data: any }>(
         API_ENDPOINTS.souscription.creer,
         submitData
       );

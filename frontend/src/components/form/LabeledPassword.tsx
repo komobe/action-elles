@@ -1,5 +1,5 @@
 import React from 'react';
-import { Password } from 'primereact/password';
+import {Password} from 'primereact/password';
 
 interface LabeledPasswordProps {
   id: string;
