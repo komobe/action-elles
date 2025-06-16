@@ -1,5 +1,5 @@
-import {Outlet} from 'react-router-dom';
-import {memo, useCallback, useState} from 'react';
+import { Outlet } from 'react-router-dom';
+import { memo, useCallback, useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
@@ -30,11 +30,11 @@ const Layout = memo(() => {
         ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
         ${isMobileOpen ? 'ml-0' : 'ml-0'}`}
       >
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <main className="app max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>
-    </div>
+    </div >
   );
 });
 

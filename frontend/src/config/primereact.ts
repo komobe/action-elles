@@ -13,8 +13,8 @@ export const PRIMEREACT_CONFIG = {
 
 // Configuration des styles de formulaire
 export const FORM_LAYOUT = {
-  labelClass: 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1',
-  inputClass: 'w-full',
-  fieldClass: 'mb-4',
-  buttonClass: 'p-button-primary'
+  labelClass: 'modern-form-label',
+  inputClass: 'modern-form-input',
+  fieldClass: 'modern-form-group',
+  buttonClass: 'modern-form-button-primary'
 } as const; 

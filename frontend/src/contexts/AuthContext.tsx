@@ -1,4 +1,4 @@
-import {HttpResponse} from '@/services/http/response.type';
+import { HttpResponse } from '@/services/http/response.type';
 import {
   createContext,
   ReactNode,
@@ -9,9 +9,9 @@ import {
   useRef,
   useState
 } from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
-import {configureHttpClient} from '@/services/http/http-client';
-import {authHttpService, UserInfo} from '@/services/auth.http-service';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { configureHttpClient } from '@/services/http/http-client';
+import { authHttpService, UserInfo } from '@/services/auth.http-service';
 
 
 export interface Credentials {
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   }, [clearAuth, redirectToHome]);
 
   const register = useCallback(async ({ username, password }: Credentials) => {
-    return await authHttpService.register(username, password);
+    return await authHttpService.register({ username, password });
   }, []);
 
   const logout = useCallback(() => {
@@ -144,7 +144,6 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     redirectToLogin();
   }, [clearAuth, redirectToLogin]);
 
-  // Initialize auth state - only runs once on mount
   useEffect(() => {
     const initialize = async () => {
       await loadUser();
@@ -152,9 +151,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     };
 
     initialize();
-  }, []); // Empty dependency array - only runs once
+  }, []);
 
-  // Set up periodic user check only when user is authenticated
+  // Configurer la vérification périodique de l'utilisateur uniquement lorsque l'utilisateur est authentifié
   useEffect(() => {
     if (!user || !token) return;
 

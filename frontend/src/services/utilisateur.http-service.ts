@@ -1,6 +1,6 @@
-import {User} from '@/services/utilisateur.http-service';
-import {API_ENDPOINTS} from "@/config/api";
-import {httpClient} from "./http/http-client";
+import { User } from '@/services/utilisateur.http-service';
+import { API_ENDPOINTS } from "@/config/api";
+import { httpClient } from "./http/http-client";
 
 export interface User {
   id: string;
@@ -8,7 +8,6 @@ export interface User {
   email: string;
   role: string;
   createdAt: string;
-  isActive: boolean;
 }
 
 interface Role {

@@ -1,21 +1,28 @@
-import {Button} from "primereact/button";
+import React from 'react';
+import { Button } from "primereact/button";
 
 interface SubmitButtonProps {
-  isDisabled: boolean;
+  label: string;
   isLoading: boolean;
-  label?: string;
+  isDisabled: boolean;
+  isPrimary?: boolean;
+  className?: string;
 }
 
-export default function SubmitButton({ isDisabled = false, isLoading, label = "Envoyer" }: SubmitButtonProps) {
+export const SubmitButton: React.FC<SubmitButtonProps> = ({
+  label,
+  isLoading,
+  isDisabled,
+  isPrimary = true,
+  className
+}) => {
   return (
-    <div className="pt-4">
-      <Button
-        type="submit"
-        label={label}
-        className="w-full"
-        disabled={isDisabled}
-        loading={isLoading}
-      />
-    </div>
+    <Button
+      type="submit"
+      label={label}
+      className={isPrimary ? "app-form-button-primary" : "app-form-button"}
+      disabled={isDisabled}
+      loading={isLoading}
+    />
   );
-}
+};

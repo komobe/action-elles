@@ -1,5 +1,6 @@
-import {httpClient} from './http/http-client';
-import {API_ENDPOINTS} from '../config/api';
+import { httpClient } from './http/http-client';
+import { API_ENDPOINTS } from '../config/api';
+import { Credentials } from '@/contexts/AuthContext';
 
 interface AuthResponse {
   accessToken: string;
@@ -18,7 +19,7 @@ export const authHttpService = {
     return httpClient.post<AuthResponse>(API_ENDPOINTS.auth.login, { username, password });
   },
 
-  register: async (username: string, password: string) => {
+  register: async ({ username, password }: Credentials) => {
     return httpClient.post<void>(API_ENDPOINTS.auth.register, { username, password });
   },
 

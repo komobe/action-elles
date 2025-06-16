@@ -8,9 +8,9 @@ import {
   faUsers,
   faXmark
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {memo, ReactElement, useCallback} from 'react';
-import {Link, useLocation} from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { memo, ReactElement, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface MenuItem {
   path: string;
@@ -101,22 +101,22 @@ const Sidebar = memo(({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }
       {/* Sidebar */}
       <aside
         id="sidebar"
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 z-30 border-r border-gray-200 dark:border-gray-700 flex flex-col
+        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 z-30 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out shadow-sm
           ${isCollapsed ? 'w-16' : 'w-64'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* En-tête */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
           <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
             {!isCollapsed && (
-              <span className="text-lg font-semibold text-gray-900 dark:text-white truncate pl-1.5">
+              <span className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 dark:from-indigo-400 dark:to-blue-300 bg-clip-text text-transparent">
                 Action'Elles
               </span>
             )}
           </div>
           <button
             onClick={toggleSidebar}
-            className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 border border-current rounded-md"
+            className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 border border-current rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Toggle Sidebar"
           >
             <FontAwesomeIcon
@@ -128,10 +128,33 @@ const Sidebar = memo(({ isCollapsed, isMobileOpen, toggleSidebar, toggleMobile }
 
         {/* Menu principal */}
         <nav className="flex-1 overflow-y-auto py-3">
-          <ul className="flex flex-col space-y-1">
+          <ul className="flex flex-col space-y-1 px-2">
             {mainMenuItems.map((item) => (
               <li key={item.path} className="w-full">
-                {renderMenuItem(item)}
+                <Link
+                  to={item.path}
+                  className={`flex items-center w-full px-3 h-12 transition-all duration-200 rounded-md
+                    ${isActiveRoute(item.path)
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/30'
+                    }
+                    ${isCollapsed ? 'justify-center px-0' : ''}`}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      toggleMobile();
+                    }
+                  }}
+                >
+                  <div className={`w-8 flex items-center justify-center ${isActiveRoute(item.path) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    {item.icon}
+                  </div>
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium truncate ml-2">{item.label}</span>
+                  )}
+                  {isCollapsed && (
+                    <span className="sr-only">{item.label}</span>
+                  )}
+                </Link>
               </li>
             ))}
           </ul>

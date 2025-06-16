@@ -1,27 +1,20 @@
-import {LabeledDropdown} from '@/components/form/LabeledDropdown';
-import LabeledInput from '@/components/form/LabeledInput';
-import LabeledPassword from '@/components/form/LabeledPassword';
-import {useToast} from '@contexts/ToastContext';
-import {Button} from 'primereact/button';
-import {Column} from 'primereact/column';
-import {DataTable} from 'primereact/datatable';
-import {Dialog} from 'primereact/dialog';
-import {Tag} from 'primereact/tag';
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {User, utilisateurHttpService} from '@/services/utilisateur.http-service';
-import {Role, roleHttpService} from '@/services/role.http-service';
-import {isPaginatedResponse} from '@/services/http/helpers';
-import {formatDateFr} from '@/utils/dateUtils';
+import Pagination from '@/components/common/Pagination';
+import { DropdownField, InputField, PasswordField, SubmitButton } from '@/components/form';
+import { useAuth } from '@/contexts/AuthContext';
+import { isPaginatedResponse } from '@/services/http/helpers';
+import { Role, roleHttpService } from '@/services/role.http-service';
+import { User, utilisateurHttpService } from '@/services/utilisateur.http-service';
+import { useToast } from '@contexts/ToastContext';
+import { Button } from 'primereact/button';
+import { Tag } from 'primereact/tag';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Message } from "primereact/message";
 
-interface EditUserForm {
+interface RegisterForm {
   username: string;
-  role: string;
-  password?: string;
+  password: string;
+  confirmPassword: string;
 }
-
-// Constants
-const DEFAULT_PAGE_SIZE = 10;
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 const MESSAGES = {
   SUCCESS: {
@@ -39,54 +32,48 @@ const MESSAGES = {
   },
 } as const;
 
+const DEFAULT_PAGE_SIZE = 5;
+
 const ListerUtilisateurs = () => {
-  // State Management
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [currentPageSize, setCurrentPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
 
-  // Dialog States
-  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [editDialogVisible, setEditDialogVisible] = useState(false);
-  const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  // Form States
-  const [editForm, setEditForm] = useState<EditUserForm>({
-    username: '',
-    role: '',
-    password: ''
-  });
+  const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [newPassword, setNewPassword] = useState('');
 
-  // Hooks
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [registerForm, setRegisterForm] = useState<RegisterForm>({
+    username: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [registerErrors, setRegisterErrors] = useState<Partial<RegisterForm>>({});
+  const [registerGlobalError, setRegisterGlobalError] = useState<string>('');
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const { register } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
 
-  // Memoized Values
-  const isFormValid = useMemo(() => {
-    return editForm.username.trim() !== '' && editForm.role !== '';
-  }, [editForm.username, editForm.role]);
-
-  const isPasswordValid = useMemo(() => {
-    return newPassword.trim().length >= 6; // Minimum password length
-  }, [newPassword]);
-
-  // API Calls
   const fetchRoles = useCallback(async () => {
     try {
       const response = await roleHttpService.lister();
       setRoles(response || []);
     } catch (error) {
-      console.error('Error fetching roles:', error);
       showError(MESSAGES.ERROR.LOADING_ROLES);
     }
   }, [showError]);
 
-  const fetchUsers = useCallback(async (page: number = 1, size: number = pageSize) => {
+  const fetchUsers = useCallback(async (page: number, size: number) => {
     setIsLoading(true);
     setError(null);
 
@@ -109,116 +96,83 @@ const ListerUtilisateurs = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [pageSize, showError]);
+  }, [showError]);
 
-  // Event Handlers
-  const handlePageChange = useCallback((event: { page?: number; first: number; rows: number }) => {
-    const newPage = (event.page ?? 0) + 1;
-    setCurrentPage(newPage);
-    setPageSize(event.rows);
-    fetchUsers(newPage, event.rows);
-  }, [fetchUsers]);
-
-  const handleDeleteUser = useCallback(async (userId: string) => {
-    if (!userId) return;
-
-    try {
-      await utilisateurHttpService.supprimer(userId);
-      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-      showSuccess(MESSAGES.SUCCESS.USER_DELETED);
-      setDeleteDialogVisible(false);
-      setSelectedUser(null);
-    } catch (error) {
-      showError(MESSAGES.ERROR.DELETING_USER);
-    }
-  }, [showSuccess, showError]);
-
-  const handleEditUser = useCallback(async () => {
-    if (!selectedUser || !isFormValid) return;
-
-    try {
-      const updateData: Partial<EditUserForm> = {
-        username: editForm.username.trim(),
-        role: editForm.role
-      };
-
-      if (editForm.password?.trim()) {
-        updateData.password = editForm.password.trim();
-      }
-
-      await utilisateurHttpService.modifier(selectedUser.id, updateData);
-
-      setUsers(prevUsers =>
-        prevUsers.map(user => user.id === selectedUser.id ? { ...user, ...updateData } : user)
-      );
-
-      showSuccess(MESSAGES.SUCCESS.USER_UPDATED);
-      closeEditDialog();
-    } catch (error) {
-      showError(MESSAGES.ERROR.UPDATING_USER);
-    }
-  }, [selectedUser, editForm, isFormValid, showSuccess, showError]);
-
-  const handlePasswordReset = useCallback(async () => {
-    if (!selectedUser || !isPasswordValid) return;
-
-    try {
-      await utilisateurHttpService.changerMot2Passe(selectedUser.id, newPassword.trim())
-      showSuccess(MESSAGES.SUCCESS.PASSWORD_RESET);
-      closePasswordDialog();
-    } catch (error) {
-      showError(MESSAGES.ERROR.RESETTING_PASSWORD);
-    }
-  }, [selectedUser, newPassword, isPasswordValid, showSuccess, showError]);
-
-  // Dialog Management
-  const openEditDialog = useCallback((user: User) => {
-    setSelectedUser(user);
-    setEditForm({
-      username: user.username,
-      role: user.role,
-      password: ''
+  // Fitrage côté client pour facilite la recherche. 
+  // TODO: On pourra etendre ce fitre au backend pour une meilleure experience utilisateur
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === '' || user.role === roleFilter;
+      return matchesSearch && matchesRole;
     });
-    setEditDialogVisible(true);
+  }, [users, searchTerm, roleFilter]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
   }, []);
 
-  const closeEditDialog = useCallback(() => {
-    setEditDialogVisible(false);
-    setSelectedUser(null);
-    setEditForm({ username: '', role: '', password: '' });
+  const handlePageSizeChange = useCallback((size: number) => {
+    setCurrentPageSize(size);
+    setCurrentPage(1);
   }, []);
 
-  const openDeleteDialog = useCallback((user: User) => {
+  const handleEditClick = (user: User) => {
     setSelectedUser(user);
-    setDeleteDialogVisible(true);
-  }, []);
+    setEditedUser({ ...user });
+    setShowEditModal(true);
+  };
 
-  const closeDeleteDialog = useCallback(() => {
-    setDeleteDialogVisible(false);
+  const handleEditConfirm = async (e: React.FormEvent) => {
+    e?.preventDefault();
+
+    if (selectedUser && editedUser) {
+      try {
+        await utilisateurHttpService.modifier(selectedUser.id, editedUser);
+        showSuccess(MESSAGES.SUCCESS.USER_UPDATED);
+        fetchUsers(currentPage, currentPageSize);
+        setShowEditModal(false);
+        setSelectedUser(null);
+        setEditedUser({});
+      } catch (error) {
+        const message = (error as any).message ?? MESSAGES.ERROR.UPDATING_USER
+        showError(message);
+      }
+    }
+  };
+
+  const handleEditCancel = () => {
+    setShowEditModal(false);
     setSelectedUser(null);
-  }, []);
+    setEditedUser({});
+  };
 
-  const openPasswordDialog = useCallback((user: User) => {
+  const handlePasswordClick = (user: User) => {
     setSelectedUser(user);
     setNewPassword('');
-    setPasswordDialogVisible(true);
-  }, []);
+    setShowPasswordModal(true);
+  };
 
-  const closePasswordDialog = useCallback(() => {
-    setPasswordDialogVisible(false);
+  const handlePasswordConfirm = async () => {
+    if (selectedUser && newPassword) {
+      try {
+        await utilisateurHttpService.changerMot2Passe(selectedUser.id, newPassword);
+        showSuccess('Mot de passe modifié avec succès');
+        setShowPasswordModal(false);
+        setSelectedUser(null);
+        setNewPassword('');
+      } catch (error) {
+        showError('Erreur lors de la modification du mot de passe');
+      }
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false);
     setSelectedUser(null);
     setNewPassword('');
-  }, []);
-
-  // Template Functions
-  const userTemplate = useCallback((user: User) => (
-    <div className="font-medium">{user.username}</div>
-  ), []);
-
-  const dateTemplate = useCallback((user: User) => {
-    if (!user.createdAt) return <span className="text-gray-400">N/A</span>;
-    return <span>{formatDateFr(user.createdAt)}</span>;
-  }, []);
+  };
 
   const rolesTemplate = useCallback((user: User) => (
     <Tag value={user.role} className="bg-gray-200 text-gray-800 border-none" />
@@ -232,103 +186,123 @@ const ListerUtilisateurs = () => {
   ), []);
 
   const actionsTemplate = useCallback((user: User) => (
-    <div className="flex gap-6 justify-center">
+    <div className="flex gap-5 justify-end">
       <i
         className="pi pi-pencil cursor-pointer text-gray-600 hover:text-blue-600 transition-colors duration-200"
-        onClick={() => openEditDialog(user)}
+        onClick={() => handleEditClick(user)}
         title="Modifier l'utilisateur"
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && openEditDialog(user)}
+        onKeyDown={(e) => e.key === 'Enter' && handleEditClick(user)}
       />
       <i
         className="pi pi-key cursor-pointer text-gray-600 hover:text-yellow-600 transition-colors duration-200"
-        onClick={() => openPasswordDialog(user)}
+        onClick={() => handlePasswordClick(user)}
         title="Réinitialiser le mot de passe"
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && openPasswordDialog(user)}
+        onKeyDown={(e) => e.key === 'Enter' && handlePasswordClick(user)}
       />
       <i
         className="pi pi-trash cursor-pointer text-gray-600 hover:text-red-600 transition-colors duration-200"
-        onClick={() => openDeleteDialog(user)}
+        onClick={() => handleDeleteClick(user)}
         title="Supprimer l'utilisateur"
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && openDeleteDialog(user)}
       />
     </div>
-  ), [openEditDialog, openPasswordDialog, openDeleteDialog]);
+  ), []);
 
-  // Effects
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDeleteClick = (user: User) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedUser) {
+      try {
+        await utilisateurHttpService.supprimer(selectedUser.id);
+        showSuccess(MESSAGES.SUCCESS.USER_DELETED);
+        fetchUsers(currentPage, currentPageSize);
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+      } catch (error) {
+        showError(MESSAGES.ERROR.DELETING_USER);
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setSelectedUser(null);
+  };
+
+  const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setRegisterForm(prev => ({ ...prev, [name]: value }));
+    setRegisterErrors({});
+    setRegisterGlobalError('');
+  };
+
+  const validateRegisterForm = (): boolean => {
+    const newErrors: Partial<typeof registerForm> = {};
+
+    if (!registerForm.username.trim()) {
+      newErrors.username = 'Le nom d\'utilisateur est requis';
+    }
+
+    if (!registerForm.password) {
+      newErrors.password = 'Le mot de passe est requis';
+    } else if (registerForm.password.length < 6) {
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+
+    if (!registerForm.confirmPassword) {
+      newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
+    } else if (registerForm.password !== registerForm.confirmPassword) {
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
+
+    setRegisterErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateRegisterForm()) {
+      return;
+    }
+
+    setRegisterLoading(true);
+    setRegisterGlobalError('');
+
+    try {
+      await register({ username: registerForm.username, password: registerForm.password });
+      showSuccess('Utilisateur créé avec succès');
+      setShowRegisterModal(false);
+      setRegisterForm({ username: '', password: '', confirmPassword: '' });
+      setRegisterErrors({});
+      await fetchUsers(currentPage, currentPageSize);
+    } catch (error) {
+      const error1 = error as any;
+      const message = error1.data ?? error1.message ??
+        'Une erreur est survenue lors de la création de l\'utilisateur';
+      setRegisterGlobalError(message);
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, [fetchUsers, fetchRoles]);
+    fetchUsers(currentPage, currentPageSize);
+  }, [currentPage, currentPageSize, fetchUsers]);
 
-  // Form Handlers
-  const handleFormChange = useCallback((field: keyof EditUserForm, value: string) => {
-    setEditForm(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  // Handler spécifique pour le dropdown si nécessaire
-  const handleRoleChange = useCallback((value: string) => {
-    handleFormChange('role', value);
-  }, [handleFormChange]);
-
-  // Dialog Footers
-  const editDialogFooter = useMemo(() => (
-    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-      <Button
-        label="Annuler"
-        icon="pi pi-times"
-        severity='danger'
-        onClick={closeEditDialog}
-      />
-      <Button
-        label="Enregistrer"
-        icon="pi pi-check"
-        severity='success'
-        onClick={handleEditUser}
-        disabled={!isFormValid}
-      />
-    </div>
-  ), [closeEditDialog, handleEditUser, isFormValid]);
-
-  const passwordDialogFooter = useMemo(() => (
-    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-      <Button
-        label="Annuler"
-        icon="pi pi-times"
-        severity='danger'
-        onClick={closePasswordDialog}
-      />
-      <Button
-        label="Réinitialiser"
-        icon="pi pi-refresh"
-        severity='success'
-        onClick={handlePasswordReset}
-        disabled={!isPasswordValid}
-      />
-    </div>
-  ), [closePasswordDialog, handlePasswordReset, isPasswordValid]);
-
-  const deleteDialogFooter = useMemo(() => (
-    <div className="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-      <Button
-        label="Annuler"
-        icon="pi pi-times"
-        onClick={closeDeleteDialog}
-        className="p-button-text p-button-secondary"
-      />
-      <Button
-        label="Supprimer"
-        icon="pi pi-trash"
-        onClick={() => selectedUser && handleDeleteUser(selectedUser.id)}
-        className="p-button-danger"
-      />
-    </div>
-  ), [closeDeleteDialog, handleDeleteUser, selectedUser]);
+  useEffect(() => {
+    fetchRoles()
+  }, [fetchRoles]);
 
   if (error && !isLoading) {
     return (
@@ -345,7 +319,7 @@ const ListerUtilisateurs = () => {
                 <Button
                   label="Réessayer"
                   icon="pi pi-refresh"
-                  onClick={() => fetchUsers()}
+                  onClick={() => fetchUsers(currentPage, currentPageSize)}
                   className="p-button-sm p-button-outlined p-button-danger"
                 />
               </div>
@@ -357,121 +331,328 @@ const ListerUtilisateurs = () => {
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Liste des utilisateurs
-        </h1>
+    <div className='space-y-2'>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center app-form-fieldset py-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-0">Liste des
+            utilisateurs</h1>
+          <button
+            onClick={() => setShowRegisterModal(true)}
+            className="app-form-button-primary"
+          >
+            Nouvel utilisateur
+          </button>
+        </div>
+
+        <div
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="app-form-group">
+              <label htmlFor="search" className="app-form-label">
+                Rechercher
+              </label>
+              <input
+                type="text"
+                id="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher par nom ou email..."
+                className="app-form-input"
+              />
+            </div>
+
+            <div className="app-form-group">
+              <label htmlFor="role" className="app-form-label">
+                Rôle
+              </label>
+              <select
+                id="role"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="app-form-select"
+              >
+                <option value="">Tous les rôles</option>
+                {
+                  roles.map(role => {
+                    return (<option key={role.value} value={role.value}>{role.label}</option>)
+                  })
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Nom
+                  </th>
+                  <th scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Rôle
+                  </th>
+                  <th scope="col"
+                    className="text-end px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      {user.username}
+                    </td>
+                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {user.email}
+                    </td>
+                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {rolesTemplate(user)}
+                    </td>
+                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium">
+                      {actionsTemplate(user)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            currentPageSize={currentPageSize}
+            totalRecords={totalRecords}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            displayedItemsCount={filteredUsers.length}
+            defautPageSize={DEFAULT_PAGE_SIZE}
+          />
+        </div>
       </div>
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        <DataTable
-          dataKey="id" value={users}
-          size="small" paginator lazy
-          first={(currentPage - 1) * pageSize}
-          rows={pageSize} totalRecords={totalRecords}
-          onPage={handlePageChange} loading={isLoading}
-          emptyMessage="Aucun utilisateur trouvé"
-          alwaysShowPaginator={false}
-          rowsPerPageOptions={PAGE_SIZE_OPTIONS}
-          tableStyle={{ minWidth: '50rem' }}
-        >
-          <Column field="username" header="Nom d'utilisateur" body={userTemplate} />
-          <Column field="createdAt" header="Date de création" body={dateTemplate} />
-          <Column field="role" header="Rôle" body={rolesTemplate} />
-          <Column field="isActive" header="Statut" body={statusTemplate} />
-          <Column body={actionsTemplate} header="Actions" style={{ width: '200px' }} />
-        </DataTable>
 
-
-        {/* Modal de modification */}
-        <Dialog
-          visible={editDialogVisible}
-          onHide={closeEditDialog}
-          header={`Modifier l'utilisateur: ${selectedUser?.username || ''}`}
-          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-          modal closeOnEscape focusOnShow
-          footer={editDialogFooter}
-        >
-          <div className="p-6 space-y-6">
-            <LabeledInput
-              id="edit-username"
-              name="edit-username"
-              label="Nom d'utilisateur"
-              value={editForm.username}
-              onChange={(e) => handleFormChange('username', e.target.value)}
-              required
-            />
-
-            <LabeledDropdown
-              id="edit-role"
-              label="Rôle"
-              value={editForm.role}
-              options={roles}
-              onChange={handleRoleChange}
-              optionLabel="label"
-              optionValue="name"
-              placeholder="Sélectionner un rôle"
-              required
-            />
-            {false && <LabeledPassword
-              id="edit-password"
-              name="edit-password"
-              label="Nouveau mot de passe (optionnel)"
-              value={editForm.password || ''}
-              placeholder="Laisser vide pour ne pas modifier"
-              onChange={(e) => handleFormChange('password', e.target.value)}
-            />}
-          </div>
-        </Dialog>
-
-        {/* Modal de réinitialisation du mot de passe */}
-        <Dialog
-          visible={passwordDialogVisible}
-          onHide={closePasswordDialog}
-          header={`Réinitialiser le mot de passe: ${selectedUser?.username || ''}`}
-          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-          modal closeOnEscape focusOnShow
-          footer={passwordDialogFooter}
-        >
-          <div className="p-6 space-y-6">
-            <LabeledPassword
-              id="new-password"
-              name="new-password"
-              label="Nouveau mot de passe"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Entrez le nouveau mot de passe"
-              required
-            />
-          </div>
-        </Dialog>
-
-        {/* Modal de confirmation de suppression */}
-        <Dialog
-          visible={deleteDialogVisible}
-          onHide={closeDeleteDialog}
-          header="Confirmer la suppression"
-          className="w-full max-w-lg rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-0"
-          modal closeOnEscape focusOnShow
-          footer={deleteDialogFooter}
-        >
-          <div className="p-6">
-            <div className="flex items-center space-x-3">
-              <i className="pi pi-exclamation-triangle text-red-500 text-2xl" />
-              <div>
-                <p className="text-gray-700 dark:text-gray-300">
-                  Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
-                  <strong className="text-red-600">{selectedUser?.username}</strong> ?
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Cette action est irréversible.
-                </p>
+      {
+        showEditModal && selectedUser && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 shadow-xl max-w-md w-full mx-4"
+              style={{ borderRadius: 'var(--border-radius)' }}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Modifier l'utilisateur : {selectedUser.username}
+                </h3>
+              </div>
+              <div className="px-4 py-5 space-y-4">
+                <form onSubmit={handleEditConfirm} className="space-y-4">
+                  <div className="app-form-group">
+                    <label className="app-form-label">Nom d'utilisateur</label>
+                    <input
+                      type="text"
+                      value={editedUser.username || ''}
+                      onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
+                      className="app-form-input"
+                    />
+                  </div>
+                  <div className="app-form-group">
+                    <label className="app-form-label">Email</label>
+                    <input
+                      type="email"
+                      value={editedUser.email || ''}
+                      onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+                      className="app-form-input"
+                    />
+                  </div>
+                  <DropdownField
+                    id="role"
+                    name="role"
+                    label="Rôle"
+                    options={roles}
+                    value={editedUser.role || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}
+                    required
+                    disabled={isLoading}
+                    placeholder="Sélectionnez un rôle"
+                  />
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={handleEditCancel}
+                      className="app-form-button"
+                    >
+                      Annuler
+                    </button>
+                    <SubmitButton
+                      isDisabled={isLoading}
+                      isLoading={isLoading}
+                      label="Enregistrer"
+                      isPrimary
+                    />
+                  </div>
+                </form>
               </div>
             </div>
           </div>
-        </Dialog>
-      </div>
-    </div>
+        )
+      }
+
+      {
+        showPasswordModal && selectedUser && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Modifier le mot de passe de : {selectedUser.username}
+              </h3>
+              <div className="space-y-4">
+                <div className="app-form-group">
+                  <label className="app-form-label">Nouveau mot de passe</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="app-form-input"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={handlePasswordCancel}
+                  className="app-form-button"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handlePasswordConfirm}
+                  className="app-form-button-primary"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showDeleteModal && selectedUser && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Confirmer la suppression de : {selectedUser.username}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est
+                irréversible.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="app-form-button"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="app-form-button-primary bg-red-600 hover:bg-red-700"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showRegisterModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 shadow-xl max-w-md w-full mx-4"
+              style={{ borderRadius: 'var(--border-radius)' }}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Ajouter un nouvel utilisateur
+                </h3>
+              </div>
+              <div className="px-4 py-5">
+                {registerGlobalError && (
+                  <div className="mb-4">
+                    <Message className="!w-full" severity="error" text={registerGlobalError} />
+                  </div>
+                )}
+                <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                  <InputField
+                    id="username"
+                    name="username"
+                    label="Nom utilisateur"
+                    value={registerForm.username}
+                    onChange={handleRegisterChange}
+                    required
+                    error={registerErrors.username}
+                    placeholder="Saisissez l'identifiant de l'utilisateur"
+                  />
+
+                  <PasswordField
+                    id="password"
+                    name="password"
+                    label="Mot de passe"
+                    value={registerForm.password}
+                    onChange={handleRegisterChange}
+                    required
+                    error={registerErrors.password}
+                    placeholder="Saisissez le mot de passe"
+                  />
+
+                  <PasswordField
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    label="Confirmer le mot de passe"
+                    value={registerForm.confirmPassword}
+                    onChange={handleRegisterChange}
+                    required
+                    error={registerErrors.confirmPassword}
+                    placeholder="Saisissez à nouveau le mot de passe"
+                  />
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRegisterModal(false);
+                        setRegisterForm({ username: '', password: '', confirmPassword: '' });
+                        setRegisterErrors({});
+                        setRegisterGlobalError('');
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      style={{ borderRadius: 'var(--border-radius)' }}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={registerLoading}
+                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                      style={{ borderRadius: 'var(--border-radius)' }}
+                    >
+                      {registerLoading ? 'Ajout en cours...' : 'Ajouter'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 };
 

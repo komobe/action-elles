@@ -15,9 +15,9 @@
   --info-color: #3b82f6;
 
   /* Variables pour les bordures */
-  --border-radius: 0;
-  --border-radius-sm: 0;
-  --border-radius-lg: 0;
+  --border-radius: 0.75rem;
+  --border-radius-sm: 0.375rem;
+  --border-radius-lg: 1rem;
 
   /* Variables pour les ombres (désactivées) */
   --shadow-none: none;
