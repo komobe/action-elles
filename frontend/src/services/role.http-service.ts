@@ -1,5 +1,5 @@
-import { API_ENDPOINTS } from "@/config/api";
 import { httpClient } from "./http/http-client";
+import { buildUrl } from "@/utils/apiUtils";
 
 export interface Role {
   label: string;
@@ -8,7 +8,7 @@ export interface Role {
 
 export const roleHttpService = {
   lister: async (): Promise<Role[]> => {
-    const response = await httpClient.get<string[]>(API_ENDPOINTS.roles.list);
+    const response = await httpClient.get<string[]>(buildUrl('api/v1/roles'));
     return (response.data || []).map((role) => ({
       label: role,
       value: role

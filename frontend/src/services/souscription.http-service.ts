@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/config/api";
+import { buildUrl } from "@/utils/apiUtils";
 import { httpClient } from "./http/http-client";
 
 export interface Assure {
@@ -88,26 +88,22 @@ interface Produit {
 export const parseStatutToDisplay = (statut: string): string | undefined => {
   if (!statut) return;
 
-  const statutParsed = statut
-    .toLowerCase()
-    .replace(/_/g, ' ');
+  const statutParsed = statut.toLowerCase().replace(/_/g, ' ');
 
   return statutParsed.charAt(0).toUpperCase() + statutParsed.slice(1);
 };
 
-const subscriptionBaseUrl = `${API_BASE_URL}/api/v1/subscriptions`;
-
 export const souscriptionHttpService = {
   lister: async () => {
-    return await httpClient.get<Souscription[]>(subscriptionBaseUrl);
+    return await httpClient.get<Souscription[]>(buildUrl('api/v1/subscriptions'));
   },
   creer: async (data: SouscriptionData) => {
-    return await httpClient.post<Souscription>(subscriptionBaseUrl, data);
+    return await httpClient.post<Souscription>(buildUrl('api/v1/subscriptions'), data);
   },
   delete: async (id: string) => {
-    return await httpClient.delete(`${subscriptionBaseUrl}/${id}`);
+    return await httpClient.delete(buildUrl('api/v1/subscriptions', id));
   },
   gerererAttestation: async (id: string) => {
-    return await httpClient.getBlob(`${subscriptionBaseUrl}/${id}/attestation`);
+    return await httpClient.getBlob(buildUrl('api/v1/subscriptions', id, 'attestation'));
   }
 }

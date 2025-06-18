@@ -1,6 +1,5 @@
-import {httpClient} from './http/http-client';
-import {API_ENDPOINTS} from '../config/api';
-
+import { httpClient } from './http/http-client';
+import { buildUrl } from '@/utils/apiUtils';
 
 export interface VehiculeInfo {
   produit: string;
@@ -49,9 +48,9 @@ export interface SimulationResponse {
 
 export const devisHttpService = {
   simuler: async (data: SimulationDevisRequest) => {
-    return httpClient.post<SimulationResponse['data']>(API_ENDPOINTS.devis.simuler, data);
+    return httpClient.post<SimulationResponse['data']>(buildUrl('api/v1/devis', 'simuler'), data);
   },
   enregistrer: async (data: EnregistrerDevisRequest) => {
-    return httpClient.post<{ status: string, message: string }>(API_ENDPOINTS.devis.enregistrer, data);
+    return httpClient.post<{ status: string, message: string }>(buildUrl('api/v1/devis', 'enregistrer'), data);
   },
 }; 

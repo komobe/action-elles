@@ -1,5 +1,4 @@
-import { User } from '@/services/utilisateur.http-service';
-import { API_ENDPOINTS } from "@/config/api";
+import { buildUrl } from "@/utils/apiUtils";
 import { httpClient } from "./http/http-client";
 
 export interface User {
@@ -17,19 +16,19 @@ interface Role {
 
 export const utilisateurHttpService = {
   lister: async (page: number, size: number) => {
-    return await httpClient.get<User[]>(`${API_ENDPOINTS.users.list}?page=${page}&size=${size}`);
+    return await httpClient.get<User[]>(buildUrl('api/v1/utilisateurs') + `?page=${page}&size=${size}`);
   },
   modifier: async (utilisateurId: string, utilisateur: Partial<User>) => {
-    await httpClient.put<{ status: string }>(API_ENDPOINTS.users.update, {
+    await httpClient.put<{ status: string }>(buildUrl('api/v1/utilisateurs'), {
       id: utilisateurId,
       ...utilisateur
     });
   },
   supprimer: async (utilisateurId: string) => {
-    await httpClient.delete(API_ENDPOINTS.users.delete(utilisateurId));
+    await httpClient.delete(buildUrl('api/v1/utilisateurs', utilisateurId));
   },
   changerMot2Passe: async (utilisateurId: string, nouveauMot2Passe: string) => {
-    await httpClient.put<{ status: string }>(API_ENDPOINTS.users.resetPassword, {
+    await httpClient.put<{ status: string }>(buildUrl('api/v1/utilisateurs', 'reset-password'), {
       id: utilisateurId,
       newPassword: nouveauMot2Passe.trim()
     });
