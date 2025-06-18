@@ -22,6 +22,7 @@ export interface ApiResponse<T> {
   status: 'success' | 'error';
   data?: T;
   message?: string;
+  headers?: Record<string, string>;
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T> {

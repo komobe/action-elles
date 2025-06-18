@@ -1,27 +1,20 @@
-import {useEffect, useState} from 'react';
-import {useAuth} from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import {authHttpService, UserInfo} from "@services/auth.http-service.ts";
 
-interface UserProfile {
-  id: string;
-  username: string;
-  email?: string;
-  // Ajoutez d'autres champs selon votre API
-}
 
 const Home = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserInfo | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        //const userData = await authApi.getCurrentUser();
-        setProfile(null);
+        const userData = await authHttpService.getCurrentUser();
+        setProfile(userData?.data);
         setError(null);
       } catch (err) {
-        console.error('Erreur lors du chargement du profil:', err);
-        setError('Impossible de charger les données du profil');
+        setError((err as any).message ?? 'Une erreur est survenue lors du chargement du profil');
       } finally {
         setIsLoading(false);
       }

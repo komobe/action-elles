@@ -1,5 +1,4 @@
-import { InputField, PasswordField } from '@/components/form';
-import { Button } from 'primereact/button';
+import { InputField, PasswordField, SubmitButton } from '@/components/form';
 import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -90,15 +89,15 @@ const Login = () => {
               />
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row items-center sm:justify-between w-full">
-              <Button
-                type="submit"
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full">
+              <SubmitButton
+                isDisabled={isLoading || !isFormValid}
+                isLoading={isLoading}
                 label="Se connecter"
-                className="app-form-button-primary w-full sm:w-auto"
-                disabled={isLoading || !isFormValid}
-                loading={isLoading}
+                className={'sm:w-full'}
+                isPrimary
               />
-              <div className="auth-link-container sm:text-right mt-4 sm:mt-0">
+              <div className="auth-link-container mt-4 sm:mt-0 text-center sm:text-right">
                 <span className="auth-link-text">Pas encore de compte ?</span>
                 <Link to="/register" className="auth-link-button">
                   Inscrivez-vous

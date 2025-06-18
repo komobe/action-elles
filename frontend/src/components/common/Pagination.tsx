@@ -29,7 +29,6 @@ const Pagination: React.FC<PaginationProps> = ({
     return currentPageSize ?? defautPageSize ?? DEFAULT_PAGE_SIZE;
   }, [currentPageSize, defautPageSize]);
 
-  // Garantir que le defautPageSize est toujours présent dans les options
   const normalizedPageSizeOptions = useMemo(() => {
     const optionsSet = new Set(pageSizeOptions);
     optionsSet.add(defautPageSize);
@@ -100,7 +99,6 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 dark:border-gray-700 space-y-2 sm:space-y-0">
-      {/* Résumé */}
       <div>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           Affichage de <span className="font-medium">{startIndex}</span> à{' '}
@@ -109,9 +107,7 @@ const Pagination: React.FC<PaginationProps> = ({
         </p>
       </div>
 
-      {/* Contrôles de pagination */}
       <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto">
-        {/* Première / Précédente */}
         {totalPages > 1 && (
           <>
             <button
@@ -133,10 +129,8 @@ const Pagination: React.FC<PaginationProps> = ({
           </>
         )}
 
-        {/* Numéros de pages */}
         <div className="flex items-center space-x-1">{renderPageNumbers()}</div>
 
-        {/* Suivante / Dernière */}
         {totalPages > 1 && (
           <>
             <button
@@ -158,7 +152,6 @@ const Pagination: React.FC<PaginationProps> = ({
           </>
         )}
 
-        {/* Sélecteur taille de page */}
         <div className="ml-4 shrink-0">
           <select
             value={effectivePageSize}

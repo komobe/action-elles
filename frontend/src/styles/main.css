@@ -76,10 +76,6 @@
     @apply space-y-6;
   }
 
-  .app-form-group {
-    @apply space-y-2;
-  }
-
   .app-form-label {
     @apply block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 bg-gradient-to-r from-gray-600 to-gray-800 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent;
   }
@@ -100,7 +96,7 @@
   }
 
   .app-form-legend {
-    @apply text-base sm:text-lg font-semibold text-gray-900 dark:text-white px-3 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20;
+    @apply text-base font-semibold text-gray-900 dark:text-white px-3 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20;
     border-radius: var(--border-radius);
   }
 
@@ -198,7 +194,7 @@
   }
 
   .auth-link-container {
-    @apply flex flex-col items-start sm:items-end gap-0.5 text-sm;
+    @apply flex flex-col gap-0.5 text-sm;
   }
 
   .auth-link-text {

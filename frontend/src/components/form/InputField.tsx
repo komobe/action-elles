@@ -1,37 +1,20 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { InputText } from 'primereact/inputtext';
-
-interface InputFieldProps {
-  id: string;
-  name: string;
-  label: string;
-  value?: string | number;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
-  error?: string;
-  required?: boolean;
-  placeholder?: string;
-  disabled?: boolean;
-  type?: string;
-}
+import { InputFieldProps } from './form.types';
 
 const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
-  ({ id, name, label, className, error, value, required, onChange, placeholder, disabled, type = 'text', ...props }, ref) => (
-    <div className={`app-form-group ${className || ''}`}>
-      <label htmlFor={id} className="app-form-label">
-        {label} {required && <span className='text-red-500'>*</span>}
+  ({ label, className = '', error, value, required = false, type = 'text', placeholder, ...props }, ref) => (
+    <div className={`app-form-group ${className}`.trim()}>
+      <label htmlFor={props.id} className="app-form-label">
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
       <InputText
         ref={ref}
-        id={id}
-        name={name}
         type={type}
-        value={value !== undefined && value !== null ? String(value) : ''}
-        onChange={onChange}
-        placeholder={placeholder}
-        disabled={disabled}
+        value={value != null ? String(value) : ''}
+        placeholder={placeholder ?? `Entrez ${label.toLowerCase()}`}
         invalid={!!error}
-        className={`w-full ${error ? 'p-invalid' : ''}`}
+        className={`w-full ${error ? 'p-invalid' : ''}`.trim()}
         {...props}
       />
       {error && <small className="p-error block mt-1">{error}</small>}

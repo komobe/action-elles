@@ -72,14 +72,13 @@ const Register = () => {
     setGenericError('');
 
     try {
-      console.log(formData)
       await register({ username: formData.username, password: formData.password });
       setIsSuccess(true);
       timeoutRef.current = setTimeout(() => {
         navigate('/login');
       }, 2000);
-    } catch (error) {
-      const message = (error as any).message ?? 'Une erreur est survenue lors de l\'inscription'
+    } catch (error: any) {
+      const message = error.message ?? 'Une erreur est survenue lors de l\'inscription';
       setGenericError(message);
     } finally {
       setIsLoading(false);
@@ -143,11 +142,12 @@ const Register = () => {
               />
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row items-center sm:justify-between w-full">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full">
               <SubmitButton
                 isDisabled={isLoading}
                 isLoading={isLoading}
                 label="S'inscrire"
+                className={'sm:w-full'}
                 isPrimary
               />
               <div className="auth-link-container mt-4 sm:mt-0 sm:text-right">

@@ -12,6 +12,7 @@ interface AuthResponse {
 export interface UserInfo {
   username: string;
   roles: string[];
+  email?: string;
 }
 
 export const authHttpService = {

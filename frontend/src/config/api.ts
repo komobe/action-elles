@@ -1,5 +1,5 @@
 // URL de base de l'API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9083';
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:9083';
 
 // Configuration des endpoints de l'API
 export const API_ENDPOINTS = {
@@ -26,13 +26,6 @@ export const API_ENDPOINTS = {
     enregistrer: `${API_BASE_URL}/api/v1/devis/enregistrer`,
     produits: `${API_BASE_URL}/api/v1/devis/produits`,
     categories: `${API_BASE_URL}/api/v1/devis/categories`,
-  },
-  souscription: {
-    creer: `${API_BASE_URL}/api/v1/subscriptions`,
-    list: `${API_BASE_URL}/api/v1/subscriptions`,
-    details: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}`,
-    statut: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/statut`,
-    gerererAttestation: (id: string) => `${API_BASE_URL}/api/v1/subscriptions/${id}/attestation`,
   },
   produit: {
     list: `${API_BASE_URL}/api/v1/produits`,

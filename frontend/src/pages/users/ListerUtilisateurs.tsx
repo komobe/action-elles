@@ -1,14 +1,18 @@
+import ActionsButtons, { ActionList } from '@/components/common/ActionsButtons';
 import Pagination from '@/components/common/Pagination';
-import { DropdownField, InputField, PasswordField, SubmitButton } from '@/components/form';
+import { DropdownField, InputField, PasswordField } from '@/components/form';
+import InputTextField from '@/components/form/InputTextField';
 import { useAuth } from '@/contexts/AuthContext';
 import { isPaginatedResponse } from '@/services/http/helpers';
 import { Role, roleHttpService } from '@/services/role.http-service';
 import { User, utilisateurHttpService } from '@/services/utilisateur.http-service';
 import { useToast } from '@contexts/ToastContext';
+import { faKey } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from 'primereact/button';
+import { Message } from "primereact/message";
 import { Tag } from 'primereact/tag';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Message } from "primereact/message";
 
 interface RegisterForm {
   username: string;
@@ -34,6 +38,8 @@ const MESSAGES = {
 
 const DEFAULT_PAGE_SIZE = 5;
 
+const ROLE_FILTER_ALL: Role = { label: 'Tous les rôles', value: 'ALL' }
+
 const ListerUtilisateurs = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -43,10 +49,11 @@ const ListerUtilisateurs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>(ROLE_FILTER_ALL.value);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editedUser, setEditedUser] = useState<Partial<User>>({});
   const [newPassword, setNewPassword] = useState('');
@@ -98,13 +105,19 @@ const ListerUtilisateurs = () => {
     }
   }, [showError]);
 
-  // Fitrage côté client pour facilite la recherche. 
-  // TODO: On pourra etendre ce fitre au backend pour une meilleure experience utilisateur
+  const roleOptions = useMemo(() => {
+    return [ROLE_FILTER_ALL, ...roles];
+  }, [roles]);
+
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === '' || user.role === roleFilter;
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesRole = roleFilter === ROLE_FILTER_ALL.value || user.role === roleFilter;
+
+
       return matchesSearch && matchesRole;
     });
   }, [users, searchTerm, roleFilter]);
@@ -178,42 +191,31 @@ const ListerUtilisateurs = () => {
     <Tag value={user.role} className="bg-gray-200 text-gray-800 border-none" />
   ), []);
 
-  const statusTemplate = useCallback((user: User) => (
-    <Tag
-      value={user.isActive ? 'Actif' : 'Inactif'}
-      severity={user.isActive ? 'success' : 'danger'}
-    />
-  ), []);
 
-  const actionsTemplate = useCallback((user: User) => (
-    <div className="flex gap-5 justify-end">
-      <i
-        className="pi pi-pencil cursor-pointer text-gray-600 hover:text-blue-600 transition-colors duration-200"
-        onClick={() => handleEditClick(user)}
-        title="Modifier l'utilisateur"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && handleEditClick(user)}
-      />
-      <i
-        className="pi pi-key cursor-pointer text-gray-600 hover:text-yellow-600 transition-colors duration-200"
-        onClick={() => handlePasswordClick(user)}
-        title="Réinitialiser le mot de passe"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && handlePasswordClick(user)}
-      />
-      <i
-        className="pi pi-trash cursor-pointer text-gray-600 hover:text-red-600 transition-colors duration-200"
-        onClick={() => handleDeleteClick(user)}
-        title="Supprimer l'utilisateur"
-        role="button"
-        tabIndex={0}
-      />
-    </div>
-  ), []);
+  const actionsTemplate = (user: User) => {
+    const actions: ActionList = [
+      {
+        type: 'edit',
+        onClick: handleEditClick,
+      },
+      {
+        type: 'delete',
+        onClick: handleDeleteClick,
+      }
+    ];
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+    return (
+      <ActionsButtons item={user} actions={actions}>
+        <button
+          onClick={() => handlePasswordClick(user)}
+          className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors duration-200"
+          title="Réinitialiser le mot de passe"
+        >
+          <FontAwesomeIcon icon={faKey} className="w-4 h-4" />
+        </button>
+      </ActionsButtons>
+    );
+  };
 
   const handleDeleteClick = (user: User) => {
     setSelectedUser(user);
@@ -334,8 +336,9 @@ const ListerUtilisateurs = () => {
     <div className='space-y-2'>
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center app-form-fieldset py-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-0">Liste des
-            utilisateurs</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-0">
+            Liste des utilisateurs
+          </h1>
           <button
             onClick={() => setShowRegisterModal(true)}
             className="app-form-button-primary"
@@ -347,38 +350,24 @@ const ListerUtilisateurs = () => {
         <div
           className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="app-form-group">
-              <label htmlFor="search" className="app-form-label">
-                Rechercher
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher par nom ou email..."
-                className="app-form-input"
-              />
-            </div>
+            <InputTextField
+              id="search"
+              name="search"
+              label="Rechercher"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Rechercher par nom ou email..."
+            />
 
-            <div className="app-form-group">
-              <label htmlFor="role" className="app-form-label">
-                Rôle
-              </label>
-              <select
-                id="role"
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="app-form-select"
-              >
-                <option value="">Tous les rôles</option>
-                {
-                  roles.map(role => {
-                    return (<option key={role.value} value={role.value}>{role.label}</option>)
-                  })
-                }
-              </select>
-            </div>
+            <DropdownField
+              id="role"
+              name="role"
+              label="Rôle"
+              options={roleOptions}
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              placeholder="Filtrer par rôle"
+            />
           </div>
         </div>
 
@@ -389,19 +378,19 @@ const ListerUtilisateurs = () => {
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   <th scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    className="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Nom
                   </th>
                   <th scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    className="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Email
                   </th>
                   <th scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    className="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Rôle
                   </th>
                   <th scope="col"
-                    className="text-end px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    className="w-10 px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -410,16 +399,16 @@ const ListerUtilisateurs = () => {
                 className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {user.username}
                     </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {user.email}
                     </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {rolesTemplate(user)}
                     </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium">
+                    <td className="px-2 whitespace-nowrap text-center text-sm font-medium">
                       {actionsTemplate(user)}
                     </td>
                   </tr>
@@ -453,31 +442,30 @@ const ListerUtilisateurs = () => {
               </div>
               <div className="px-4 py-5 space-y-4">
                 <form onSubmit={handleEditConfirm} className="space-y-4">
-                  <div className="app-form-group">
-                    <label className="app-form-label">Nom d'utilisateur</label>
-                    <input
-                      type="text"
-                      value={editedUser.username || ''}
-                      onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
-                      className="app-form-input"
-                    />
-                  </div>
-                  <div className="app-form-group">
-                    <label className="app-form-label">Email</label>
-                    <input
-                      type="email"
-                      value={editedUser.email || ''}
-                      onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
-                      className="app-form-input"
-                    />
-                  </div>
+                  <InputTextField
+                    id="username"
+                    name="username"
+                    label="Nom utilisateur"
+                    value={editedUser.username ?? ''}
+                    onChange={(e: any) => setEditedUser({ ...editedUser, username: e.target.value })}
+                    required
+                  />
+
+                  <InputTextField
+                    id="email"
+                    name="email"
+                    label="Email"
+                    value={editedUser.email ?? ''}
+                    onChange={(e: any) => setEditedUser({ ...editedUser, email: e.target.value })}
+                  />
+
                   <DropdownField
                     id="role"
                     name="role"
                     label="Rôle"
                     options={roles}
-                    value={editedUser.role || ''}
-                    onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}
+                    value={editedUser.role ?? ''}
+                    onChange={(e: any) => setEditedUser({ ...editedUser, role: e.target.value })}
                     required
                     disabled={isLoading}
                     placeholder="Sélectionnez un rôle"
@@ -489,12 +477,12 @@ const ListerUtilisateurs = () => {
                     >
                       Annuler
                     </button>
-                    <SubmitButton
-                      isDisabled={isLoading}
-                      isLoading={isLoading}
-                      label="Enregistrer"
-                      isPrimary
-                    />
+                    <button
+                      onClick={handleEditConfirm}
+                      className="app-form-button-primary"
+                    >
+                      Enregistrer
+                    </button>
                   </div>
                 </form>
               </div>
@@ -513,12 +501,15 @@ const ListerUtilisateurs = () => {
               </h3>
               <div className="space-y-4">
                 <div className="app-form-group">
-                  <label className="app-form-label">Nouveau mot de passe</label>
-                  <input
-                    type="password"
+                  <PasswordField
+                    id="password"
+                    name="password"
+                    label="Nouveau mot de passe"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="app-form-input"
+                    onChange={(e: any) => setNewPassword(e.target.value)}
+                    error={registerErrors.password}
+                    placeholder="Saisissez le nouveau mot de passe"
+                    required
                   />
                 </div>
               </div>

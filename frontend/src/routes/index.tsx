@@ -7,7 +7,7 @@ import About from '../pages/About';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
-import SimulerDevis from '@pages/devis/SimulerDevis.tsx';
+import SimulerDevis from '@/pages/devis/simuler/SimulerDevis';
 import CreerSouscription from '../pages/souscriptions/CreerSouscription';
 import { memo } from 'react';
 

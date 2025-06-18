@@ -20,7 +20,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     <Button
       type="submit"
       label={label}
-      className={isPrimary ? "app-form-button-primary" : "app-form-button"}
+      className={`${isPrimary ? "app-form-button-primary" : "app-form-button"} ${className ?? ''}`}
       disabled={isDisabled}
       loading={isLoading}
     />
