@@ -1,24 +1,20 @@
 import { formaterDate } from '@/utils/dateUtils';
-import { useToast } from '@contexts/ToastContext.tsx';
+import { useToast } from '@/hooks/useToast';
 import { useMediaQuery } from '@hooks/useMediaQuery';
-import { produitHttpService } from "@services/produit.http-service.ts";
+import { Produit, produitHttpService } from "@services/produit.http-service.ts";
 import { Button } from 'primereact/button';
 import { MenuItem } from 'primereact/menuitem';
 import { Steps } from 'primereact/steps';
 import { classNames } from 'primereact/utils';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { DropdownField, InputNumberField } from '@/components/form';
 import InputDateField from '@/components/form/InputDateField';
 import InputTextField from '@/components/form/InputTextField';
-import { Categorie, Produit } from '@/services/devis.http-service';
+import { Categorie } from '@/services/devis.http-service';
 import { SouscriptionData, souscriptionHttpService, Vehicule, Assure } from '@/services/souscription.http-service';
-
-interface ApiError {
-  message: string;
-  errors?: Record<string, string[]>;
-}
+import { HttpError } from "@services/http/ http-error.ts";
 
 const CreerSouscription = () => {
   const navigate = useNavigate();
@@ -27,12 +23,10 @@ const CreerSouscription = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [categoriesDisponibles, setCategoriesDisponibles] = useState<Categorie[]>([]);
-  const [forceUpdate, setForceUpdate] = useState(0);
 
   const [formData, setFormData] = useState<SouscriptionData>({
     vehicule: {
@@ -60,15 +54,12 @@ const CreerSouscription = () => {
     produit: ''
   });
 
-  // Hook personnalisé pour détecter la taille de l'écran
   const useScreenSize = () => {
     const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
     useEffect(() => {
       const handleResize = () => {
-        const newWidth = window.innerWidth;
-        setScreenWidth(newWidth);
-        setForceUpdate(prev => prev + 1);
+        setScreenWidth(window.innerWidth);
       };
 
       window.addEventListener('resize', handleResize);
@@ -88,15 +79,19 @@ const CreerSouscription = () => {
         if (produitsResponse.data) {
           setProduits(produitsResponse.data);
         }
-      } catch (error) {
-        showError('Erreur lors du chargement des données');
+      } catch (error: unknown) {
+        if (error instanceof HttpError) {
+          showError(error.message);
+        } else {
+          showError('Erreur lors du chargement des produits');
+        }
       }
     };
 
     fetchData();
   }, [showError]);
 
-  const updateStepStatus = (stepIndex: number) => {
+  const updateStepStatus = useCallback((stepIndex: number) => {
     const stepFields = {
       0: ['produit', 'dateMiseEnCirculation', 'immatriculation', 'couleur', 'categorieCode', 'nombreDeSieges', 'nombreDePortes', 'puissanceFiscale', 'valeurNeuf'],
       1: ['nom', 'prenoms', 'numeroCarteIdentite', 'email', 'sexe', 'dateNaissance', 'lieuNaissance', 'adresse', 'telephone'],
@@ -106,7 +101,7 @@ const CreerSouscription = () => {
     const fields = stepFields[stepIndex as keyof typeof stepFields];
     let isStepValid = true;
 
-    fields.forEach(async (field) => {
+    fields.forEach((field) => {
       let value = '';
       if (stepIndex === 0) {
         if (field === 'produit') {
@@ -118,7 +113,7 @@ const CreerSouscription = () => {
         value = String(formData.assure[field as keyof Assure] ?? '');
       }
 
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
+      if (!value || value.trim() === '') {
         isStepValid = false;
       }
     });
@@ -128,7 +123,7 @@ const CreerSouscription = () => {
     } else if (!isStepValid && completedSteps.includes(stepIndex)) {
       setCompletedSteps(prev => prev.filter(step => step !== stepIndex));
     }
-  };
+  }, [formData, completedSteps]);
 
   const steps: MenuItem[] = [
     {
@@ -172,12 +167,11 @@ const CreerSouscription = () => {
     }
   ];
 
-  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: unknown } }) => {
     const { name, value } = e.target;
-    setTouchedFields(prev => new Set([...prev, name]));
 
     if (name === 'produit') {
-      handleProduitChange(value);
+      handleProduitChange(value as string);
     } else if (name === 'vehiculeValeurVenale') {
       setFormData(prev => ({
         ...prev,
@@ -249,7 +243,7 @@ const CreerSouscription = () => {
     }
   };
 
-  const validateField = (fieldName: string, value: any) => {
+  const validateField = (fieldName: string, value: unknown) => {
     const errors: Record<string, string> = {};
 
     const stringValue = value != null ? String(value) : '';
@@ -259,7 +253,7 @@ const CreerSouscription = () => {
     } else {
       switch (fieldName) {
         case 'telephone':
-          if (!/^\+?[\\d]{8,}$/.test(stringValue)) {
+          if (!/^\+?\d{8,}$/.test(stringValue)) {
             errors[fieldName] = 'Numéro de téléphone invalide';
           }
           break;
@@ -332,7 +326,7 @@ const CreerSouscription = () => {
 
   useEffect(() => {
     updateStepStatus(currentStep);
-  }, [formData, currentStep]);
+  }, [formData, currentStep, updateStepStatus]);
 
   const isCurrentStepValid = useMemo(() => {
     const stepFields = {
@@ -354,7 +348,7 @@ const CreerSouscription = () => {
         value = String(formData.assure[field as keyof Assure] ?? '');
       }
 
-      return value &&  value.trim() !== '' && !validationErrors[field];
+      return value && value.trim() !== '' && !validationErrors[field];
     });
   }, [formData, currentStep, validationErrors]);
 
@@ -404,26 +398,25 @@ const CreerSouscription = () => {
         showSuccess('Souscription créée avec succès');
         navigate('/souscriptions');
       } else {
-        throw new Error('Une erreur est survenue lors de la création de la souscription');
+        const errorMessage = 'Une erreur est survenue lors de la création de la souscription';
+        setApiError(errorMessage);
+        showError(errorMessage);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = 'Une erreur est survenue lors de la création de la souscription';
 
-      if (error.response?.data) {
-        const apiError = error.response.data as ApiError;
-
-        if (apiError.errors) {
+      if (error instanceof HttpError) {
+        if (error.data) {
           const newValidationErrors: Record<string, string> = {};
-          Object.entries(apiError.errors).forEach(([field, messages]) => {
-            newValidationErrors[field] = messages[0];
+          Object.entries(error.data).forEach(([field, message]) => {
+            newValidationErrors[field] = message as string;
           });
           setValidationErrors(newValidationErrors);
           errorMessage = 'Veuillez corriger les erreurs dans le formulaire';
-        } else if (apiError.message) {
-          errorMessage = apiError.message;
+        } else if (error.message) {
+          errorMessage = error.message;
         }
       }
-
       setApiError(errorMessage);
       showError(errorMessage);
     } finally {
@@ -671,57 +664,6 @@ const CreerSouscription = () => {
               Récapitulatif de la souscription
             </h2>
             <div className={`grid ${gridClass} gap-4 sm:gap-6`}>
-              <div className="bg-white/80 dark:bg-gray-800/80 p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Informations du véhicule
-                </h3>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className={`grid ${gridClass} gap-x-3 sm:gap-x-4 gap-y-2 sm:gap-y-3 text-xs sm:text-sm`}>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Produit</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {(() => {
-                          const produitSelectionne = produits.find(p => p.id === formData.produit);
-                          return produitSelectionne?.nom ?? formData.produit;
-                        })()}
-                      </p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Date de mise en circulation</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {formaterDate(formData.vehicule.dateMiseEnCirculation)}
-                      </p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Valeur vénale</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {formData.vehiculeValeurVenale}
-                      </p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Numéro d'immatriculation</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.immatriculation}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Couleur</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.couleur}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Catégorie</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.categorieCode}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Nombre de sièges</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.nombreDeSieges}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50">
-                      <p className="text-gray-500 dark:text-gray-400">Nombre de portes</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formData.vehicule.nombreDePortes}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div className="bg-white/80 dark:bg-gray-800/80 p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Informations de l'assuré

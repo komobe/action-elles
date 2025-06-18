@@ -1,6 +1,6 @@
-import { httpClient } from './http/http-client';
-import { Credentials } from '@/contexts/AuthContext';
-import { buildUrl } from '@/utils/apiUtils';
+import {httpClient} from './http/http-client';
+import {buildUrl} from '@/utils/apiUtils';
+import {Credentials} from "@contexts/auth-context.ts";
 
 interface AuthResponse {
   accessToken: string;
@@ -17,14 +17,14 @@ export interface UserInfo {
 
 export const authHttpService = {
   login: async (username: string, password: string) => {
-    return httpClient.post(buildUrl('api/v1/auth', 'login'), { username, password });
+    return httpClient.post<AuthResponse>(buildUrl('api/v1/auth', 'login'), {username, password});
   },
 
-  register: async ({ username, password }: Credentials) => {
-    return httpClient.post(buildUrl('api/v1/auth', 'register'), { username, password });
+  register: async ({username, password}: Credentials) => {
+    return httpClient.post<void>(buildUrl('api/v1/auth', 'register'), {username, password});
   },
 
   getCurrentUser: async () => {
-    return httpClient.get(buildUrl('api/v1/auth', 'profile'));
+    return httpClient.get<UserInfo>(buildUrl('api/v1/auth', 'profile'));
   }
 }; 

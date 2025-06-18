@@ -2,14 +2,14 @@ import ListerSouscriptions from "@/pages/souscriptions/ListerSouscriptions";
 import ListerUtilisateurs from "@/pages/users/ListerUtilisateurs";
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import About from '../pages/About';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import SimulerDevis from '@/pages/devis/simuler/SimulerDevis';
 import CreerSouscription from '../pages/souscriptions/CreerSouscription';
-import { memo } from 'react';
+import React, { memo } from 'react';
 
 const PrivateRoute = memo(({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();

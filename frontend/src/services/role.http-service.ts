@@ -8,7 +8,7 @@ export interface Role {
 
 export const roleHttpService = {
   lister: async (): Promise<Role[]> => {
-    const response = await httpClient.get<string[]>(buildUrl('api/v1/roles'));
+    const response = await httpClient.get<string[]>(buildUrl('api/v1/roles')) ;
     return (response.data || []).map((role) => ({
       label: role,
       value: role

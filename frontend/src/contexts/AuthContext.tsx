@@ -1,9 +1,6 @@
-import { HttpResponse } from '@/services/http/response.type';
 import {
-  createContext,
   ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -12,21 +9,8 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { configureHttpClient } from '@/services/http/http-client';
 import { authHttpService, UserInfo } from '@/services/auth.http-service';
-
-
-export interface Credentials {
-  username: string;
-  password: string;
-}
-interface AuthContextType {
-  user: UserInfo | null;
-  isLoading: boolean;
-  login: (credentials: Credentials) => Promise<void>;
-  register: (credentials: Credentials) => Promise<HttpResponse<unknown>>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { HttpError } from '@/services/http/ http-error';
+import { AuthContext, Credentials } from './auth-context';
 
 const USER_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const LOGIN_PAGE = '/login';
@@ -88,6 +72,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setUser(response.data);
       }
     } catch (error) {
+      if (error instanceof HttpError) {
+        // Si l'erreur est une erreur HTTP (401, 403, etc.), on déconnecte l'utilisateur
+        console.warn('Erreur HTTP lors du chargement de l\'utilisateur:', error.message);
+      }
       clearAuth();
     } finally {
       setIsLoading(false);
@@ -151,7 +139,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     };
 
     initialize();
-  }, []);
+  }, [loadUser]);
 
   // Configurer la vérification périodique de l'utilisateur uniquement lorsque l'utilisateur est authentifié
   useEffect(() => {
@@ -173,10 +161,4 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   );
 }
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+// Déplacer useAuth dans un fichier séparé

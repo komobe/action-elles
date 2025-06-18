@@ -2,17 +2,18 @@ import ActionsButtons, { ActionList } from '@/components/common/ActionsButtons';
 import Pagination from '@/components/common/Pagination';
 import { DropdownField, InputField, PasswordField } from '@/components/form';
 import InputTextField from '@/components/form/InputTextField';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { isPaginatedResponse } from '@/services/http/helpers';
 import { Role, roleHttpService } from '@/services/role.http-service';
 import { User, utilisateurHttpService } from '@/services/utilisateur.http-service';
-import { useToast } from '@contexts/ToastContext';
+import { useToast } from '@/hooks/useToast';
 import { faKey } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from 'primereact/button';
 import { Message } from "primereact/message";
 import { Tag } from 'primereact/tag';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { HttpError } from "@services/http/ http-error.ts";
 
 interface RegisterForm {
   username: string;
@@ -76,7 +77,11 @@ const ListerUtilisateurs = () => {
       const response = await roleHttpService.lister();
       setRoles(response || []);
     } catch (error) {
-      showError(MESSAGES.ERROR.LOADING_ROLES);
+      if (error instanceof HttpError) {
+        showError(error.message);
+      } else {
+        showError(MESSAGES.ERROR.LOADING_ROLES);
+      }
     }
   }, [showError]);
 
@@ -148,8 +153,11 @@ const ListerUtilisateurs = () => {
         setShowEditModal(false);
         setSelectedUser(null);
         setEditedUser({});
-      } catch (error) {
-        const message = (error as any).message ?? MESSAGES.ERROR.UPDATING_USER
+      } catch (error: unknown) {
+        let message: string = MESSAGES.ERROR.UPDATING_USER;
+        if (error instanceof HttpError) {
+          message = error?.message
+        }
         showError(message);
       }
     }
@@ -175,8 +183,12 @@ const ListerUtilisateurs = () => {
         setShowPasswordModal(false);
         setSelectedUser(null);
         setNewPassword('');
-      } catch (error) {
-        showError('Erreur lors de la modification du mot de passe');
+      } catch (error: unknown) {
+        if (error instanceof HttpError) {
+          showError(error.message);
+        } else {
+          showError('Erreur lors de la modification du mot de passe');
+        }
       }
     }
   };
@@ -196,11 +208,11 @@ const ListerUtilisateurs = () => {
     const actions: ActionList = [
       {
         type: 'edit',
-        onClick: handleEditClick,
+        onClick: (item: unknown) => handleEditClick(item as User),
       },
       {
         type: 'delete',
-        onClick: handleDeleteClick,
+        onClick: (item: unknown) => handleDeleteClick(item as User),
       }
     ];
 
@@ -230,8 +242,12 @@ const ListerUtilisateurs = () => {
         fetchUsers(currentPage, currentPageSize);
         setShowDeleteModal(false);
         setSelectedUser(null);
-      } catch (error) {
-        showError(MESSAGES.ERROR.DELETING_USER);
+      } catch (error: unknown) {
+        if (error instanceof HttpError) {
+          showError(error.message);
+        } else {
+          showError(MESSAGES.ERROR.DELETING_USER);
+        }
       }
     }
   };
@@ -288,11 +304,12 @@ const ListerUtilisateurs = () => {
       setRegisterForm({ username: '', password: '', confirmPassword: '' });
       setRegisterErrors({});
       await fetchUsers(currentPage, currentPageSize);
-    } catch (error) {
-      const error1 = error as any;
-      const message = error1.data ?? error1.message ??
-        'Une erreur est survenue lors de la création de l\'utilisateur';
-      setRegisterGlobalError(message);
+    } catch (error: unknown) {
+      if (error instanceof HttpError) {
+        setRegisterGlobalError(error.message);
+      } else {
+        setRegisterGlobalError('Une erreur est survenue lors de la création de l\'utilisateur');
+      }
     } finally {
       setRegisterLoading(false);
     }
@@ -447,7 +464,10 @@ const ListerUtilisateurs = () => {
                     name="username"
                     label="Nom utilisateur"
                     value={editedUser.username ?? ''}
-                    onChange={(e: any) => setEditedUser({ ...editedUser, username: e.target.value })}
+                    onChange={(e) => setEditedUser({
+                      ...editedUser,
+                      username: e.target.value
+                    })}
                     required
                   />
 
@@ -456,7 +476,7 @@ const ListerUtilisateurs = () => {
                     name="email"
                     label="Email"
                     value={editedUser.email ?? ''}
-                    onChange={(e: any) => setEditedUser({ ...editedUser, email: e.target.value })}
+                    onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
                   />
 
                   <DropdownField
@@ -465,7 +485,7 @@ const ListerUtilisateurs = () => {
                     label="Rôle"
                     options={roles}
                     value={editedUser.role ?? ''}
-                    onChange={(e: any) => setEditedUser({ ...editedUser, role: e.target.value })}
+                    onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}
                     required
                     disabled={isLoading}
                     placeholder="Sélectionnez un rôle"
@@ -506,7 +526,7 @@ const ListerUtilisateurs = () => {
                     name="password"
                     label="Nouveau mot de passe"
                     value={newPassword}
-                    onChange={(e: any) => setNewPassword(e.target.value)}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     error={registerErrors.password}
                     placeholder="Saisissez le nouveau mot de passe"
                     required
@@ -643,7 +663,7 @@ const ListerUtilisateurs = () => {
           </div>
         )
       }
-    </div >
+    </div>
   );
 };
 

@@ -1,12 +1,23 @@
 import React from 'react';
 import { type SimulationResponse } from '@/services/devis.http-service';
-import { formaterDate, formaterMontant, calculerJoursRestants } from '@/utils/dateUtils';
+import { formaterDate, calculerJoursRestants } from '@/utils/dateUtils';
+import { formaterMontant } from '@/utils/formatUtils';
 import { Button } from 'primereact/button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
+interface FormData {
+  produit: string;
+  categorie: string;
+  puissanceFiscale: number;
+  vehiculeImmatriculation: string;
+  dateDeMiseEnCirculation: string;
+  valeurNeuf: number;
+  valeurVenale: number;
+}
+
 interface SimulationResultProps {
   result: SimulationResponse['data'] | null;
-  formData: any;
+  formData: FormData;
   onSave: () => void;
   isLoading: boolean;
 }

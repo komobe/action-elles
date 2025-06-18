@@ -17,18 +17,10 @@ export interface DevisData {
   endDate: string;
 }
 
-export interface SimulationDevisRequest extends VehiculeInfo { }
+export type SimulationDevisRequest = VehiculeInfo
 
 export interface EnregistrerDevisRequest extends DevisData, VehiculeInfo { }
 
-export interface Produit {
-  id: string;
-  code: string | null;
-  nom: string;
-  description: string;
-  garanties: Array<any>;
-  categoriesVehicules: Array<Categorie>;
-}
 
 export interface Categorie {
   id: string;

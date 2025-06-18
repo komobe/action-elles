@@ -3,7 +3,8 @@ import { Button } from 'primereact/button';
 import { DropdownField, InputField, InputNumberField } from '@/components/form';
 import InputDateField from '@/components/form/InputDateField';
 import { LoadingSpinner } from '@/components/common';
-import { type Produit, type Categorie, type SimulationDevisRequest } from '@/services/devis.http-service';
+import {type Categorie, type SimulationDevisRequest } from '@/services/devis.http-service';
+import {type Produit} from "@services/produit.http-service.ts";
 
 interface SimulationFormProps {
   currentStep: number;
@@ -16,12 +17,10 @@ interface SimulationFormProps {
   isLoadingData: boolean;
   isDesktop: boolean;
   steps: Array<{ number: number; title: string; fields: string[] }>;
-  onHandleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }) => void;
+  onHandleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: unknown } }) => void;
   onHandleNext: () => void;
   onHandleBack: () => void;
   onHandleSubmit: () => void;
-  onHandleSave: () => void;
-  result: any;
 }
 
 const SimulationForm: React.FC<SimulationFormProps> = ({
@@ -38,9 +37,7 @@ const SimulationForm: React.FC<SimulationFormProps> = ({
   onHandleChange,
   onHandleNext,
   onHandleBack,
-  onHandleSubmit,
-  onHandleSave,
-  result
+  onHandleSubmit
 }) => {
   return (
     <form onSubmit={(e) => e.preventDefault()}>

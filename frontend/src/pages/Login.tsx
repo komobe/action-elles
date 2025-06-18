@@ -1,8 +1,9 @@
 import { InputField, PasswordField, SubmitButton } from '@/components/form';
 import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Message } from 'primereact/message';
+import { HttpError } from "@services/http/ http-error.ts";
 
 interface FormData {
   username: string;
@@ -38,8 +39,14 @@ const Login = () => {
 
     try {
       await login({ username: formData.username, password: formData.password });
-    } catch (err) {
-      setError('Nom d\'utilisateur ou mot de passe incorrect');
+    } catch (error: unknown) {
+      if (error instanceof HttpError) {
+        setError(error.message);
+        setGenericError(error.message)
+      } else {
+        setError('Nom d\'utilisateur ou mot de passe incorrect');
+        setGenericError('Nom d\'utilisateur ou mot de passe incorrect')
+      }
     } finally {
       setIsLoading(false);
     }

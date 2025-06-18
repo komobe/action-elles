@@ -9,11 +9,6 @@ export interface User {
   createdAt: string;
 }
 
-interface Role {
-  name: string;
-  label: string;
-}
-
 export const utilisateurHttpService = {
   lister: async (page: number, size: number) => {
     return await httpClient.get<User[]>(buildUrl('api/v1/utilisateurs') + `?page=${page}&size=${size}`);

@@ -18,7 +18,7 @@ export type ActionType =
 
 interface Action {
   type: ActionType;
-  onClick: (item: any) => void;
+  onClick: (item: unknown) => void;
   title?: string;
   disabled?: boolean;
   hidden?: boolean;
@@ -29,7 +29,7 @@ interface Action {
 export type ActionList = Action[];
 
 interface ActionsButtonsProps {
-  item: any;
+  item: unknown;
   actions: ActionList;
   className?: string;
   children?: ReactNode;

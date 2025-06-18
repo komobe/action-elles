@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useMediaQuery } from '@hooks/useMediaQuery.ts';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useMediaQuery } from '@hooks/useMediaQuery';
 import {
   type Categorie,
   devisHttpService,
-  type Produit,
-  type SimulationDevisRequest,
+  SimulationDevisRequest,
   type SimulationResponse
 } from '@/services/devis.http-service';
-import { produitHttpService } from "@services/produit.http-service.ts";
+import { Produit, produitHttpService } from "@services/produit.http-service";
 import SimulationForm from '@/pages/devis/simuler/SimulationForm';
 import SimulationResult from '@/pages/devis/simuler/SimulationResult';
+import { HttpError } from "@services/http/ http-error.ts";
 
 const initialFormData: SimulationDevisRequest = {
   produit: '',
@@ -47,7 +47,6 @@ const SimulerDevis = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof SimulationDevisRequest, string>>>({});
 
-  // Chargement des produits au montage
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
@@ -58,16 +57,19 @@ const SimulerDevis = () => {
           setProduits(produitsResponse.data);
         }
       } catch (error) {
-        setError('Erreur lors du chargement des données');
+        if (error instanceof HttpError) {
+          setError(error.message);
+        } else {
+          setError('Erreur lors du chargement des données');
+        }
       } finally {
         setIsLoadingData(false);
       }
     };
 
-    fetchData();
+    fetchData().then()
   }, []);
 
-  // Validation d'une étape
   const validateStep = useCallback((step: number): boolean => {
     const currentStepFields = steps[step - 1].fields;
     const errors: Partial<Record<keyof SimulationDevisRequest, string>> = {};
@@ -115,19 +117,19 @@ const SimulerDevis = () => {
     return Object.keys(errors).length === 0;
   }, [formData]);
 
-  // Validation de toutes les étapes
   const validateAllSteps = useCallback((): boolean => {
     return steps.every((_, index) => validateStep(index + 1));
   }, [validateStep]);
 
-  // Gestion des changements de formulaire
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | {
+    target: { name: string; value: unknown }
+  }) => {
     const { name, value } = e.target;
 
     if (name === 'produit') {
       const produitSelectionne = produits.find(p => p.id === value);
       if (produitSelectionne) {
-        setSelectedProduitId(value);
+        setSelectedProduitId(value as string);
         setCategoriesDisponibles(produitSelectionne.categoriesVehicules || []);
         setFormData(prev => ({
           ...prev,
@@ -161,27 +163,6 @@ const SimulerDevis = () => {
     setError('');
   }, [produits, validationErrors]);
 
-  // Navigation par étapes
-  const handleNext = useCallback(() => {
-    if (validateStep(currentStep)) {
-      if (currentStep === 2) {
-        handleSubmit();
-      } else if (currentStep < steps.length) {
-        setCurrentStep(currentStep + 1);
-      }
-    }
-  }, [currentStep, validateStep, steps.length]);
-
-  const handleBack = useCallback(() => {
-    if (currentStep > 1) {
-      setError('');
-      setValidationErrors({});
-      setResult(null);
-      setCurrentStep(currentStep - 1);
-    }
-  }, [currentStep]);
-
-  // Simulation du devis
   const handleSubmit = useCallback(async () => {
     if (!validateAllSteps()) {
       return;
@@ -204,14 +185,45 @@ const SimulerDevis = () => {
       } else {
         setError('Une erreur est survenue lors de la simulation');
       }
-    } catch (error) {
-      setError('Une erreur est survenue lors de la simulation');
+    } catch (error: unknown) {
+      if (error instanceof HttpError) {
+        setError(error.message);
+      } else {
+        setError('Une erreur est survenue lors de la simulation');
+      }
     } finally {
       setIsLoading(false);
     }
   }, [validateAllSteps, isLoading, formData]);
 
-  // Enregistrement du devis
+  const handleNext = useCallback(() => {
+    if (validateStep(currentStep)) {
+      if (currentStep === 2) {
+        handleSubmit().then();
+      } else if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+      }
+    }
+  }, [currentStep, validateStep, handleSubmit]);
+
+  const handleBack = useCallback(() => {
+    if (currentStep > 1) {
+      setError('');
+      setValidationErrors({});
+      setResult(null);
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
+
+  const handleReset = useCallback(() => {
+    setFormData(initialFormData);
+    setSelectedProduitId('');
+    setResult(null);
+    setError('');
+    setValidationErrors({});
+    setCurrentStep(1);
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!result) {
       setError('Aucune simulation disponible');
@@ -235,19 +247,8 @@ const SimulerDevis = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [result, formData]);
+  }, [result, formData, handleReset]);
 
-  // Réinitialisation du formulaire
-  const handleReset = useCallback(() => {
-    setFormData(initialFormData);
-    setSelectedProduitId('');
-    setResult(null);
-    setError('');
-    setValidationErrors({});
-    setCurrentStep(1);
-  }, []);
-
-  // Réinitialisation des erreurs lors du changement d'étape
   useEffect(() => {
     setError('');
   }, [currentStep]);
@@ -283,8 +284,6 @@ const SimulerDevis = () => {
             onHandleNext={handleNext}
             onHandleBack={handleBack}
             onHandleSubmit={handleSubmit}
-            onHandleSave={handleSave}
-            result={result}
           />
         </div>
 

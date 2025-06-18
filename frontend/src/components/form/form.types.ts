@@ -17,7 +17,7 @@ export interface BaseInputProps extends BaseFormFieldProps {
 }
 
 export interface BaseCustomInputProps extends BaseFormFieldProps {
-  onChange?: (e: { target: { name: string; value: any } }) => void;
+  onChange?: (e: { target: { name: string; value: unknown } }) => void;
 }
 
 export interface InputFieldProps extends BaseInputProps {
@@ -69,7 +69,7 @@ export type SelectOption = {
 export type CustomChangeEvent = {
   target: {
     name: string;
-    value: any;
+    value: unknown;
   };
 };
 

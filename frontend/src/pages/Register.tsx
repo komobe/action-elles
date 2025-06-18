@@ -1,8 +1,9 @@
 import { InputField, PasswordField, SubmitButton } from '@/components/form';
 import { Message } from 'primereact/message';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { HttpError } from '@/services/http/ http-error';
 
 type FormData = {
   username: string;
@@ -34,7 +35,7 @@ const Register = () => {
     };
   }, []);
 
-  const validateForm = (): Partial<FormData> => {
+  const validateForm = useCallback((): Partial<FormData> => {
     const newErrors: Partial<FormData> = {};
 
     if (!formData.username.trim()) {
@@ -54,7 +55,7 @@ const Register = () => {
     }
 
     return newErrors;
-  };
+  }, [formData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -67,7 +68,7 @@ const Register = () => {
     const errors = validateForm();
     setErrors(errors);
     setIsFormValid(Object.keys(errors).length === 0);
-  }, [formData]);
+  }, [formData, validateForm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,9 +86,12 @@ const Register = () => {
       timeoutRef.current = setTimeout(() => {
         navigate('/login');
       }, 2000);
-    } catch (error: any) {
-      const message = error.message ?? 'Une erreur est survenue lors de l\'inscription';
-      setGenericError(message);
+    } catch (error: unknown) {
+      if (error instanceof HttpError) {
+        setGenericError(error.message);
+      } else {
+        setGenericError('Une erreur est survenue lors de l\'inscription');
+      }
     } finally {
       setIsLoading(false);
     }

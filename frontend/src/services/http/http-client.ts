@@ -1,4 +1,5 @@
-import { HttpResponse } from "./response.type";
+import {HttpResponse} from './response.type';
+import {HttpError} from "@services/http/ http-error.ts";
 
 interface TokenManager {
   getToken: () => string | null;
@@ -7,18 +8,20 @@ interface TokenManager {
 
 let tokenManager: TokenManager = {
   getToken: () => localStorage.getItem('token'),
-  removeToken: () => localStorage.removeItem('token')
+  removeToken: () => localStorage.removeItem('token'),
 };
 
 export const configureHttpClient = (manager: TokenManager) => {
   tokenManager = manager;
 };
 
-const getAuthHeader = (): Record<string, string> => {
+const getAuthHeader = (ignoreContentType: boolean = false): Record<string, string> => {
   const token = tokenManager.getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  };
+  const headers: Record<string, string> = {};
+
+  if (!ignoreContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -28,13 +31,13 @@ const getAuthHeader = (): Record<string, string> => {
 };
 
 const handleResponse = async <T>(response: Response): Promise<HttpResponse<T>> => {
-  let responseParsed: any;
+  let responseParsed: HttpResponse<T> | null = null;
 
-  // Si la réponse est un fichier binaire (blob), on ne tente pas de la parser en JSON
   const contentType = response.headers.get('content-type');
-  if (contentType && !contentType.includes('application/json') && !contentType.includes('text/')) {
+  const isJson = contentType?.includes('application/json');
+
+  if (!isJson) {
     const blob = await response.blob();
-    // Extraire tous les headers de la réponse
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       headers[key] = value;
@@ -43,122 +46,94 @@ const handleResponse = async <T>(response: Response): Promise<HttpResponse<T>> =
     return {
       status: 'success',
       data: blob as T,
-      headers
+      headers,
     };
   }
 
   try {
     responseParsed = await response.json();
-  } catch (error) {
+  } catch {
     responseParsed = null;
   }
 
   if (response.status === 401) {
     tokenManager.removeToken();
-    const error = new Error(responseParsed?.message ?? 'Session expirée');
-    (error as any).data = responseParsed?.data;
-    (error as any).isAuthError = true;
-    throw error;
+    throw new HttpError(responseParsed?.message ?? 'Session expirée', {
+      isAuthError: true,
+      status: response.status,
+      data: responseParsed?.data,
+    });
   }
 
   if (responseParsed?.status === 'error') {
-    const error = new Error(responseParsed?.message ?? 'Une erreur est survenue');
-    if (responseParsed?.data) {
-      (error as any).data = responseParsed?.data;
-    }
-
-    throw error;
+    throw new HttpError(responseParsed?.message ?? 'Une erreur est survenue', {
+      status: response.status,
+      data: responseParsed?.data,
+    });
   }
 
   if (!response.ok) {
-    const error = new Error(responseParsed?.message ?? `Erreur HTTP: ${response.status}`);
-    if (responseParsed?.data) {
-      (error as any).data = responseParsed?.data;
-    }
-
-    (error as any).status = response.status;
-
-    throw error;
-  }
-
-  if (responseParsed?.metadata || responseParsed?.links) {
-    // Extraire tous les headers de la réponse
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key] = value;
+    throw new HttpError(responseParsed?.message ?? `Erreur HTTP: ${response.status}`, {
+      status: response.status,
+      data: responseParsed?.data,
     });
-
-    return {
-      status: responseParsed.status,
-      data: responseParsed.data,
-      metadata: responseParsed.metadata,
-      links: responseParsed.links,
-      size: responseParsed.size,
-      headers
-    };
   }
 
-  // Extraire tous les headers de la réponse
   const headers: Record<string, string> = {};
   response.headers.forEach((value, key) => {
     headers[key] = value;
   });
 
   return {
-    status: responseParsed.status,
-    data: responseParsed?.data !== undefined ? responseParsed.data : responseParsed,
-    headers
-  };
+    ...responseParsed,
+    headers,
+  } as HttpResponse<T>;
+};
+
+const createRequest = (method: string, headers: Record<string, string>, data?: unknown): RequestInit => {
+  const requestInit: RequestInit = { method, headers };
+
+  if (data !== undefined && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    requestInit.body = JSON.stringify(data);
+  }
+
+  return requestInit;
 };
 
 export const httpClient = {
   async get<T>(url: string): Promise<HttpResponse<T>> {
     const headers = getAuthHeader();
-    const response = await fetch(url, { method: 'GET', headers });
+    const response = await fetch(url, createRequest('GET', headers));
     return handleResponse<T>(response);
   },
 
-  async getBlob(url: string): Promise<HttpResponse<Blob>> {
-    const headers = getAuthHeader();
-    // On retire le Content-Type pour les blobs car le serveur doit le définir
-    delete headers['Content-Type'];
-    const response = await fetch(url, { method: 'GET', headers });
+  async download(url: string): Promise<HttpResponse<Blob>> {
+    const headers = getAuthHeader(true);
+    const response = await fetch(url, createRequest('GET', headers));
     return handleResponse<Blob>(response);
   },
 
   async post<T>(url: string, data: unknown): Promise<HttpResponse<T>> {
     const headers = getAuthHeader();
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data)
-    });
+    const response = await fetch(url, createRequest('POST', headers, data));
     return handleResponse<T>(response);
   },
 
   async put<T>(url: string, data: unknown): Promise<HttpResponse<T>> {
     const headers = getAuthHeader();
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(data)
-    });
+    const response = await fetch(url, createRequest('PUT', headers, data));
     return handleResponse<T>(response);
   },
 
   async patch<T>(url: string, data: unknown): Promise<HttpResponse<T>> {
     const headers = getAuthHeader();
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify(data)
-    });
+    const response = await fetch(url, createRequest('PATCH', headers, data));
     return handleResponse<T>(response);
   },
 
   async delete<T = void>(url: string): Promise<HttpResponse<T>> {
     const headers = getAuthHeader();
-    const response = await fetch(url, { method: 'DELETE', headers });
+    const response = await fetch(url, createRequest('DELETE', headers));
     return handleResponse<T>(response);
-  }
+  },
 };

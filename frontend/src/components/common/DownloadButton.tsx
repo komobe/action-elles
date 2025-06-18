@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import React from 'react';
+import { useToast } from '@/hooks/useToast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
-import { useToast } from '@/contexts/ToastContext';
+import { HttpError } from "@services/http/ http-error.ts";
 
 interface DownloadButtonProps<T> {
   onClick: () => Promise<T>;
@@ -12,7 +13,7 @@ interface DownloadButtonProps<T> {
 }
 
 const DownloadButton = <T,>({ onClick: onDownload, fileName, title = 'Télécharger', className = '', disabled = false }: DownloadButtonProps<T>) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const { error: showError } = useToast();
 
   const handleClick = async () => {
@@ -32,7 +33,11 @@ const DownloadButton = <T,>({ onClick: onDownload, fileName, title = 'Téléchar
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      showError((error as any).message ?? 'Erreur lors du téléchargement:');
+      if (error instanceof HttpError) {
+        showError(error.message);
+      } else {
+        showError('Erreur lors du téléchargement:');
+      }
     } finally {
       setIsLoading(false);
     }
