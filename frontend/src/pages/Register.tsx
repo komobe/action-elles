@@ -23,6 +23,8 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>(null);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [touched, setTouched] = useState<{ [K in keyof FormData]?: boolean }>({});
 
   useEffect(() => {
     return () => {
@@ -32,7 +34,7 @@ const Register = () => {
     };
   }, []);
 
-  const validateForm = (): boolean => {
+  const validateForm = (): Partial<FormData> => {
     const newErrors: Partial<FormData> = {};
 
     if (!formData.username.trim()) {
@@ -51,15 +53,21 @@ const Register = () => {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
     setGenericError('');
   };
+
+  useEffect(() => {
+    const errors = validateForm();
+    setErrors(errors);
+    setIsFormValid(Object.keys(errors).length === 0);
+  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +122,7 @@ const Register = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                error={errors.username}
+                error={touched.username ? errors.username : ''}
               />
 
               <PasswordField
@@ -126,7 +134,7 @@ const Register = () => {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
-                error={errors.password}
+                error={touched.password ? errors.password : ''}
               />
 
               <PasswordField
@@ -138,19 +146,19 @@ const Register = () => {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
-                error={errors.confirmPassword}
+                error={touched.confirmPassword ? errors.confirmPassword : ''}
               />
             </div>
 
             <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full">
               <SubmitButton
-                isDisabled={isLoading}
+                isDisabled={isLoading || !isFormValid}
                 isLoading={isLoading}
                 label="S'inscrire"
-                className={'sm:w-full'}
+                className="w-full sm:w-auto"
                 isPrimary
               />
-              <div className="auth-link-container mt-4 sm:mt-0 sm:text-right">
+              <div className="auth-link-container mt-4 sm:mt-0 w-full sm:flex-1 text-center flex flex-col items-center">
                 <span className="auth-link-text">Déjà un compte ?</span>
                 <Link to="/login" className="auth-link-button">
                   Connectez-vous

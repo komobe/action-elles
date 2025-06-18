@@ -106,7 +106,7 @@ const CreerSouscription = () => {
     const fields = stepFields[stepIndex as keyof typeof stepFields];
     let isStepValid = true;
 
-    fields.forEach((field) => {
+    fields.forEach(async (field) => {
       let value = '';
       if (stepIndex === 0) {
         if (field === 'produit') {

@@ -94,10 +94,10 @@ const Login = () => {
                 isDisabled={isLoading || !isFormValid}
                 isLoading={isLoading}
                 label="Se connecter"
-                className={'sm:w-full'}
+                className="w-full sm:w-auto"
                 isPrimary
               />
-              <div className="auth-link-container mt-4 sm:mt-0 text-center sm:text-right">
+              <div className="auth-link-container mt-4 sm:mt-0 w-full sm:flex-1 text-center flex flex-col items-center">
                 <span className="auth-link-text">Pas encore de compte ?</span>
                 <Link to="/register" className="auth-link-button">
                   Inscrivez-vous
